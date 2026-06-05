@@ -1,0 +1,27 @@
+# Lean / Lake
+.lake/
+*.olean
+*.ilean
+*.c
+*.o
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets / Environment
+.env
+.env.*
+secrets.*
+*.pem
+*.key
+*.p12
+
+# Logs
+*.log

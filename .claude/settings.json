@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Read(**/secrets*)",
+      "Read(**/.ssh/**)",
+      "Read(**/.gnupg/**)",
+      "Read(/Users/*/.ssh/**)",
+      "Read(/home/*/.ssh/**)",
+      "Read(/root/.ssh/**)",
+      "Read(/Users/*/.gnupg/**)",
+      "Read(/home/*/.gnupg/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-cmd.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
