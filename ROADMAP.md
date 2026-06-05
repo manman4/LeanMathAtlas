@@ -38,11 +38,11 @@
 | Primes & Divisibility | [`NumberTheory/Primes.lean`](LeanMathAtlas/NumberTheory/Primes.lean) | `Nat.Prime`, GCD, coprimality, Euclid's theorem |
 | Complex Numbers | [`Algebra/Complex.lean`](LeanMathAtlas/Algebra/Complex.lean) | `ℂ`, modulus, conjugate, Euler's formula, de Moivre |
 | Derivatives | [`Analysis/Derivatives.lean`](LeanMathAtlas/Analysis/Derivatives.lean) | `HasDerivAt`, sum/product/chain rules, trig derivatives |
-| Modular Arithmetic | `NumberTheory/Modular.lean` | `ZMod`, Fermat's little theorem |
-| Vectors | `LinearAlgebra/Vectors.lean` | inner product, norm, Cauchy–Schwarz |
-| Limits & Continuity | `Analysis/Limits.lean` | ε-δ definition, `Filter.Tendsto` |
+| Modular Arithmetic | [`NumberTheory/Modular.lean`](LeanMathAtlas/NumberTheory/Modular.lean) · [解説](docs/ja/NumberTheory/Modular.md) | `ZMod`, Fermat's little theorem |
+| Vectors | [`LinearAlgebra/Vectors.lean`](LeanMathAtlas/LinearAlgebra/Vectors.lean) · [解説](docs/ja/LinearAlgebra/Vectors.md) | inner product, norm, Cauchy–Schwarz |
+| Limits & Continuity | [`Analysis/Limits.lean`](LeanMathAtlas/Analysis/Limits.lean) · [解説](docs/ja/Analysis/Limits.md) | ε-δ definition, `Filter.Tendsto` |
 
-> Modules without a link are **planned** and not yet implemented.
+> All ★★☆ modules are **implemented**. ★★★ modules are planned.
 
 ---
 
