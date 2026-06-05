@@ -22,12 +22,12 @@
 
 | Module | File | Topics |
 |--------|------|--------|
-| Propositional Logic | `Logic/Propositional.lean` | intro/elim, ∧ ∨ ¬ ↔, De Morgan |
-| Natural Numbers | `NumberTheory/NaturalNumbers.lean` | induction, arithmetic laws, parity |
-| Algebraic Identities | `Algebra/BasicIdentities.lean` | expansion, factoring, quadratic inequalities, factor/remainder theorems |
-| Sequences & Series | `Algebra/Sequences.lean` | arithmetic/geometric sequences, Gauss, sum of squares/cubes |
-| Trigonometry | `Analysis/Trigonometry.lean` | Pythagorean identity, addition formulas, double-angle formulas |
-| Binomial Theorem | `Combinatorics/BinomialTheorem.lean` | binomial coefficients, Pascal's triangle, binomial theorem |
+| Propositional Logic | [`Logic/Propositional.lean`](LeanMathAtlas/Logic/Propositional.lean) · [解説](docs/ja/Logic/Propositional.md) | intro/elim, ∧ ∨ ¬ ↔, De Morgan |
+| Natural Numbers | [`NumberTheory/NaturalNumbers.lean`](LeanMathAtlas/NumberTheory/NaturalNumbers.lean) · [解説](docs/ja/NumberTheory/NaturalNumbers.md) | induction, arithmetic laws, parity |
+| Algebraic Identities | [`Algebra/BasicIdentities.lean`](LeanMathAtlas/Algebra/BasicIdentities.lean) · [解説](docs/ja/Algebra/BasicIdentities.md) | expansion, factoring, quadratic inequalities, factor/remainder theorems |
+| Sequences & Series | [`Algebra/Sequences.lean`](LeanMathAtlas/Algebra/Sequences.lean) · [解説](docs/ja/Algebra/Sequences.md) | arithmetic/geometric sequences, Gauss, sum of squares/cubes |
+| Trigonometry | [`Analysis/Trigonometry.lean`](LeanMathAtlas/Analysis/Trigonometry.lean) · [解説](docs/ja/Analysis/Trigonometry.md) | Pythagorean identity, addition formulas, double-angle formulas |
+| Binomial Theorem | [`Combinatorics/BinomialTheorem.lean`](LeanMathAtlas/Combinatorics/BinomialTheorem.lean) · [解説](docs/ja/Combinatorics/BinomialTheorem.md) | binomial coefficients, Pascal's triangle, binomial theorem |
 
 ---
 
@@ -35,9 +35,9 @@
 
 | Module | File | Topics |
 |--------|------|--------|
-| Primes & Divisibility | [`NumberTheory/Primes.lean`](LeanMathAtlas/NumberTheory/Primes.lean) | `Nat.Prime`, GCD, coprimality, Euclid's theorem |
-| Complex Numbers | [`Algebra/Complex.lean`](LeanMathAtlas/Algebra/Complex.lean) | `ℂ`, modulus, conjugate, Euler's formula, de Moivre |
-| Derivatives | [`Analysis/Derivatives.lean`](LeanMathAtlas/Analysis/Derivatives.lean) | `HasDerivAt`, sum/product/chain rules, trig derivatives |
+| Primes & Divisibility | [`NumberTheory/Primes.lean`](LeanMathAtlas/NumberTheory/Primes.lean) · [解説](docs/ja/NumberTheory/Primes.md) | `Nat.Prime`, GCD, coprimality, Euclid's theorem |
+| Complex Numbers | [`Algebra/Complex.lean`](LeanMathAtlas/Algebra/Complex.lean) · [解説](docs/ja/Algebra/Complex.md) | `ℂ`, modulus, conjugate, Euler's formula, de Moivre |
+| Derivatives | [`Analysis/Derivatives.lean`](LeanMathAtlas/Analysis/Derivatives.lean) · [解説](docs/ja/Analysis/Derivatives.md) | `HasDerivAt`, sum/product/chain rules, trig derivatives |
 | Modular Arithmetic | [`NumberTheory/Modular.lean`](LeanMathAtlas/NumberTheory/Modular.lean) · [解説](docs/ja/NumberTheory/Modular.md) | `ZMod`, Fermat's little theorem |
 | Vectors | [`LinearAlgebra/Vectors.lean`](LeanMathAtlas/LinearAlgebra/Vectors.lean) · [解説](docs/ja/LinearAlgebra/Vectors.md) | inner product, norm, Cauchy–Schwarz |
 | Limits & Continuity | [`Analysis/Limits.lean`](LeanMathAtlas/Analysis/Limits.lean) · [解説](docs/ja/Analysis/Limits.md) | ε-δ definition, `Filter.Tendsto` |
