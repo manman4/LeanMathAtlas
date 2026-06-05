@@ -23,5 +23,13 @@ secrets.*
 *.key
 *.p12
 
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# auto_prove.py cache
+.proof_index.json
+
 # Logs
 *.log
