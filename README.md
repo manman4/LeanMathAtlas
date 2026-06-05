@@ -1,5 +1,7 @@
 # LeanMathAtlas
 
+> **日本語で読む →** [README.ja.md](README.ja.md)
+
 A collection of Lean 4 theorem proofs organized by mathematical subject.
 Proofs are verified by the Lean compiler and accumulated in
 `LeanMathAtlas/ProvedTheorems.lean` via an automated prover (`auto_prove.py`).
