@@ -1,5 +1,7 @@
 # LeanMathAtlas
 
+> **Read in English →** [README.md](README.md)
+
 数学の定理を科目別に整理した Lean 4 証明コレクションです。
 証明は Lean コンパイラによって検証され、自動証明スクリプト（`auto_prove.py`）によって
 `LeanMathAtlas/ProvedTheorems.lean` に蓄積されていきます。
