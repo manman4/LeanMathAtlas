@@ -14,6 +14,7 @@ import LeanMathAtlas.Algebra.Rings
 import LeanMathAtlas.Analysis.Trigonometry
 import LeanMathAtlas.Analysis.Derivatives
 import LeanMathAtlas.Analysis.Limits
+import LeanMathAtlas.Analysis.Integration
 import LeanMathAtlas.Combinatorics.BinomialTheorem
 import LeanMathAtlas.LinearAlgebra.Vectors
 import LeanMathAtlas.Topology.Basic

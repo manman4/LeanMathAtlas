@@ -52,10 +52,10 @@
 |--------|------|--------|
 | Group Theory | [`Algebra/Groups.lean`](LeanMathAtlas/Algebra/Groups.lean) · [解説](docs/ja/Algebra/Groups.md) | `Group`, subgroups, Lagrange's theorem |
 | Ring Theory | [`Algebra/Rings.lean`](LeanMathAtlas/Algebra/Rings.lean) · [解説](docs/ja/Algebra/Rings.md) | `Ring`, ideals, quotient rings |
-| Integration | `Analysis/Integration.lean` | `MeasureTheory.integral`, fundamental theorem |
+| Integration | [`Analysis/Integration.lean`](LeanMathAtlas/Analysis/Integration.lean) · [解説](docs/ja/Analysis/Integration.md) | `MeasureTheory.integral`, fundamental theorem |
 | Topology | [`Topology/Basic.lean`](LeanMathAtlas/Topology/Basic.lean) · [解説](docs/ja/Topology/Basic.md) | open sets, compactness, connectedness |
 
-> All ★★★ modules are **planned**.
+> All ★★★ modules are **implemented**.
 
 ---
 

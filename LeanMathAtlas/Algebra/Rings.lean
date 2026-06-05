@@ -24,21 +24,21 @@ variable {R : Type*} [CommRing R]
 -- ============================================================
 
 -- 分配法則: a * (b + c) = a * b + a * c
-theorem my_mul_add (a b c : R) : a * (b + c) = a * b + a * c := mul_add a b c
-theorem my_add_mul (a b c : R) : (a + b) * c = a * c + b * c := add_mul a b c
+theorem my_ring_mul_add (a b c : R) : a * (b + c) = a * b + a * c := mul_add a b c
+theorem my_ring_add_mul (a b c : R) : (a + b) * c = a * c + b * c := add_mul a b c
 
 -- 可換環: a * b = b * a
-theorem my_mul_comm (a b : R) : a * b = b * a := mul_comm a b
+theorem my_ring_mul_comm (a b : R) : a * b = b * a := mul_comm a b
 
 -- 零乗法: a * 0 = 0, 0 * a = 0
-theorem my_mul_zero (a : R) : a * 0 = 0 := mul_zero a
-theorem my_zero_mul (a : R) : 0 * a = 0 := zero_mul a
+theorem my_ring_mul_zero (a : R) : a * 0 = 0 := mul_zero a
+theorem my_ring_zero_mul (a : R) : 0 * a = 0 := zero_mul a
 
 -- 環では -1 * a = -a
-theorem my_neg_one_mul (a : R) : -1 * a = -a := neg_one_mul a
+theorem my_ring_neg_one_mul (a : R) : -1 * a = -a := neg_one_mul a
 
 -- 単位元: a * 1 = a
-theorem my_mul_one (a : R) : a * 1 = a := mul_one a
+theorem my_ring_mul_one (a : R) : a * 1 = a := mul_one a
 
 -- ============================================================
 -- 2. イデアル (Ideals)
