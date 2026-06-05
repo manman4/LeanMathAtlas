@@ -42,7 +42,7 @@
 | Vectors | [`LinearAlgebra/Vectors.lean`](LeanMathAtlas/LinearAlgebra/Vectors.lean) · [解説](docs/ja/LinearAlgebra/Vectors.md) | inner product, norm, Cauchy–Schwarz |
 | Limits & Continuity | [`Analysis/Limits.lean`](LeanMathAtlas/Analysis/Limits.lean) · [解説](docs/ja/Analysis/Limits.md) | ε-δ definition, `Filter.Tendsto` |
 
-> All ★★☆ modules are **implemented**. ★★★ modules are planned.
+> All ★★☆ modules are **implemented**.
 
 ---
 
