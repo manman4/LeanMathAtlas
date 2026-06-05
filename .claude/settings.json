@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(rm -rf*)",
+      "Bash(curl*|*bash*)",
+      "Bash(wget*|*sh*)",
+      "Read(**/.env*)",
+      "Read(**/secrets*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)"
+    ]
+  }
+}
