@@ -50,7 +50,7 @@
 
 | Module | File | Topics |
 |--------|------|--------|
-| Group Theory | `Algebra/Groups.lean` | `Group`, subgroups, Lagrange's theorem |
+| Group Theory | [`Algebra/Groups.lean`](LeanMathAtlas/Algebra/Groups.lean) · [解説](docs/ja/Algebra/Groups.md) | `Group`, subgroups, Lagrange's theorem |
 | Ring Theory | `Algebra/Rings.lean` | `Ring`, ideals, quotient rings |
 | Integration | `Analysis/Integration.lean` | `MeasureTheory.integral`, fundamental theorem |
 | Topology | `Topology/Basic.lean` | open sets, compactness, connectedness |

@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.0.7 | 2026-06-06 | Group Theory (Group laws, Subgroup, Lagrange's theorem, orderOf) |
 | 0.0.6 | 2026-06-06 | Vectors (inner product, norm, Cauchy-Schwarz), ★★☆ Intermediate all complete |
 | 0.0.5 | 2026-06-06 | Limits (`ε-δ`, `Filter.Tendsto`), docs/ja for Modular and Limits |
 | 0.0.4 | 2026-06-06 | Modular arithmetic (`ZMod`, Fermat's little theorem) |
