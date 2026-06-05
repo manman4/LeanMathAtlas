@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [Unreleased] — develop/v0.0.3
+## [0.0.3] — 2026-06-06
 
 ### Changed
 - Moved tooling (`auto_prove.py`, `benchmark.py`, `AUTO_PROVE.md`, `BENCHMARK.md`) into `tools/` directory
