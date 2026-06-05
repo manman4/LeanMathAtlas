@@ -5,6 +5,7 @@ import LeanMathAtlas.ProvedTheorems
 import LeanMathAtlas.Logic.Propositional
 import LeanMathAtlas.NumberTheory.NaturalNumbers
 import LeanMathAtlas.NumberTheory.Primes
+import LeanMathAtlas.NumberTheory.Modular
 import LeanMathAtlas.Algebra.BasicIdentities
 import LeanMathAtlas.Algebra.Sequences
 import LeanMathAtlas.Algebra.Complex
