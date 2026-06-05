@@ -11,4 +11,5 @@ import LeanMathAtlas.Algebra.Sequences
 import LeanMathAtlas.Algebra.Complex
 import LeanMathAtlas.Analysis.Trigonometry
 import LeanMathAtlas.Analysis.Derivatives
+import LeanMathAtlas.Analysis.Limits
 import LeanMathAtlas.Combinatorics.BinomialTheorem
