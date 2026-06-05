@@ -10,6 +10,7 @@ import LeanMathAtlas.Algebra.BasicIdentities
 import LeanMathAtlas.Algebra.Sequences
 import LeanMathAtlas.Algebra.Complex
 import LeanMathAtlas.Algebra.Groups
+import LeanMathAtlas.Algebra.Rings
 import LeanMathAtlas.Analysis.Trigonometry
 import LeanMathAtlas.Analysis.Derivatives
 import LeanMathAtlas.Analysis.Limits
