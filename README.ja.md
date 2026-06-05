@@ -73,7 +73,7 @@ Mathlib と REPL パッケージをダウンロードします（初回は数分
 lake build
 ```
 
-## [難易度マップ →](ROADMAP.md)
+## [難易度マップ →](ROADMAP.ja.md) · [Difficulty Map →](ROADMAP.md)
 
 ## 学習のしかた
 

@@ -73,7 +73,7 @@ This downloads Mathlib and the REPL package (~several minutes on first run).
 lake build
 ```
 
-## [Difficulty Map →](ROADMAP.md)
+## [Difficulty Map →](ROADMAP.md) · [難易度マップ →](ROADMAP.ja.md)
 
 ## How to study
 
