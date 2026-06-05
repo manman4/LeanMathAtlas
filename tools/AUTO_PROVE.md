@@ -363,7 +363,7 @@ have hg : HasDerivAt Real.sin (Real.cos (2 * a)) (2 * a) := ...
 exact hg.comp a hf
 ```
 
-精度の詳細な計測結果（使用問題セット・バージョン別比較）は [docs/BENCHMARK.md](docs/BENCHMARK.md) にまとめています。
+精度の詳細な計測結果（使用問題セット・バージョン別比較）は [BENCHMARK.md](BENCHMARK.md) にまとめています。
 
 ---
 

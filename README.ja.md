@@ -22,7 +22,9 @@ LeanMathAtlas/
   ProvedTheorems.lean      # 自動生成: auto_prove.py が証明した定理
 
 docs/ja/                   # 各モジュールの日本語解説（Markdown）
-auto_prove.py              # Lean REPL を使った自動証明スクリプト
+tools/
+  auto_prove.py            # Lean REPL を使った自動証明スクリプト
+  benchmark.py             # 精度ベンチマーク
 ```
 
 ## 環境の準備
@@ -76,10 +78,10 @@ code LeanMathAtlas/Algebra/BasicIdentities.lean
 
 ```bash
 # 組み込みテスト（7 定理）を実行
-python auto_prove.py
+python3 tools/auto_prove.py
 
 # 任意の定理を証明する
-python auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
+python3 tools/auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
 ```
 
 一度証明した定理は `.proof_index.json` にキャッシュされ、次回以降は即座に結果を返します。
