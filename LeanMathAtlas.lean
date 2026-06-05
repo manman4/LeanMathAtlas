@@ -13,3 +13,4 @@ import LeanMathAtlas.Analysis.Trigonometry
 import LeanMathAtlas.Analysis.Derivatives
 import LeanMathAtlas.Analysis.Limits
 import LeanMathAtlas.Combinatorics.BinomialTheorem
+import LeanMathAtlas.LinearAlgebra.Vectors
