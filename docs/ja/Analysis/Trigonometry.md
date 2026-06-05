@@ -1,6 +1,6 @@
 # 三角関数の公式
 
-対応する Lean ファイル: `StudyLean4/Analysis/Trigonometry.lean`
+対応する Lean ファイル: `LeanMathAtlas/Analysis/Trigonometry.lean`
 
 ## 内容
 

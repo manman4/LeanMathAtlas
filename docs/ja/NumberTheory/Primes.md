@@ -1,6 +1,6 @@
 # 素数と整除性
 
-対応する Lean ファイル: `StudyLean4/NumberTheory/Primes.lean`
+対応する Lean ファイル: `LeanMathAtlas/NumberTheory/Primes.lean`
 
 ## 内容
 

@@ -1,6 +1,6 @@
 # 自然数の算術・帰納法
 
-対応する Lean ファイル: `StudyLean4/NumberTheory/NaturalNumbers.lean`
+対応する Lean ファイル: `LeanMathAtlas/NumberTheory/NaturalNumbers.lean`
 
 ## 内容
 

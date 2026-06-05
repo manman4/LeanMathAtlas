@@ -1,6 +1,6 @@
 # 微分（導関数）
 
-対応する Lean ファイル: `StudyLean4/Analysis/Derivatives.lean`
+対応する Lean ファイル: `LeanMathAtlas/Analysis/Derivatives.lean`
 
 ## `HasDerivAt` の読み方
 

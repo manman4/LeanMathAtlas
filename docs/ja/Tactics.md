@@ -1,6 +1,6 @@
 # タクティクスガイド
 
-対応する Lean ファイル: `StudyLean4/Tactics.lean`
+対応する Lean ファイル: `LeanMathAtlas/Tactics.lean`
 
 Lean 4 で証明を書くとき、`by` の後ろに書く命令を **タクティクス** といいます。
 このファイルでは「自動で証明を完成させてくれるタクティクス」を中心に説明します。

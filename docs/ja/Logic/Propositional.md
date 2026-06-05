@@ -1,6 +1,6 @@
 # 命題論理
 
-対応する Lean ファイル: `StudyLean4/Logic/Propositional.lean`
+対応する Lean ファイル: `LeanMathAtlas/Logic/Propositional.lean`
 
 ## 内容
 

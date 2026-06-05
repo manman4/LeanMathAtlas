@@ -1,6 +1,6 @@
 # 数列と級数
 
-対応する Lean ファイル: `StudyLean4/Algebra/Sequences.lean`
+対応する Lean ファイル: `LeanMathAtlas/Algebra/Sequences.lean`
 
 ## 内容
 

@@ -1,6 +1,6 @@
 # 複素数
 
-対応する Lean ファイル: `StudyLean4/Algebra/Complex.lean`
+対応する Lean ファイル: `LeanMathAtlas/Algebra/Complex.lean`
 
 ## 内容
 

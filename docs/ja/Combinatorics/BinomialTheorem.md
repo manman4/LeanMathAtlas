@@ -1,6 +1,6 @@
 # 場合の数・二項定理
 
-対応する Lean ファイル: `StudyLean4/Combinatorics/BinomialTheorem.lean`
+対応する Lean ファイル: `LeanMathAtlas/Combinatorics/BinomialTheorem.lean`
 
 ## 内容
 

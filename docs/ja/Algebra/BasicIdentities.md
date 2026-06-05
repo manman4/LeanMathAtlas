@@ -1,6 +1,6 @@
 # 式の展開・因数分解・多項式定理
 
-対応する Lean ファイル: `StudyLean4/Algebra/BasicIdentities.lean`
+対応する Lean ファイル: `LeanMathAtlas/Algebra/BasicIdentities.lean`
 
 ## 内容
 
