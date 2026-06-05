@@ -22,7 +22,9 @@ LeanMathAtlas/
   ProvedTheorems.lean      # Auto-generated: theorems proved by auto_prove.py
 
 docs/ja/                   # Japanese explanations (one Markdown file per module)
-auto_prove.py              # Automated theorem prover via Lean REPL
+tools/
+  auto_prove.py            # Automated theorem prover via Lean REPL
+  benchmark.py             # Accuracy benchmark
 ```
 
 ## Requirements
@@ -94,17 +96,17 @@ Japanese notes explaining each theorem in terms of standard curricula are in
 
 ### 3. Run the automated prover
 
-> Detailed guide: [AUTO_PROVE.md](AUTO_PROVE.md)
+> Detailed guide: [AUTO_PROVE.md](tools/AUTO_PROVE.md)
 
-`auto_prove.py` takes a theorem statement, tries a set of tactics via the Lean
+`tools/auto_prove.py` takes a theorem statement, tries a set of tactics via the Lean
 REPL, and saves any successful proof to `ProvedTheorems.lean`.
 
 ```bash
 # Run the built-in test suite (7 theorems)
-python auto_prove.py
+python3 tools/auto_prove.py
 
 # Prove a custom theorem
-python auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
+python3 tools/auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
 ```
 
 Proved theorems are cached in `.proof_index.json` — subsequent runs return

@@ -14,7 +14,7 @@ from collections import deque
 from datetime import date
 from pathlib import Path
 
-WORKDIR        = Path(os.environ.get("LEAN_WORKDIR", Path(__file__).parent)).resolve()
+WORKDIR        = Path(os.environ.get("LEAN_WORKDIR", Path(__file__).parent.parent)).resolve()
 REPL_CMD       = ["lake", "exe", "repl"]
 SEP            = "\n\n"
 LEAN_DB_FILE   = WORKDIR / "LeanMathAtlas" / "ProvedTheorems.lean"
