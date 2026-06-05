@@ -94,7 +94,7 @@ Japanese notes explaining each theorem in terms of standard curricula are in
 
 ### 3. Run the automated prover
 
-> Detailed guide: [AUTO_PROVE.md](AUTO_PROVE.md)
+> Detailed guide: [AUTO_PROVE.md](tools/AUTO_PROVE.md)
 
 `auto_prove.py` takes a theorem statement, tries a set of tactics via the Lean
 REPL, and saves any successful proof to `ProvedTheorems.lean`.
