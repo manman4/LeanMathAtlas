@@ -33,11 +33,6 @@ All notable changes to this project will be documented in this file.
 - Japanese explanation docs (`docs/ja/`) for all implemented modules
 - `README.ja.md` — Japanese README
 
-### Changed
-- Renamed project from `StudyLean4` → `LeanMathAtlas` across all files
-  - `lakefile.toml`, `lake-manifest.json`, `LeanMathAtlas.lean`, all imports
-- Updated `docs/ja/` markdown files (10 files) to reflect new module paths
-
 ---
 
 ## [0.0.1] — 2026-06-06
