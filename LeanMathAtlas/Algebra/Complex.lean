@@ -41,7 +41,7 @@ example (z : ℂ) : 0 ≤ normSq z := normSq_nonneg z
 theorem my_norm_mul (z w : ℂ) : ‖z * w‖ = ‖z‖ * ‖w‖ := norm_mul z w
 
 -- 三角不等式: ‖z + w‖ ≤ ‖z‖ + ‖w‖
-theorem my_norm_add_le (z w : ℂ) : ‖z + w‖ ≤ ‖z‖ + ‖w‖ := norm_add_le z w
+theorem my_cx_norm_add_le (z w : ℂ) : ‖z + w‖ ≤ ‖z‖ + ‖w‖ := norm_add_le z w
 
 -- ‖z‖ ≥ 0
 example (z : ℂ) : 0 ≤ ‖z‖ := norm_nonneg z

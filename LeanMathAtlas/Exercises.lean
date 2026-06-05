@@ -80,7 +80,7 @@ example (n m : Nat) (h : n ≤ m) : n ≤ m + 1 := by
 --        base case は simp で、inductive step は rw と ih を使う
 -- ============================================================
 
-theorem my_zero_add (n : Nat) : 0 + n = n := by
+theorem ex_zero_add (n : Nat) : 0 + n = n := by
   sorry
 
 -- ============================================================
