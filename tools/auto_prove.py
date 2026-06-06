@@ -277,6 +277,20 @@ def extract_try_this(resp: dict) -> str | None:
 def to_example(stmt: str) -> str:
     return re.sub(r"^theorem\s+\S+", "example", stmt)
 
+def fact_preamble(stmt: str) -> str:
+    """Generate haveI lines for Nat.Prime hypotheses.
+
+    e.g. '(hp : Nat.Prime p)' → 'haveI : Fact (Nat.Prime p) := ⟨hp⟩'
+    Many Mathlib lemmas (ZMod.wilsons_lemma, ZMod.pow_card, …) require
+    [Fact (Nat.Prime p)] as a typeclass, so this bridges the gap between
+    a plain hypothesis and the typeclass the lemma expects.
+    """
+    lines = []
+    for m in re.finditer(r'\((\w+)\s*:\s*Nat\.Prime\s+(\w+)\)', stmt):
+        hname, pvar = m.group(1), m.group(2)
+        lines.append(f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩")
+    return "\n  ".join(lines)
+
 # ────────────────────────────────────────────────
 # Automated proving
 # ────────────────────────────────────────────────
@@ -336,6 +350,26 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
                             append_to_lean_db(stmt, proof, goal, lean_name)
                             index[cache_key(stmt)] = lean_name
                         break
+
+                # Phase 1.5: Fact typeclass preamble + search tactics
+                # Handles lemmas that require [Fact (Nat.Prime p)] typeclass
+                if proof is None:
+                    preamble = fact_preamble(stmt)
+                    if preamble:
+                        for t in SEARCH_TACTICS:
+                            resp = session.send({
+                                "cmd": f"{example} := by\n  {preamble}\n  {t}",
+                                "env": base_env
+                            })
+                            if not has_error(resp):
+                                extracted = extract_try_this(resp)
+                                if extracted:
+                                    proof = f"{preamble}\n  {extracted}"
+                                    if not dry_run:
+                                        lean_name = lean_name_from(stmt)
+                                        append_to_lean_db(stmt, proof, goal, lean_name)
+                                        index[cache_key(stmt)] = lean_name
+                                    break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
                 if proof is None:
