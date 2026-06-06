@@ -3,15 +3,10 @@
 Coverage benchmark: measure how many theorems auto_prove.py can solve.
 
 Categories:
-  A) Logic (Propositional-style) — main target for iterative BFS
-  B) Algebra (ring / omega)      — phase-1 should close most
-  C) Induction (Sequences)       — template matching
-  D) Hard (multi-step have)      — expected failures
-
-Usage:
-  python3 benchmark.py                                     # run only, no log
-  python3 benchmark.py --save "tauto追加"                  # run and append to bench_log.csv (suite="core")
-  python3 benchmark.py --save "label" --suite "hard_v2"   # specify suite name
+  logic     — propositional logic (tauto / BFS target)
+  algebra   — ring / omega
+  induction — summation formulas
+  hard      — multi-step have (expected failures)
 """
 import sys
 import csv
@@ -144,21 +139,23 @@ def run_benchmark(save_label: str | None = None, suite: str = "core"):
 
 
 if __name__ == "__main__":
-    label = None
-    suite = "core"
-    args = sys.argv[1:]
-    if "--save" in args:
-        idx = args.index("--save")
-        if idx + 1 < len(args):
-            label = args[idx + 1]
-        else:
-            print("使い方: python3 benchmark.py --save <ラベル> [--suite <スイート名>]")
-            sys.exit(1)
-    if "--suite" in args:
-        idx = args.index("--suite")
-        if idx + 1 < len(args):
-            suite = args[idx + 1]
-        else:
-            print("使い方: python3 benchmark.py --suite <スイート名>")
-            sys.exit(1)
-    run_benchmark(save_label=label, suite=suite)
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="auto_prove.py の証明カバレッジを計測する",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  python3 benchmark.py\n"
+            "  python3 benchmark.py --save 'tauto追加'\n"
+            "  python3 benchmark.py --save 'label' --suite hard_v2"
+        ),
+    )
+    parser.add_argument("--save", metavar="LABEL", help="結果を bench_log.csv に追記する")
+    parser.add_argument("--suite", metavar="NAME", default="core",
+                        help="スイート名（デフォルト: core）。--save なしでは無視される")
+    args = parser.parse_args()
+
+    if args.suite != "core" and args.save is None:
+        parser.error("--suite は --save と一緒に使ってください")
+
+    run_benchmark(save_label=args.save, suite=args.suite)
