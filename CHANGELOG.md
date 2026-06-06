@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.14 | 2026-06-06 | auto_prove: FINTYPE_TEMPLATES (Pigeonhole); Phase 1.5 拡張・堅牢化; Phase 1.6 apply? 追加 (42/46, 91%) |
 | 0.1.13 | 2026-06-06 | docs: update AUTO_PROVE / BENCHMARK / PLANNING with current state and next development candidates |
 | 0.1.12 | 2026-06-06 | benchmark: per-theorem solve_time cache (.bench_cache.json); BFS timeout 30s→10s; 6min→5.5min |
 | 0.1.11 | 2026-06-06 | auto_prove: haveI Fact typeclass preamble; solves Fermat's little theorem (competition 2/5) |

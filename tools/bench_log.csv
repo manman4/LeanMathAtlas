@@ -9,3 +9,4 @@ date,label,suite,test_hash,logic,algebra,induction,hard,competition,total,pct,el
 2026-06-06,ver.6 competitionカテゴリ追加 ベースライン (dry_run),competition,9679feda,16/16,12/12,5/5,6/8,1/2,40/43,93%,-
 2026-06-06,ver.7 competition×5 ベースライン (dry_run),competition,58ce068b,16/16,12/12,5/5,6/8,1/5,40/46,87%,498
 2026-06-06,ver.8 haveI Fact typeclass追加 (dry_run),competition,58ce068b,16/16,12/12,5/5,6/8,2/5,41/46,89%,493
+2026-06-06,Phase 1.5 拡張 + FINTYPE_TEMPLATES (Pigeonhole 解決),core,58ce068b,16/16,12/12,5/5,6/8,3/5,42/46,91%,189

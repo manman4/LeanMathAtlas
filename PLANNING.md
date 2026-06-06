@@ -7,10 +7,10 @@ This document records design decisions and the reasoning behind things that were
 ## Current state (2026-06-06)
 
 - 16 Lean proof files (★☆☆ / ★★☆ / ★★★), bilingual docs (`docs/ja/`, `docs/en/`)
-- `tools/auto_prove.py`: automated theorem prover, v0.1.11
+- `tools/auto_prove.py`: automated theorem prover, v0.1.14 (予定)
 - `tools/benchmark.py`: 46-problem benchmark suite, v0.1.12
-- Benchmark score: **41/46 (89%)**, competition 2/5
-- Unsolved: chain rule, card_filter (hard), Wilson, Pigeonhole, AM-GM 3変数 (competition)
+- Benchmark score: **42/46 (91%)**, competition 3/5
+- Unsolved: chain rule, card_filter (hard), Wilson, AM-GM 3変数 (competition)
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history and [tools/BENCHMARK.md](tools/BENCHMARK.md) for precision records.
 
@@ -22,9 +22,9 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history and [tools/BENCHMARK.m
 
 | ID | 内容 | 難易度 | 期待効果 |
 |---|---|---|---|
-| A | Wilson の定理（`haveI` 後も `exact?` が失敗する原因を調査。`ZMod.wilsons_lemma` のレンマ名確認） | 中 | competition 3/5 |
-| B | Pigeonhole（`apply Fintype.exists_ne_map_eq_of_card_lt` + `simp [Fintype.card_fin]` の BFS 追加） | 中 | competition 3/5 |
-| C | chain rule（`convert` + `ring` テンプレートで mul_comm 方向不一致を吸収） | 高 | hard 7/8 |
+| A | Wilson の定理（`haveI` 後も `exact?` が失敗。`exact?` の内部タイムアウト疑いあり、代替アプローチ調査） | 高 | competition 4/5 |
+| B | ~~Pigeonhole~~ → **解決済み** (v0.1.14: FINTYPE_TEMPLATES) | — | — |
+| C | chain rule（`convert` + `ring` テンプレートで `_` 型推論の限界を調査。明示的定数が必要？） | 高 | hard 7/8 |
 | D | LLM ベース証明探索（Claude API をゴール → タクティク推論に使用） | 高 | 全カテゴリ改善 |
 
 ### ベンチマーク・可視化

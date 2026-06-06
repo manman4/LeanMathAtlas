@@ -74,7 +74,7 @@ AM-GM 2変数 `2ab ≤ a²+b²`, `0 ≤ a²`, `ab = ba` (ℝ)
 |---|---|---|
 | `bench_comp_cauchy_schwarz` | `(∑ fᵢgᵢ)² ≤ (∑ fᵢ²)(∑ gᵢ²)` | ✓ exact? |
 | `bench_comp_wilson` | `(p-1)! ≡ -1 (mod p)` | ✗ haveI 後も exact? 未ヒット |
-| `bench_comp_pigeonhole` | `m < n → f: Fin n → Fin m` は衝突する | ✗ card 変換が必要 |
+| `bench_comp_pigeonhole` | `m < n → f: Fin n → Fin m` は衝突する | ✓ FINTYPE_TEMPLATES |
 | `bench_comp_fermat` | `a^p = a` in ZMod p | ✓ haveI Fact + exact? |
 | `bench_comp_am_gm3` | `abc ≤ ((a+b+c)/3)³` | ✗ nlinarith witness が必要 |
 
@@ -165,14 +165,28 @@ AM-GM 2変数 `2ab ≤ a²+b²`, `0 ≤ a²`, `ab = ba` (ℝ)
 
 ---
 
+### ver.9（FINTYPE_TEMPLATES + Phase 1.5 拡張 + Phase 1.6 apply? 追加）— 2026-06-06
+
+**変更内容**:
+- FINTYPE_TEMPLATES 追加: `apply Fintype.exists_ne_map_eq_of_card_lt` + `simp [Fintype.card_fin, *]`
+  - `∃ + Fin` ゴールに対して DERIV_TEMPLATES と同様に Phase 1 で試す
+- Phase 1.5 拡張: `exact?`/`simp?` だけでなく SIMPLE_TACTICS（`simp`, `norm_num` 等）も試す
+- Phase 1.5 堅牢化: `exact?` 結果をエラー有りでも "Try this:" 抽出して個別検証
+- Phase 1.5 バグ修正: SIMPLE_TACTICS 成功時の stored proof に preamble を含める
+- Phase 1.6 追加: `apply?`/`refine?` → extracted suggestion + `all_goals <closer>` で残ゴールを閉じる汎用フェーズ
+- STEP_TACTICS に `Fintype.exists_ne_map_eq_of_card_lt`, `simp [Fintype.card_fin]` を追加
+
+**結果**: **42/46 (91%)**、`bench_comp_pigeonhole` が解決（apply Fintype.exists_ne_map_eq_of_card_lt + simp [Fintype.card_fin, *]）
+
+---
+
 ## 現在の未解決問題（2026-06-06 時点）
 
 | 定理 | 失敗理由 | 次のアプローチ案 |
 |---|---|---|
-| `bench_hard_chain` | sin(2x) の chain rule で mul_comm の向き不一致 | `convert` + `ring` テンプレート |
+| `bench_hard_chain` | sin(2x) の chain rule で `_` 型推論が失敗（convert テンプレート動かず） | 明示的な定数を使ったテンプレート |
 | `bench_hard_card_filter` | Finset.card の帰納法が必要 | 専用テンプレート |
-| `bench_comp_wilson` | `haveI` 後も `exact?` が Wilson の定理レンマを見つけない | レンマ名を調査 |
-| `bench_comp_pigeonhole` | `Fintype.card (Fin n)` → `n` の変換が必要 | simp [Fintype.card_fin] + apply |
+| `bench_comp_wilson` | `haveI` 後も `exact?` が `ZMod.wilsons_lemma` を見つけない（exact? タイムアウト疑い） | Mathlib 内検索・代替アプローチ |
 | `bench_comp_am_gm3` | `nlinarith` に witness `(a-b)^2` 系が必要 | nlinarith witness 自動生成 |
 
 ---

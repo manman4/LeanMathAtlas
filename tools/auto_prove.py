@@ -165,6 +165,15 @@ DERIV_TEMPLATES = [
     "exact hasDerivAt_const _ _",
 ]
 
+# Fintype / Pigeonhole templates (tried in cmd mode before BFS)
+# Generalizable: Fintype.exists_ne_map_eq_of_card_lt is the standard Mathlib Pigeonhole lemma;
+# simp [Fintype.card_fin] reduces Fintype.card (Fin n) → n; omega closes the card inequality.
+FINTYPE_TEMPLATES = [
+    "apply Fintype.exists_ne_map_eq_of_card_lt\n  simp [Fintype.card_fin, *]",
+    "apply Fintype.exists_ne_map_eq_of_card_lt\n  simp [Fintype.card_fin]\n  omega",
+    "apply Fintype.exists_ne_map_eq_of_card_lt\n  omega",
+]
+
 # Step-by-step tactics used in iterative BFS search
 STEP_TACTICS = [
     # Intro / elimination
@@ -184,6 +193,10 @@ STEP_TACTICS = [
     "apply HasDerivAt.neg", "apply HasDerivAt.add",
     "exact Real.hasDerivAt_sin _", "exact Real.hasDerivAt_cos _",
     "exact hasDerivAt_id _",
+    # Fintype / Pigeonhole principle (standard Mathlib lemma for ∃-collision goals)
+    "apply Fintype.exists_ne_map_eq_of_card_lt",
+    # Fintype.card simp rules (reduces Fintype.card (Fin n) to n)
+    "simp [Fintype.card_fin]", "simp [Fintype.card_fin, *]",
 ]
 
 # Max seconds per theorem for iterative proof search
@@ -199,6 +212,9 @@ def select_tactics(goal: str) -> list:
         return DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Irrational" in goal:
         return SEARCH_TACTICS
+    # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
+    if "∃" in goal and "Fin" in goal:
+        return FINTYPE_TEMPLATES + SEARCH_TACTICS
     if "^" in goal:
         return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
@@ -352,25 +368,88 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
                             index[cache_key(stmt)] = lean_name
                         break
 
-                # Phase 1.5: Fact typeclass preamble + search tactics
-                # Handles lemmas that require [Fact (Nat.Prime p)] typeclass
+                # Phase 1.5: Fact typeclass preamble + tactics
+                # Handles lemmas that require [Fact (Nat.Prime p)] typeclass.
+                # Tries SIMPLE_TACTICS first (simp/norm_num may find the goal if the target
+                # lemma is @[simp]), then SEARCH_TACTICS as fallback.
+                # For search tactics (exact?/simp?), we extract the "Try this:" suggestion even
+                # if the response has errors (exact? may report an error while still suggesting
+                # the right lemma), then verify the suggestion in a separate REPL call.
                 if proof is None:
                     preamble = fact_preamble(stmt)
                     if preamble:
-                        for t in SEARCH_TACTICS:
+                        for t in SIMPLE_TACTICS + SEARCH_TACTICS:
                             resp = session.send({
                                 "cmd": f"{example} := by\n  {preamble}\n  {t}",
                                 "env": base_env
                             })
-                            if not has_error(resp):
+                            if t in SEARCH_TACTICS:
+                                # Extract suggestion regardless of errors, then verify separately
                                 extracted = extract_try_this(resp)
                                 if extracted:
-                                    proof = f"{preamble}\n  {extracted}"
-                                    if not dry_run:
-                                        lean_name = lean_name_from(stmt)
-                                        append_to_lean_db(stmt, proof, goal, lean_name)
-                                        index[cache_key(stmt)] = lean_name
-                                    break
+                                    resp2 = session.send({
+                                        "cmd": f"{example} := by\n  {preamble}\n  {extracted}",
+                                        "env": base_env
+                                    })
+                                    if not has_error(resp2):
+                                        proof = f"{preamble}\n  {extracted}"
+                                        if not dry_run:
+                                            lean_name = lean_name_from(stmt)
+                                            append_to_lean_db(stmt, proof, goal, lean_name)
+                                            index[cache_key(stmt)] = lean_name
+                                        break
+                            elif not has_error(resp):
+                                proof = f"{preamble}\n  {t}"
+                                if not dry_run:
+                                    lean_name = lean_name_from(stmt)
+                                    append_to_lean_db(stmt, proof, goal, lean_name)
+                                    index[cache_key(stmt)] = lean_name
+                                break
+
+                # Phase 1.6: apply? + all_goals closer
+                # apply? finds any Mathlib lemma that partially matches the goal,
+                # then closes remaining subgoals with standard tactics.
+                # More powerful than exact? for goals that need a lemma application
+                # followed by a simple finishing step (e.g. Pigeonhole + card simp).
+                if proof is None:
+                    _closers = [
+                        "simp", "simp [*]", "omega",
+                        "simp [Fintype.card_fin, *]", "simp_all",
+                    ]
+                    # Try plain apply? first, then with Fact preamble if present
+                    _preamble = fact_preamble(stmt)
+                    _prefixes = [""]
+                    if _preamble:
+                        _prefixes.append(_preamble)
+                    for _pre in _prefixes:
+                        if proof is not None:
+                            break
+                        _pre_block = f"  {_pre}\n  " if _pre else "  "
+                        _resp = session.send({
+                            "cmd": f"{example} := by\n{_pre_block}apply?",
+                            "env": base_env
+                        })
+                        _sug = extract_try_this(_resp)
+                        if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
+                            continue
+                        for _closer in _closers:
+                            _cmd = (
+                                f"{example} := by\n  {_pre}\n  {_sug}\n  all_goals {_closer}"
+                                if _pre else
+                                f"{example} := by\n  {_sug}\n  all_goals {_closer}"
+                            )
+                            _resp2 = session.send({"cmd": _cmd, "env": base_env})
+                            if not has_error(_resp2):
+                                proof = (
+                                    f"{_pre}\n  {_sug}\n  all_goals {_closer}"
+                                    if _pre else
+                                    f"{_sug}\n  all_goals {_closer}"
+                                )
+                                if not dry_run:
+                                    lean_name = lean_name_from(stmt)
+                                    append_to_lean_db(stmt, proof, goal, lean_name)
+                                    index[cache_key(stmt)] = lean_name
+                                break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
                 if proof is None:
