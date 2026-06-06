@@ -122,7 +122,9 @@ class ReplSession:
 SIMPLE_TACTICS = [
     "rfl", "ring", "omega", "simp", "norm_num",
     "decide", "tauto", "linarith", "nlinarith", "aesop",
+    "fun_prop",
     "simp [*]", "simp_all", "push_cast; ring", "push_cast; omega",
+    "norm_cast", "norm_cast; ring", "norm_cast; omega",
 ]
 
 INDUCTION_TACTICS = [
@@ -153,6 +155,7 @@ STEP_TACTICS = [
     "obtain ⟨a, b⟩ := h",
     # Auto closers
     "tauto", "simp", "ring", "omega", "norm_num", "linarith", "aesop",
+    "fun_prop", "norm_cast",
 ]
 
 # Max seconds per theorem for iterative proof search
@@ -162,12 +165,18 @@ def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
     if "∑" in goal or "Finset" in goal:
         return INDUCTION_TACTICS + SEARCH_TACTICS
+    if "Continuous" in goal or "Differentiable" in goal:
+        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
+    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
+        return ["fun_prop", "simp"] + SEARCH_TACTICS
+    if "Irrational" in goal:
+        return SEARCH_TACTICS
     if "^" in goal:
         return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
-        return ["ring", "linarith", "norm_num", "nlinarith"] + SEARCH_TACTICS
+        return ["ring", "linarith", "norm_num", "nlinarith", "fun_prop"] + SEARCH_TACTICS
     if "ℕ" in goal or "ℤ" in goal:
-        return ["omega", "simp", "rfl", "decide", "ring", "norm_num"] + SEARCH_TACTICS
+        return ["omega", "simp", "rfl", "decide", "ring", "norm_num", "norm_cast"] + SEARCH_TACTICS
     return ALL_TACTICS + SEARCH_TACTICS
 
 # ────────────────────────────────────────────────
