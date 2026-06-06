@@ -130,6 +130,10 @@ python3 tools/auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
 Proved theorems are cached in `.proof_index.json` — subsequent runs return
 instantly for already-proved statements.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a new module.
+
 ## License
 
 [MIT License](LICENSE)

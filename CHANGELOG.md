@@ -2,6 +2,8 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.3 | 2026-06-06 | Add CONTRIBUTING.md; fix missing v0.1.2 entry in CHANGELOG |
+| 0.1.2 | 2026-06-06 | Add PLANNING.md with design decisions and deprioritization notes |
 | 0.1.1 | 2026-06-06 | Add English notes (docs/en/) for all 17 modules; add Notes links in ROADMAP.md |
 | 0.1.0 | 2026-06-06 | Cleanup: README/ROADMAP updated to reflect all 16 implemented modules |
 | 0.0.9 | 2026-06-06 | Integration (interval integrals, FTC parts 1 & 2, concrete examples), all ★★★ Advanced complete |
