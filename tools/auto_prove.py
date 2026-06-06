@@ -677,7 +677,7 @@ def main():
     elapsed = time.time() - t0
 
     passed = failed = 0
-    for stmt, proof, goal in results:
+    for stmt, proof, goal, solve_time in results:
         print(f"\n{'─'*60}")
         print(f"target: {stmt}")
         if goal:
