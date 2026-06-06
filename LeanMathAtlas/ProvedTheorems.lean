@@ -331,4 +331,36 @@ theorem bench_hard_irrational_sqrt2 : Irrational (Real.sqrt 2) := by
 theorem bench_hard_emod (a b c : ℤ) (h : c ∣ b) : a % b % c = a % c := by
   exact Int.emod_emod_of_dvd a h
 
+-- stmt: theorem sq_sum (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2
+-- goal:
+--   a b : ℝ
+--   ⊢ (a + b) ^ 2 = a ^ 2 + 2 * a * b + b ^ 2
+-- added: 2026-06-07
+theorem sq_sum (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
+  ring
+
+-- stmt: theorem sq_diff (a b : ℝ) : (a - b)^2 = a^2 - 2*a*b + b^2
+-- goal:
+--   a b : ℝ
+--   ⊢ (a - b) ^ 2 = a ^ 2 - 2 * a * b + b ^ 2
+-- added: 2026-06-07
+theorem sq_diff (a b : ℝ) : (a - b)^2 = a^2 - 2*a*b + b^2 := by
+  ring
+
+-- stmt: theorem mul_sum_diff (a b : ℝ) : (a + b) * (a - b) = a^2 - b^2
+-- goal:
+--   a b : ℝ
+--   ⊢ (a + b) * (a - b) = a ^ 2 - b ^ 2
+-- added: 2026-06-07
+theorem mul_sum_diff (a b : ℝ) : (a + b) * (a - b) = a^2 - b^2 := by
+  ring
+
+-- stmt: theorem cube_sum (a b : ℝ) : (a + b)^3 = a^3 + 3*a^2*b + 3*a*b^2 + b^3
+-- goal:
+--   a b : ℝ
+--   ⊢ (a + b) ^ 3 = a ^ 3 + 3 * a ^ 2 * b + 3 * a * b ^ 2 + b ^ 3
+-- added: 2026-06-07
+theorem cube_sum (a b : ℝ) : (a + b)^3 = a^3 + 3*a^2*b + 3*a*b^2 + b^3 := by
+  ring
+
 end AutoProved
