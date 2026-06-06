@@ -5,3 +5,4 @@ date,label,suite,test_hash,logic,algebra,induction,hard,total,pct
 2026-06-06,ver.3 旧タクティクス ベースライン (dry_run),core,c6782442,16/16,8/8,2/2,5/8,31/34,91%
 2026-06-06,ver.4 fun_prop/norm_cast追加 (dry_run),core,c6782442,16/16,8/8,2/2,5/8,31/34,91%
 2026-06-06,ver.5 HasDerivAtテンプレート+import Mathlib (dry_run),core,c6782442,16/16,8/8,2/2,6/8,32/34,94%
+2026-06-06,ver.5 拡張問題セット ベースライン (dry_run),core,14d89aa3,16/16,12/12,5/5,6/8,39/41,95%
