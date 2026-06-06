@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.8 | 2026-06-06 | benchmark: expand to 41 problems (algebra×12, induction×5) |
 | 0.1.7 | 2026-06-06 | Add CLAUDE.md with branching and release instructions for GitHub Flow |
 | 0.1.6 | 2026-06-06 | fix: remove duplicate entries in ProvedTheorems.lean caused by pre-dry_run benchmark runs |
 | 0.1.5 | 2026-06-06 | benchmark: dry_run mode, hard×8, HasDerivAt templates; auto_prove: fun_prop/norm_cast/import Mathlib |
