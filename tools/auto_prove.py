@@ -209,7 +209,7 @@ STEP_TACTICS = [
 # Max seconds per theorem for iterative proof search
 STEP_TIME_LIMIT = 10
 
-def select_tactics(goal: str, nonneg_tactic: str | None = None) -> list:
+def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
     if "∑" in goal or "Finset" in goal:
         return INDUCTION_TACTICS + SEARCH_TACTICS
@@ -225,10 +225,19 @@ def select_tactics(goal: str, nonneg_tactic: str | None = None) -> list:
     # ZMod goals: skip simple tactics that can't possibly work and go to search
     if "ZMod" in goal:
         return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
-    # Polynomial ≤ goals with non-negative ℝ variables: try nlinarith with dynamic witnesses
-    if "≤" in goal and "0 ≤" in goal and "^" in goal and nonneg_tactic:
-        return [nonneg_tactic, "field_simp\n  " + nonneg_tactic,
-                "ring", "nlinarith", "linarith"] + SEARCH_TACTICS
+    # Polynomial inequality goals (≤ or ≥ with ^): build dynamic nlinarith witnesses.
+    # nonneg3: for 3-var non-neg goals (AM-GM3, cube AM-GM, …)
+    # pairwise_sq: for goals without non-neg assumptions (Cauchy-Schwarz, sym-ineq, …)
+    if ("≤" in goal or "≥" in goal) and "^" in goal:
+        tactics: list[str] = []
+        nonneg_tac = nlinarith_nonneg3_tactic(goal)
+        pairwise_tac = nlinarith_pairwise_sq_tactic(goal)
+        if nonneg_tac:
+            tactics += [nonneg_tac, "field_simp\n  " + nonneg_tac]
+        if pairwise_tac:
+            tactics.append(pairwise_tac)
+        if tactics:
+            return tactics + ["ring", "nlinarith", "linarith"] + SEARCH_TACTICS
     if "^" in goal:
         return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
@@ -316,6 +325,37 @@ def extract_nonneg_triples(goal: str) -> list[tuple[str, str]]:
     """
     return re.findall(r'(\w+)\s*:\s*0\s*≤\s*(\w+)', goal)
 
+def extract_real_vars(goal: str) -> list[str]:
+    """Extract variable names declared as ℝ or ℚ in the proof state context.
+
+    e.g. 'a b : ℝ' → ['a', 'b']; 'a b c d : ℝ' → ['a', 'b', 'c', 'd']
+    """
+    result, seen = [], set()
+    for m in re.finditer(r'(\b\w+(?:\s+\w+)*)\s*:\s*[ℝℚ]', goal):
+        for name in m.group(1).split():
+            if name not in seen:
+                seen.add(name)
+                result.append(name)
+    return result
+
+def nlinarith_pairwise_sq_tactic(goal: str) -> str | None:
+    """Generate nlinarith witnesses from pairwise squared differences of ℝ variables.
+
+    Handles polynomial inequalities WITHOUT explicit non-negativity assumptions.
+    Witness pattern:
+      - sq_nonneg (vi - vj)  for every pair  →  covers a²+b²+c² ≥ ab+bc+ca, (a+b+c)²≤3(a²+b²+c²)
+      - sq_nonneg (vi*vk - vj*vl) for 4-var  →  covers 2D Cauchy-Schwarz (ad-bc)²≥0
+    """
+    vs = extract_real_vars(goal)
+    if len(vs) < 2:
+        return None
+    witnesses = [f"sq_nonneg ({vs[i]} - {vs[j]})"
+                 for i in range(len(vs)) for j in range(i + 1, len(vs))]
+    if len(vs) >= 4:
+        a, b, c, d = vs[0], vs[1], vs[2], vs[3]
+        witnesses.append(f"sq_nonneg ({a}*{d} - {b}*{c})")
+    return "nlinarith [" + ", ".join(witnesses) + "]"
+
 def nlinarith_nonneg3_tactic(goal: str) -> str | None:
     """Build a generalizable nlinarith witness tactic for 3-variable non-negative ℝ inequalities.
 
@@ -398,8 +438,7 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
 
                 # Phase 1: try each filtered tactic in one shot
                 proof = None
-                nonneg_tac = nlinarith_nonneg3_tactic(goal)
-                for t in select_tactics(goal, nonneg_tactic=nonneg_tac):
+                for t in select_tactics(goal):
                     resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
                     if not has_error(resp):
                         if t in SEARCH_TACTICS:
