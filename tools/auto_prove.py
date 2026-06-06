@@ -245,9 +245,10 @@ def select_tactics(goal: str) -> list:
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
     if "∃" in goal and "Fin" in goal:
         return FINTYPE_TEMPLATES + SEARCH_TACTICS
-    # Wilson's theorem: goal contains `.factorial` (open Nat makes (p-1)! parse as .factorial).
+    # Wilson's theorem: open scoped Nat shows goal as '↑(p-1)! = -1' (not .factorial).
     # exact? times out before finding ZMod.wilsons_lemma, so we try it directly.
-    if "factorial" in goal:
+    # In Lean 4 goals, '!' only appears as factorial notation (negation uses '¬').
+    if "!" in goal:
         return [
             "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  exact ZMod.wilsons_lemma p",
             "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  simp [ZMod.wilsons_lemma]",
@@ -489,8 +490,11 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
             imports = "import Mathlib" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
             resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
-            # open Nat enables n! factorial notation (needed for Wilson's theorem)
-            resp = session.send({"cmd": "open BigOperators AutoProved Nat", "env": env0})
+            resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
+            env1 = resp.get("env", env0)
+            # open scoped Nat enables n! factorial notation (wilsons_lemma uses it)
+            # Regular `open Nat` does NOT activate scoped notations like n!
+            resp = session.send({"cmd": "open scoped Nat", "env": env1})
             base_env = resp.get("env", env0)
 
             for stmt in uncached:
