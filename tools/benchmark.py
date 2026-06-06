@@ -94,8 +94,6 @@ def run_benchmark():
     pct = total_pass / total * 100
     print(f"{'='*55}")
     print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
-    print(f"  以前の推計: 80/142 (56%)")
-    print(f"  今回計測:   {total_pass}/{total} ({pct:.0f}%) — サンプル {total} 件")
 
 if __name__ == "__main__":
     run_benchmark()
