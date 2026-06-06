@@ -130,6 +130,9 @@ exact hg.comp a hf
 # 計測して結果を記録する
 python3 benchmark.py --save "タクティク追加: aesop"
 
+# suite 名を指定して記録する（デフォルトは "core"）
+python3 benchmark.py --save "harder set v1" --suite "hard_v2"
+
 # 記録せず実行するだけ
 python3 benchmark.py
 ```

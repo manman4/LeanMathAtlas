@@ -20,7 +20,7 @@ from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
 LOG_FILE = Path(__file__).parent / "bench_log.csv"
-LOG_HEADER = ["date", "label", "test_hash", "logic", "algebra", "induction", "hard", "total", "pct"]
+LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "total", "pct"]
 
 
 def compute_test_hash(problems: list[str]) -> str:
@@ -85,7 +85,7 @@ CATS = [
 ]
 
 
-def append_log(label: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
+def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
     exists = LOG_FILE.exists()
     with LOG_FILE.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
@@ -94,6 +94,7 @@ def append_log(label: str, test_hash: str, scores: dict[str, tuple[int, int]], t
         writer.writerow({
             "date":      date.today().isoformat(),
             "label":     label,
+            "suite":     suite,
             "test_hash": test_hash,
             "logic":     f"{scores['logic'][0]}/{scores['logic'][1]}",
             "algebra":   f"{scores['algebra'][0]}/{scores['algebra'][1]}",
@@ -102,15 +103,15 @@ def append_log(label: str, test_hash: str, scores: dict[str, tuple[int, int]], t
             "total":     f"{total_pass}/{total}",
             "pct":       f"{total_pass / total * 100:.0f}%",
         })
-    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (label: {label!r}, test_hash: {test_hash})")
+    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (suite: {suite!r}, label: {label!r}, test_hash: {test_hash})")
 
 
-def run_benchmark(save_label: str | None = None):
+def run_benchmark(save_label: str | None = None, suite: str = "core"):
     test_hash = compute_test_hash(ALL)
     index = load_index()
     cached = sum(1 for s in ALL if cache_key(s) in index)
     print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
-    print(f"    test_hash: {test_hash}\n")
+    print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
     results = prove_all(ALL)
 
@@ -138,17 +139,25 @@ def run_benchmark(save_label: str | None = None):
     print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
 
     if save_label is not None:
-        append_log(save_label, test_hash, scores, total_pass, total)
+        append_log(save_label, suite, test_hash, scores, total_pass, total)
 
 
 if __name__ == "__main__":
     label = None
+    suite = "core"
     args = sys.argv[1:]
     if "--save" in args:
         idx = args.index("--save")
         if idx + 1 < len(args):
             label = args[idx + 1]
         else:
-            print("使い方: python3 benchmark.py --save <ラベル>")
+            print("使い方: python3 benchmark.py --save <ラベル> [--suite <スイート名>]")
             sys.exit(1)
-    run_benchmark(save_label=label)
+    if "--suite" in args:
+        idx = args.index("--suite")
+        if idx + 1 < len(args):
+            suite = args[idx + 1]
+        else:
+            print("使い方: python3 benchmark.py --suite <スイート名>")
+            sys.exit(1)
+    run_benchmark(save_label=label, suite=suite)
