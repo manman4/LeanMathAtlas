@@ -10,13 +10,14 @@ Categories:
 """
 import sys
 import csv
+import time
 import hashlib
 from datetime import date
 from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
 LOG_FILE = Path(__file__).parent / "bench_log.csv"
-LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "competition", "total", "pct"]
+LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "competition", "total", "pct", "elapsed_sec"]
 
 
 def compute_test_hash(problems: list[str]) -> str:
@@ -102,6 +103,12 @@ COMPETITION = [
     "theorem bench_comp_cauchy_schwarz (n : ℕ) (f g : Fin n → ℝ) : (∑ i, f i * g i) ^ 2 ≤ (∑ i, f i ^ 2) * (∑ i, g i ^ 2)",
     # Wilson's theorem: (p-1)! ≡ -1 (mod p) for prime p
     "theorem bench_comp_wilson (p : ℕ) (hp : Nat.Prime p) : ((p - 1)! : ZMod p) = -1",
+    # Pigeonhole principle: more pigeons than holes → collision
+    "theorem bench_comp_pigeonhole (m n : ℕ) (h : m < n) (f : Fin n → Fin m) : ∃ i j : Fin n, i ≠ j ∧ f i = f j",
+    # Fermat's little theorem: a^p = a in ZMod p for prime p
+    "theorem bench_comp_fermat (p : ℕ) (hp : Nat.Prime p) (a : ZMod p) : a ^ p = a",
+    # AM-GM for three variables: abc ≤ ((a+b+c)/3)³
+    "theorem bench_comp_am_gm3 (a b c : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c) : a * b * c ≤ ((a + b + c) / 3) ^ 3",
 ]
 
 ALL = LOGIC + ALGEBRA + INDUCTION + HARD + COMPETITION
@@ -115,7 +122,7 @@ CATS = [
 ]
 
 
-def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
+def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int, elapsed_sec: float):
     exists = LOG_FILE.exists()
     with LOG_FILE.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
@@ -130,9 +137,10 @@ def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[i
             "algebra":     f"{scores['algebra'][0]}/{scores['algebra'][1]}",
             "induction":   f"{scores['induction'][0]}/{scores['induction'][1]}",
             "hard":        f"{scores['hard'][0]}/{scores['hard'][1]}",
-            "competition": f"{scores['competition'][0]}/{scores['competition'][1]}",
-            "total":       f"{total_pass}/{total}",
-            "pct":         f"{total_pass / total * 100:.0f}%",
+            "competition":  f"{scores['competition'][0]}/{scores['competition'][1]}",
+            "total":        f"{total_pass}/{total}",
+            "pct":          f"{total_pass / total * 100:.0f}%",
+            "elapsed_sec":  f"{elapsed_sec:.0f}",
         })
     print(f"\n→ 結果を {LOG_FILE.name} に追記しました (suite: {suite!r}, label: {label!r}, test_hash: {test_hash})")
 
@@ -144,7 +152,9 @@ def run_benchmark(save_label: str | None = None, suite: str = "core"):
     print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
     print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
+    t0 = time.monotonic()
     results = prove_all(ALL, dry_run=True)
+    elapsed_sec = time.monotonic() - t0
 
     total_pass = total_fail = 0
     scores: dict[str, tuple[int, int]] = {}
@@ -167,10 +177,10 @@ def run_benchmark(save_label: str | None = None, suite: str = "core"):
     total = total_pass + total_fail
     pct = total_pass / total * 100
     print(f"{'='*55}")
-    print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
+    print(f"合計: {total_pass}/{total} ({pct:.0f}%)  [{elapsed_sec:.0f}s]")
 
     if save_label is not None:
-        append_log(save_label, suite, test_hash, scores, total_pass, total)
+        append_log(save_label, suite, test_hash, scores, total_pass, total, elapsed_sec)
 
 
 if __name__ == "__main__":
