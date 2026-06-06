@@ -24,6 +24,11 @@ def compute_test_hash(problems: list[str]) -> str:
     content = "\n".join(sorted(problems))
     return hashlib.sha256(content.encode()).hexdigest()[:8]
 
+# Problem sets are defined inline here rather than in a separate file.
+# Rationale: at ~40 problems the overhead of a separate module outweighs the benefit.
+# If the total grows past ~100 problems or multiple suites need to be managed
+# independently, consider splitting into bench_problems.py or a JSON file.
+
 LOGIC = [
     # 含意
     "theorem bench_imp_id (P : Prop) : P → P",
