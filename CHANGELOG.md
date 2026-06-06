@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.12 | 2026-06-06 | benchmark: per-theorem solve_time cache (.bench_cache.json); BFS timeout 30s→10s; 6min→5.5min |
 | 0.1.11 | 2026-06-06 | auto_prove: haveI Fact typeclass preamble; solves Fermat's little theorem (competition 2/5) |
 | 0.1.10 | 2026-06-06 | benchmark: add elapsed_sec to log; expand competition to 5 problems (Pigeonhole, Fermat, AM-GM×3) |
 | 0.1.9 | 2026-06-06 | benchmark: add competition category (Cauchy-Schwarz, Wilson's theorem), 43 problems total |
