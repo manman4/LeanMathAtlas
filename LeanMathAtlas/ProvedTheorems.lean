@@ -296,4 +296,39 @@ theorem bench_sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n *
 theorem bench_hard_prime_inf : ∀ n : ℕ, ∃ p, n ≤ p ∧ Nat.Prime p := by
   exact fun n => Nat.exists_infinite_primes n
 
+-- stmt: theorem bench_hard_sqrt (a : ℝ) (ha : 0 ≤ a) : Real.sqrt (a ^ 2) = a
+-- goal:
+--   a : ℝ
+--   ha : 0 ≤ a
+--   ⊢ √(a ^ 2) = a
+-- added: 2026-06-06
+theorem bench_hard_sqrt (a : ℝ) (ha : 0 ≤ a) : Real.sqrt (a ^ 2) = a := by
+  exact Real.sqrt_sq ha
+
+-- stmt: theorem bench_hard_cont_comp (f g : ℝ → ℝ) (hf : Continuous f) (hg : Continuous g) : Continuous (f ∘ g)
+-- goal:
+--   f g : ℝ → ℝ
+--   hf : Continuous f
+--   hg : Continuous g
+--   ⊢ Continuous (f ∘ g)
+-- added: 2026-06-06
+theorem bench_hard_cont_comp (f g : ℝ → ℝ) (hf : Continuous f) (hg : Continuous g) : Continuous (f ∘ g) := by
+  fun_prop
+
+-- stmt: theorem bench_hard_irrational_sqrt2 : Irrational (Real.sqrt 2)
+-- goal:
+--   ⊢ Irrational √2
+-- added: 2026-06-06
+theorem bench_hard_irrational_sqrt2 : Irrational (Real.sqrt 2) := by
+  exact irrational_sqrt_two
+
+-- stmt: theorem bench_hard_emod (a b c : ℤ) (h : c ∣ b) : a % b % c = a % c
+-- goal:
+--   a b c : ℤ
+--   h : c ∣ b
+--   ⊢ a % b % c = a % c
+-- added: 2026-06-06
+theorem bench_hard_emod (a b c : ℤ) (h : c ∣ b) : a % b % c = a % c := by
+  exact Int.emod_emod_of_dvd a h
+
 end AutoProved
