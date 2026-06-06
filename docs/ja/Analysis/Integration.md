@@ -1,5 +1,7 @@
 # 積分論: 区間積分と微積分の基本定理
 
+> **Read in English →** [Integration.md](../../en/Analysis/Integration.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Analysis/Integration.lean`
 
 ## 内容

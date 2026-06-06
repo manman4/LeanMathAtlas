@@ -1,5 +1,7 @@
 # 環論: 環・イデアル・商環
 
+> **Read in English →** [Rings.md](../../en/Algebra/Rings.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Algebra/Rings.lean`
 
 ## 内容

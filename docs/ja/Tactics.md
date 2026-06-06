@@ -1,5 +1,7 @@
 # タクティクスガイド
 
+> **Read in English →** [Tactics.md](../en/Tactics.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Tactics.lean`
 
 Lean 4 で証明を書くとき、`by` の後ろに書く命令を **タクティクス** といいます。

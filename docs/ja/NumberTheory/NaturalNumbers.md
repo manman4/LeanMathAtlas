@@ -1,5 +1,7 @@
 # 自然数の算術・帰納法
 
+> **Read in English →** [NaturalNumbers.md](../../en/NumberTheory/NaturalNumbers.md)
+
 対応する Lean ファイル: `LeanMathAtlas/NumberTheory/NaturalNumbers.lean`
 
 ## 内容

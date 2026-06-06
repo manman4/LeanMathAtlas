@@ -1,5 +1,7 @@
 # 合同式とフェルマーの小定理
 
+> **Read in English →** [Modular.md](../../en/NumberTheory/Modular.md)
+
 対応する Lean ファイル: `LeanMathAtlas/NumberTheory/Modular.lean`
 
 ## 内容

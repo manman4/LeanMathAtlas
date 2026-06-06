@@ -1,5 +1,7 @@
 # 命題論理
 
+> **Read in English →** [Propositional.md](../../en/Logic/Propositional.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Logic/Propositional.lean`
 
 ## 内容

@@ -1,5 +1,7 @@
 # 式の展開・因数分解・多項式定理
 
+> **Read in English →** [BasicIdentities.md](../../en/Algebra/BasicIdentities.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Algebra/BasicIdentities.lean`
 
 ## 内容
