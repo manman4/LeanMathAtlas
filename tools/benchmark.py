@@ -9,8 +9,9 @@ Categories:
   D) Hard (multi-step have)      — expected failures
 
 Usage:
-  python3 benchmark.py                        # run only, no log
-  python3 benchmark.py --save "tauto追加"     # run and append result to bench_log.csv
+  python3 benchmark.py                                     # run only, no log
+  python3 benchmark.py --save "tauto追加"                  # run and append to bench_log.csv (suite="core")
+  python3 benchmark.py --save "label" --suite "hard_v2"   # specify suite name
 """
 import sys
 import csv
