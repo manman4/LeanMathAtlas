@@ -20,7 +20,7 @@ from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
 LOG_FILE = Path(__file__).parent / "bench_log.csv"
-LOG_HEADER = ["date", "label", "test_hash", "A", "B", "C", "D", "total", "pct"]
+LOG_HEADER = ["date", "label", "test_hash", "logic", "algebra", "induction", "hard", "total", "pct"]
 
 
 def compute_test_hash(problems: list[str]) -> str:
@@ -78,10 +78,10 @@ HARD = [
 ALL = LOGIC + ALGEBRA + INDUCTION + HARD
 
 CATS = [
-    ("A) 論理 (BFS 主ターゲット)", "A", LOGIC),
-    ("B) 代数 (ring/omega)",       "B", ALGEBRA),
-    ("C) 帰納法 (テンプレート)",    "C", INDUCTION),
-    ("D) 難問 (多ステップ have)",   "D", HARD),
+    ("logic     (命題論理)",     "logic",     LOGIC),
+    ("algebra   (ring/omega)",   "algebra",   ALGEBRA),
+    ("induction (帰納法)",       "induction", INDUCTION),
+    ("hard      (多ステップ)",   "hard",      HARD),
 ]
 
 
@@ -95,10 +95,10 @@ def append_log(label: str, test_hash: str, scores: dict[str, tuple[int, int]], t
             "date":      date.today().isoformat(),
             "label":     label,
             "test_hash": test_hash,
-            "A":         f"{scores['A'][0]}/{scores['A'][1]}",
-            "B":         f"{scores['B'][0]}/{scores['B'][1]}",
-            "C":         f"{scores['C'][0]}/{scores['C'][1]}",
-            "D":         f"{scores['D'][0]}/{scores['D'][1]}",
+            "logic":     f"{scores['logic'][0]}/{scores['logic'][1]}",
+            "algebra":   f"{scores['algebra'][0]}/{scores['algebra'][1]}",
+            "induction": f"{scores['induction'][0]}/{scores['induction'][1]}",
+            "hard":      f"{scores['hard'][0]}/{scores['hard'][1]}",
             "total":     f"{total_pass}/{total}",
             "pct":       f"{total_pass / total * 100:.0f}%",
         })

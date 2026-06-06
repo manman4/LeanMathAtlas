@@ -1,4 +1,4 @@
-date,label,test_hash,A,B,C,D,total,pct
+date,label,test_hash,logic,algebra,induction,hard,total,pct
 2026-06-05,ver.1 初期実装 (フェーズ1のみ),f5c6e020,0/16,8/8,2/2,0/2,10/28,36%
 2026-06-05,ver.2 tauto追加 + extract_try_this修正,f5c6e020,16/16,8/8,2/2,1/2,27/28,96%
 2026-06-05,ver.3 イテラティブBFS追加,f5c6e020,16/16,8/8,2/2,1/2,27/28,96%
