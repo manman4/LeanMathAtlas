@@ -142,6 +142,25 @@ ALL_TACTICS = SIMPLE_TACTICS + INDUCTION_TACTICS
 # Search tactics: tried last as fallback; proof is extracted from "Try this:" message
 SEARCH_TACTICS = ["exact?", "simp?"]
 
+# HasDerivAt-specific one-shot templates (tried before BFS for derivative goals)
+DERIV_TEMPLATES = [
+    # scalar multiple: c * sin/cos/exp
+    "exact (Real.hasDerivAt_sin _).const_mul _",
+    "exact (Real.hasDerivAt_cos _).const_mul _",
+    "exact (Real.hasDerivAt_exp _).const_mul _",
+    # negation
+    "exact (Real.hasDerivAt_sin _).neg",
+    "exact (Real.hasDerivAt_cos _).neg",
+    # chain rule: f(c * x) — result may need ring_nf for mul_comm
+    "exact (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)",
+    "exact (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)",
+    "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _); ring_nf at h ⊢; exact h",
+    "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _); ring_nf at h ⊢; exact h",
+    # identity and constant
+    "exact hasDerivAt_id _",
+    "exact hasDerivAt_const _ _",
+]
+
 # Step-by-step tactics used in iterative BFS search
 STEP_TACTICS = [
     # Intro / elimination
@@ -156,6 +175,11 @@ STEP_TACTICS = [
     # Auto closers
     "tauto", "simp", "ring", "omega", "norm_num", "linarith", "aesop",
     "fun_prop", "norm_cast",
+    # Derivative building blocks (for BFS multi-step)
+    "apply HasDerivAt.const_mul", "apply HasDerivAt.comp",
+    "apply HasDerivAt.neg", "apply HasDerivAt.add",
+    "exact Real.hasDerivAt_sin _", "exact Real.hasDerivAt_cos _",
+    "exact hasDerivAt_id _",
 ]
 
 # Max seconds per theorem for iterative proof search
@@ -168,7 +192,7 @@ def select_tactics(goal: str) -> list:
     if "Continuous" in goal or "Differentiable" in goal:
         return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "HasDerivAt" in goal or "HasFDerivAt" in goal:
-        return ["fun_prop", "simp"] + SEARCH_TACTICS
+        return DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Irrational" in goal:
         return SEARCH_TACTICS
     if "^" in goal:
@@ -273,7 +297,9 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
         session = ReplSession()
         try:
             print("  [repl] Loading Mathlib (~80s)..." if dry_run else "  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
-            imports = "import Mathlib.Tactic" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
+            # dry_run: import full Mathlib (no ProvedTheorems) so all lemmas are available
+            # but our previously proved theorems don't contaminate the results
+            imports = "import Mathlib" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
             resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
             resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
