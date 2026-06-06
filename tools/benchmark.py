@@ -14,12 +14,19 @@ Usage:
 """
 import sys
 import csv
+import hashlib
 from datetime import date
 from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
 LOG_FILE = Path(__file__).parent / "bench_log.csv"
-LOG_HEADER = ["date", "label", "A", "B", "C", "D", "total", "pct"]
+LOG_HEADER = ["date", "label", "test_hash", "A", "B", "C", "D", "total", "pct"]
+
+
+def compute_test_hash(problems: list[str]) -> str:
+    """Compute a short hash of the problem set to detect accidental changes."""
+    content = "\n".join(sorted(problems))
+    return hashlib.sha256(content.encode()).hexdigest()[:8]
 
 LOGIC = [
     # 含意
@@ -78,29 +85,32 @@ CATS = [
 ]
 
 
-def append_log(label: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
+def append_log(label: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
     exists = LOG_FILE.exists()
     with LOG_FILE.open("a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
         if not exists:
             writer.writeheader()
         writer.writerow({
-            "date":  date.today().isoformat(),
-            "label": label,
-            "A":     f"{scores['A'][0]}/{scores['A'][1]}",
-            "B":     f"{scores['B'][0]}/{scores['B'][1]}",
-            "C":     f"{scores['C'][0]}/{scores['C'][1]}",
-            "D":     f"{scores['D'][0]}/{scores['D'][1]}",
-            "total": f"{total_pass}/{total}",
-            "pct":   f"{total_pass / total * 100:.0f}%",
+            "date":      date.today().isoformat(),
+            "label":     label,
+            "test_hash": test_hash,
+            "A":         f"{scores['A'][0]}/{scores['A'][1]}",
+            "B":         f"{scores['B'][0]}/{scores['B'][1]}",
+            "C":         f"{scores['C'][0]}/{scores['C'][1]}",
+            "D":         f"{scores['D'][0]}/{scores['D'][1]}",
+            "total":     f"{total_pass}/{total}",
+            "pct":       f"{total_pass / total * 100:.0f}%",
         })
-    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (label: {label!r})")
+    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (label: {label!r}, test_hash: {test_hash})")
 
 
 def run_benchmark(save_label: str | None = None):
+    test_hash = compute_test_hash(ALL)
     index = load_index()
     cached = sum(1 for s in ALL if cache_key(s) in index)
-    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===\n")
+    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
+    print(f"    test_hash: {test_hash}\n")
 
     results = prove_all(ALL)
 
@@ -128,7 +138,7 @@ def run_benchmark(save_label: str | None = None):
     print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
 
     if save_label is not None:
-        append_log(save_label, scores, total_pass, total)
+        append_log(save_label, test_hash, scores, total_pass, total)
 
 
 if __name__ == "__main__":
