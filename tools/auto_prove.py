@@ -167,9 +167,28 @@ DERIV_TEMPLATES = [
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 2\n  ring",
+    # simp [Function.comp, id] unwraps ∘ notation; norm_num simplifies 2*1→2;
+    # then convert + ring handles the remaining mul_comm mismatch.
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
     # identity and constant
     "exact hasDerivAt_id _",
     "exact hasDerivAt_const _ _",
+]
+
+# Finset.card goals where the filter is an image of a simpler set.
+# Generalizable: for filter(pred, range(k*n)).card = n, express as image(f, range n)
+# then use card_image_of_injective + simp [Finset.card_range].
+# omega handles the membership arithmetic after simp reduces it to linear facts.
+FINSET_CARD_TEMPLATES = [
+    # Even filter: {k < 2n | k%2=0}.card = n  ←  bijection k↦2k
+    # rw [h, card_image_of_injective] leaves (range n).card = n, closed by simp.
+    "have h : (Finset.range (2 * n)).filter (fun k => k % 2 = 0) = (Finset.range n).image (2 * ·) := by\n    ext k\n    simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_image]\n    constructor\n    · intro ⟨hk, hmod⟩; exact ⟨k / 2, by omega, by omega⟩\n    · rintro ⟨m, hm, rfl⟩; exact ⟨by omega, by omega⟩\n  rw [h, Finset.card_image_of_injective _ (fun a b hab => by omega)]\n  simp",
+    "have h : (Finset.range (2 * n)).filter (fun k => k % 2 = 0) = (Finset.range n).image (· * 2) := by\n    ext k\n    simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_image]\n    constructor\n    · intro ⟨hk, hmod⟩; exact ⟨k / 2, by omega, by omega⟩\n    · rintro ⟨m, hm, rfl⟩; exact ⟨by omega, by omega⟩\n  rw [h, Finset.card_image_of_injective _ (fun a b hab => by omega)]\n  simp",
+    # Odd filter: {k < 2n | k%2≠0}.card = n  ←  bijection k↦2k+1
+    "have h : (Finset.range (2 * n)).filter (fun k => k % 2 ≠ 0) = (Finset.range n).image (2 * · + 1) := by\n    ext k\n    simp only [Finset.mem_filter, Finset.mem_range, Finset.mem_image]\n    constructor\n    · intro ⟨hk, hmod⟩; exact ⟨k / 2, by omega, by omega⟩\n    · rintro ⟨m, hm, rfl⟩; exact ⟨by omega, by omega⟩\n  rw [h, Finset.card_image_of_injective _ (fun a b hab => by omega)]\n  simp",
 ]
 
 # Fintype / Pigeonhole templates (tried in cmd mode before BFS)
@@ -212,17 +231,28 @@ STEP_TIME_LIMIT = 10
 def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
     if "∑" in goal or "Finset" in goal:
+        # card goals: try bijection-based templates before induction
+        if ".card" in goal:
+            return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
         return INDUCTION_TACTICS + SEARCH_TACTICS
     if "Continuous" in goal or "Differentiable" in goal:
         return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "HasDerivAt" in goal or "HasFDerivAt" in goal:
-        return DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+        chain_tactics = chain_rule_deriv_tactics(goal)
+        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Irrational" in goal:
         return SEARCH_TACTICS
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
     if "∃" in goal and "Fin" in goal:
         return FINTYPE_TEMPLATES + SEARCH_TACTICS
-    # ZMod goals: skip simple tactics that can't possibly work and go to search
+    # Wilson's theorem: goal contains `.factorial` (open Nat makes (p-1)! parse as .factorial).
+    # exact? times out before finding ZMod.wilsons_lemma, so we try it directly.
+    if "factorial" in goal:
+        return [
+            "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  exact ZMod.wilsons_lemma p",
+            "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  simp [ZMod.wilsons_lemma]",
+        ] + SEARCH_TACTICS
+    # ZMod goals: skip simple tactics that can't possibly work and go to search.
     if "ZMod" in goal:
         return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
     # Polynomial inequality goals (≤ or ≥ with ^): build dynamic nlinarith witnesses.
@@ -325,6 +355,43 @@ def extract_nonneg_triples(goal: str) -> list[tuple[str, str]]:
     """
     return re.findall(r'(\w+)\s*:\s*0\s*≤\s*(\w+)', goal)
 
+def extract_chain_rule_params(goal: str) -> tuple[str, str, str] | None:
+    """Extract (trig_fn, coeff, point) from a HasDerivAt chain rule goal.
+
+    Matches: HasDerivAt (fun x => Real.F (c * x)) (... Real.F' (c * pt)) pt
+    Returns e.g. ('sin', '2', 'a') for the bench_hard_chain goal.
+    Used to build fully explicit .comp templates that avoid implicit-arg inference errors.
+    """
+    m = re.search(r'HasDerivAt \(fun \w+ => Real\.(sin|cos|exp) \((\S+) \* \w+\)\)', goal)
+    if not m:
+        return None
+    fn = m.group(1)
+    coeff = m.group(2)
+    # point is the last token on the ⊢ line
+    goal_line = [l for l in goal.splitlines() if "⊢" in l]
+    if not goal_line:
+        return None
+    pt = goal_line[0].split()[-1]
+    return fn, coeff, pt
+
+def chain_rule_deriv_tactics(goal: str) -> list[str]:
+    """Build explicit HasDerivAt chain rule tactic strings.
+
+    Returns [] if the goal doesn't match the linear-composition pattern.
+    Generates templates with all arguments explicit to avoid .comp implicit-arg failures.
+    Pattern: HasDerivAt (fun x => Real.F(c*x)) (c * Real.F'(c*pt)) pt
+    """
+    p = extract_chain_rule_params(goal)
+    if not p:
+        return []
+    fn, coeff, pt = p
+    inner = f"({coeff} * {pt})"
+    base = f"(Real.hasDerivAt_{fn} {inner}).comp {pt} ((hasDerivAt_id {pt}).const_mul {coeff})"
+    return [
+        f"have h := {base}\n  convert h using 1\n  ring",
+        f"have h := {base}\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
+    ]
+
 def extract_real_vars(goal: str) -> list[str]:
     """Extract variable names declared as ℝ or ℚ in the proof state context.
 
@@ -422,7 +489,8 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
             imports = "import Mathlib" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
             resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
-            resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
+            # open Nat enables n! factorial notation (needed for Wilson's theorem)
+            resp = session.send({"cmd": "open BigOperators AutoProved Nat", "env": env0})
             base_env = resp.get("env", env0)
 
             for stmt in uncached:
