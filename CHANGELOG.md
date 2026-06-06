@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.6 | 2026-06-06 | fix: remove duplicate entries in ProvedTheorems.lean caused by pre-dry_run benchmark runs |
 | 0.1.5 | 2026-06-06 | benchmark: dry_run mode, hard×8, HasDerivAt templates; auto_prove: fun_prop/norm_cast/import Mathlib |
 | 0.1.4 | 2026-06-06 | benchmark.py: bench_log.csv with --save, test_hash, suite column, argparse |
 | 0.1.3 | 2026-06-06 | Add CONTRIBUTING.md |
