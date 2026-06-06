@@ -117,6 +117,10 @@ theorem ex1 (n : ℕ) : n + 0 = n := by sorry
 theorem ex1 (n : ℕ) : n + 0 = n := by rfl
 ```
 
+## コントリビューション
+
+[CONTRIBUTING.ja.md](CONTRIBUTING.ja.md) を参照してください。
+
 ## ライセンス
 
 [MIT License](LICENSE)

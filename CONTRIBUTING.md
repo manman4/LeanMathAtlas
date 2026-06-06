@@ -1,5 +1,7 @@
 # Contributing to LeanMathAtlas
 
+> **日本語で読む →** [CONTRIBUTING.ja.md](CONTRIBUTING.ja.md)
+
 ## Setup
 
 ```bash
