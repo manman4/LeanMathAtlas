@@ -253,22 +253,28 @@ def to_example(stmt: str) -> str:
 # Automated proving
 # ────────────────────────────────────────────────
 
-def prove_all(theorems: list) -> list:
+def prove_all(theorems: list, dry_run: bool = False) -> list:
+    """Attempt to prove each theorem.
+
+    dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
+    so that one run cannot contaminate the next).
+    """
     index = load_index()
-    uncached = [s for s in theorems if cache_key(s) not in index]
+    uncached = theorems if dry_run else [s for s in theorems if cache_key(s) not in index]
 
     new_results: dict[str, tuple] = {}
 
     if uncached:
-        # Pre-build so previously proved theorems are available in the REPL
-        subprocess.run(
-            ["lake", "build", "LeanMathAtlas.ProvedTheorems"],
-            cwd=WORKDIR, capture_output=True
-        )
+        if not dry_run:
+            subprocess.run(
+                ["lake", "build", "LeanMathAtlas.ProvedTheorems"],
+                cwd=WORKDIR, capture_output=True
+            )
         session = ReplSession()
         try:
-            print("  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
-            resp = session.send({"cmd": "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"})
+            print("  [repl] Loading Mathlib (~80s)..." if dry_run else "  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
+            imports = "import Mathlib.Tactic" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
+            resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
             resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
             base_env = resp.get("env", env0)
@@ -289,16 +295,16 @@ def prove_all(theorems: list) -> list:
                     resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
                     if not has_error(resp):
                         if t in SEARCH_TACTICS:
-                            # exact? / simp? must report "Try this:" — skip if not found
                             extracted = extract_try_this(resp)
                             if extracted is None:
                                 continue
                             proof = extracted
                         else:
                             proof = t
-                        lean_name = lean_name_from(stmt)
-                        append_to_lean_db(stmt, proof, goal, lean_name)
-                        index[cache_key(stmt)] = lean_name
+                        if not dry_run:
+                            lean_name = lean_name_from(stmt)
+                            append_to_lean_db(stmt, proof, goal, lean_name)
+                            index[cache_key(stmt)] = lean_name
                         break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
@@ -307,15 +313,17 @@ def prove_all(theorems: list) -> list:
                     step_proof = prove_iterative(session, example, base_env)
                     if step_proof:
                         proof = step_proof
-                        lean_name = lean_name_from(stmt)
-                        append_to_lean_db(stmt, proof, goal, lean_name)
-                        index[cache_key(stmt)] = lean_name
+                        if not dry_run:
+                            lean_name = lean_name_from(stmt)
+                            append_to_lean_db(stmt, proof, goal, lean_name)
+                            index[cache_key(stmt)] = lean_name
 
                 new_results[stmt] = (proof, goal)
 
         finally:
             session.close()
-            save_index(index)
+            if not dry_run:
+                save_index(index)
 
     # Collect results in the original order
     results = []

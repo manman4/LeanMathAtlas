@@ -121,7 +121,7 @@ def run_benchmark(save_label: str | None = None, suite: str = "core"):
     print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
     print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
-    results = prove_all(ALL)
+    results = prove_all(ALL, dry_run=True)
 
     total_pass = total_fail = 0
     scores: dict[str, tuple[int, int]] = {}
