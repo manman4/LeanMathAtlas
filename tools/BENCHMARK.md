@@ -122,11 +122,18 @@ exact hg.comp a hf
 
 ---
 
-## 再計測方法
+## 計測結果の記録
+
+`benchmark.py` に `--save <ラベル>` を渡すと、結果が [`bench_log.csv`](bench_log.csv) に自動追記される。
 
 ```bash
-# プロジェクトルートで実行
+# 計測して結果を記録する
+python3 benchmark.py --save "タクティク追加: aesop"
+
+# 記録せず実行するだけ
 python3 benchmark.py
 ```
+
+`bench_log.csv` が精度変化の正本。BENCHMARK.md はその解釈・コンテキストを補足するドキュメント。
 
 初回は Mathlib のロードに約 80 秒かかる。キャッシュ済みの定理は即座に返る。

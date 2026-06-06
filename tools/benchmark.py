@@ -7,8 +7,19 @@ Categories:
   B) Algebra (ring / omega)      — phase-1 should close most
   C) Induction (Sequences)       — template matching
   D) Hard (multi-step have)      — expected failures
+
+Usage:
+  python3 benchmark.py                        # run only, no log
+  python3 benchmark.py --save "tauto追加"     # run and append result to bench_log.csv
 """
+import sys
+import csv
+from datetime import date
+from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
+
+LOG_FILE = Path(__file__).parent / "bench_log.csv"
+LOG_HEADER = ["date", "label", "A", "B", "C", "D", "total", "pct"]
 
 LOGIC = [
     # 含意
@@ -59,28 +70,49 @@ HARD = [
 
 ALL = LOGIC + ALGEBRA + INDUCTION + HARD
 
-def run_benchmark():
+CATS = [
+    ("A) 論理 (BFS 主ターゲット)", "A", LOGIC),
+    ("B) 代数 (ring/omega)",       "B", ALGEBRA),
+    ("C) 帰納法 (テンプレート)",    "C", INDUCTION),
+    ("D) 難問 (多ステップ have)",   "D", HARD),
+]
+
+
+def append_log(label: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
+    exists = LOG_FILE.exists()
+    with LOG_FILE.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({
+            "date":  date.today().isoformat(),
+            "label": label,
+            "A":     f"{scores['A'][0]}/{scores['A'][1]}",
+            "B":     f"{scores['B'][0]}/{scores['B'][1]}",
+            "C":     f"{scores['C'][0]}/{scores['C'][1]}",
+            "D":     f"{scores['D'][0]}/{scores['D'][1]}",
+            "total": f"{total_pass}/{total}",
+            "pct":   f"{total_pass / total * 100:.0f}%",
+        })
+    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (label: {label!r})")
+
+
+def run_benchmark(save_label: str | None = None):
     index = load_index()
     cached = sum(1 for s in ALL if cache_key(s) in index)
     print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===\n")
 
     results = prove_all(ALL)
 
-    cats = [
-        ("A) 論理 (BFS 主ターゲット)", LOGIC),
-        ("B) 代数 (ring/omega)", ALGEBRA),
-        ("C) 帰納法 (テンプレート)", INDUCTION),
-        ("D) 難問 (多ステップ have)", HARD),
-    ]
-
     total_pass = total_fail = 0
+    scores: dict[str, tuple[int, int]] = {}
     print()
-    for label, stmts in cats:
+    for label, key, stmts in CATS:
         r = {s: p for s, p, _ in results if s in stmts}
-        ok  = sum(1 for s in stmts if r.get(s))
-        ng  = len(stmts) - ok
+        ok = sum(1 for s in stmts if r.get(s))
+        scores[key] = (ok, len(stmts))
         total_pass += ok
-        total_fail += ng
+        total_fail += len(stmts) - ok
         print(f"{label}: {ok}/{len(stmts)} ✓")
         for s in stmts:
             p = r.get(s)
@@ -95,5 +127,18 @@ def run_benchmark():
     print(f"{'='*55}")
     print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
 
+    if save_label is not None:
+        append_log(save_label, scores, total_pass, total)
+
+
 if __name__ == "__main__":
-    run_benchmark()
+    label = None
+    args = sys.argv[1:]
+    if "--save" in args:
+        idx = args.index("--save")
+        if idx + 1 < len(args):
+            label = args[idx + 1]
+        else:
+            print("使い方: python3 benchmark.py --save <ラベル>")
+            sys.exit(1)
+    run_benchmark(save_label=label)
