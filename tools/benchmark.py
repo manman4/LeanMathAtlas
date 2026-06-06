@@ -58,11 +58,20 @@ ALGEBRA = [
     "theorem bench_nat_assoc (a b c : ℕ) : (a + b) + c = a + (b + c)",
     "theorem bench_nat_le (n : ℕ) : n ≤ n + 1",
     "theorem bench_int_linarith (a b : ℤ) (h1 : a ≤ b) (h2 : b ≤ a) : a = b",
+    # additional algebra
+    "theorem bench_cube_diff (a b : ℝ) : (a - b)^3 = a^3 - 3*a^2*b + 3*a*b^2 - b^3",
+    "theorem bench_am_gm (a b : ℝ) : 2 * a * b ≤ a^2 + b^2",
+    "theorem bench_sq_nonneg (a : ℝ) : 0 ≤ a^2",
+    "theorem bench_mul_comm_real (a b : ℝ) : a * b = b * a",
 ]
 
 INDUCTION = [
     "theorem bench_sum_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)",
     "theorem bench_sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)",
+    # additional induction
+    "theorem bench_sum_cube (n : ℕ) : 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2",
+    "theorem bench_geom_sum (n : ℕ) : ∑ k ∈ Finset.range (n + 1), 2 ^ k + 1 = 2 ^ (n + 1)",
+    "theorem bench_sum_odd (n : ℕ) : ∑ k ∈ Finset.range n, (2 * k + 1) = n ^ 2",
 ]
 
 HARD = [
@@ -88,7 +97,7 @@ ALL = LOGIC + ALGEBRA + INDUCTION + HARD
 CATS = [
     ("logic     (命題論理)",     "logic",     LOGIC),
     ("algebra   (ring/omega)",   "algebra",   ALGEBRA),
-    ("induction (帰納法)",       "induction", INDUCTION),
+    ("induction (帰納法)",        "induction", INDUCTION),
     ("hard      (多ステップ)",   "hard",      HARD),
 ]
 
