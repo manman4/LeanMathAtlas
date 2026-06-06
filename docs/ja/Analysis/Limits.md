@@ -1,5 +1,7 @@
 # 極限と連続性
 
+> **Read in English →** [Limits.md](../../en/Analysis/Limits.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Analysis/Limits.lean`
 
 ## 内容

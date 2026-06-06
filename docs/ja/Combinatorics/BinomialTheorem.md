@@ -1,5 +1,7 @@
 # 場合の数・二項定理
 
+> **Read in English →** [BinomialTheorem.md](../../en/Combinatorics/BinomialTheorem.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Combinatorics/BinomialTheorem.lean`
 
 ## 内容

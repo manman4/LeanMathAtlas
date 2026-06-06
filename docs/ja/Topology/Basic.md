@@ -1,5 +1,7 @@
 # 位相空間: 開集合・コンパクト性・連結性
 
+> **Read in English →** [Basic.md](../../en/Topology/Basic.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Topology/Basic.lean`
 
 ## 内容

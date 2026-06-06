@@ -1,5 +1,7 @@
 # 素数と整除性
 
+> **Read in English →** [Primes.md](../../en/NumberTheory/Primes.md)
+
 対応する Lean ファイル: `LeanMathAtlas/NumberTheory/Primes.lean`
 
 ## 内容

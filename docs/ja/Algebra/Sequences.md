@@ -1,5 +1,7 @@
 # 数列と級数
 
+> **Read in English →** [Sequences.md](../../en/Algebra/Sequences.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Algebra/Sequences.lean`
 
 ## 内容

@@ -1,5 +1,7 @@
 # 内積・ノルム・コーシー・シュワルツ
 
+> **Read in English →** [Vectors.md](../../en/LinearAlgebra/Vectors.md)
+
 対応する Lean ファイル: `LeanMathAtlas/LinearAlgebra/Vectors.lean`
 
 ## 内容

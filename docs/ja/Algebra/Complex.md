@@ -1,5 +1,7 @@
 # 複素数
 
+> **Read in English →** [Complex.md](../../en/Algebra/Complex.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Algebra/Complex.lean`
 
 ## 内容

@@ -1,5 +1,7 @@
 # 群論: 群・部分群・ラグランジュの定理
 
+> **Read in English →** [Groups.md](../../en/Algebra/Groups.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Algebra/Groups.lean`
 
 ## 内容

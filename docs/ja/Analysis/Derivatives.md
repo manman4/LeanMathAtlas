@@ -1,5 +1,7 @@
 # 微分（導関数）
 
+> **Read in English →** [Derivatives.md](../../en/Analysis/Derivatives.md)
+
 対応する Lean ファイル: `LeanMathAtlas/Analysis/Derivatives.lean`
 
 ## `HasDerivAt` の読み方
