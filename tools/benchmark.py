@@ -16,7 +16,7 @@ from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
 LOG_FILE = Path(__file__).parent / "bench_log.csv"
-LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "total", "pct"]
+LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "competition", "total", "pct"]
 
 
 def compute_test_hash(problems: list[str]) -> str:
@@ -97,13 +97,21 @@ HARD = [
     "theorem bench_hard_card_filter (n : ℕ) : ((Finset.range (2 * n)).filter (fun k => k % 2 = 0)).card = n",
 ]
 
-ALL = LOGIC + ALGEBRA + INDUCTION + HARD
+COMPETITION = [
+    # Cauchy-Schwarz inequality: (∑ fᵢgᵢ)² ≤ (∑ fᵢ²)(∑ gᵢ²)
+    "theorem bench_comp_cauchy_schwarz (n : ℕ) (f g : Fin n → ℝ) : (∑ i, f i * g i) ^ 2 ≤ (∑ i, f i ^ 2) * (∑ i, g i ^ 2)",
+    # Wilson's theorem: (p-1)! ≡ -1 (mod p) for prime p
+    "theorem bench_comp_wilson (p : ℕ) (hp : Nat.Prime p) : ((p - 1)! : ZMod p) = -1",
+]
+
+ALL = LOGIC + ALGEBRA + INDUCTION + HARD + COMPETITION
 
 CATS = [
-    ("logic     (命題論理)",     "logic",     LOGIC),
-    ("algebra   (ring/omega)",   "algebra",   ALGEBRA),
-    ("induction (帰納法)",        "induction", INDUCTION),
-    ("hard      (多ステップ)",   "hard",      HARD),
+    ("logic       (命題論理)",     "logic",       LOGIC),
+    ("algebra     (ring/omega)",   "algebra",     ALGEBRA),
+    ("induction   (帰納法)",       "induction",   INDUCTION),
+    ("hard        (多ステップ)",   "hard",        HARD),
+    ("competition (競技数学)",     "competition", COMPETITION),
 ]
 
 
@@ -114,16 +122,17 @@ def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[i
         if not exists:
             writer.writeheader()
         writer.writerow({
-            "date":      date.today().isoformat(),
-            "label":     label,
-            "suite":     suite,
-            "test_hash": test_hash,
-            "logic":     f"{scores['logic'][0]}/{scores['logic'][1]}",
-            "algebra":   f"{scores['algebra'][0]}/{scores['algebra'][1]}",
-            "induction": f"{scores['induction'][0]}/{scores['induction'][1]}",
-            "hard":      f"{scores['hard'][0]}/{scores['hard'][1]}",
-            "total":     f"{total_pass}/{total}",
-            "pct":       f"{total_pass / total * 100:.0f}%",
+            "date":        date.today().isoformat(),
+            "label":       label,
+            "suite":       suite,
+            "test_hash":   test_hash,
+            "logic":       f"{scores['logic'][0]}/{scores['logic'][1]}",
+            "algebra":     f"{scores['algebra'][0]}/{scores['algebra'][1]}",
+            "induction":   f"{scores['induction'][0]}/{scores['induction'][1]}",
+            "hard":        f"{scores['hard'][0]}/{scores['hard'][1]}",
+            "competition": f"{scores['competition'][0]}/{scores['competition'][1]}",
+            "total":       f"{total_pass}/{total}",
+            "pct":         f"{total_pass / total * 100:.0f}%",
         })
     print(f"\n→ 結果を {LOG_FILE.name} に追記しました (suite: {suite!r}, label: {label!r}, test_hash: {test_hash})")
 
