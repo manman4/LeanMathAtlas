@@ -10,14 +10,25 @@ Categories:
 """
 import sys
 import csv
+import json
 import time
 import hashlib
 from datetime import date
 from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
 
-LOG_FILE = Path(__file__).parent / "bench_log.csv"
+LOG_FILE        = Path(__file__).parent / "bench_log.csv"
+BENCH_CACHE_FILE = Path(__file__).parent / ".bench_cache.json"
 LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "competition", "total", "pct", "elapsed_sec"]
+
+
+def load_bench_cache() -> dict:
+    if BENCH_CACHE_FILE.exists():
+        return json.loads(BENCH_CACHE_FILE.read_text(encoding="utf-8"))
+    return {}
+
+def save_bench_cache(cache: dict):
+    BENCH_CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def compute_test_hash(problems: list[str]) -> str:
@@ -145,39 +156,69 @@ def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[i
     print(f"\n→ 結果を {LOG_FILE.name} に追記しました (suite: {suite!r}, label: {label!r}, test_hash: {test_hash})")
 
 
-def run_benchmark(save_label: str | None = None, suite: str = "core"):
+def run_benchmark(save_label: str | None = None, suite: str = "core", clear_cache: bool = False):
     test_hash = compute_test_hash(ALL)
-    index = load_index()
-    cached = sum(1 for s in ALL if cache_key(s) in index)
-    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
+
+    # Load per-theorem result cache (successful proofs only)
+    bench_cache = {} if clear_cache else load_bench_cache()
+    if clear_cache:
+        print("  [cache] クリアしました")
+
+    # Only re-run theorems without a cached successful proof
+    to_prove   = [s for s in ALL if cache_key(s) not in bench_cache]
+    n_cached   = len(ALL) - len(to_prove)
+    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({n_cached} キャッシュ済 / {len(to_prove)} 未計測) ===")
     print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
-    t0 = time.monotonic()
-    results = prove_all(ALL, dry_run=True)
-    elapsed_sec = time.monotonic() - t0
+    # Run Lean only for uncached theorems
+    new_results: dict[str, tuple] = {}
+    if to_prove:
+        raw = prove_all(to_prove, dry_run=True)
+        for stmt, proof, goal, solve_time in raw:
+            new_results[stmt] = (proof, goal, solve_time)
+            if proof:  # cache only successful proofs
+                bench_cache[cache_key(stmt)] = {"proof": proof, "solve_time_sec": solve_time}
+        save_bench_cache(bench_cache)
+
+    # Build full result list
+    results: dict[str, str | None] = {}
+    solve_times: dict[str, float] = {}
+    for stmt in ALL:
+        key = cache_key(stmt)
+        if stmt in new_results:
+            proof, _, solve_time = new_results[stmt]
+        elif key in bench_cache:
+            proof      = bench_cache[key]["proof"]
+            solve_time = bench_cache[key].get("solve_time_sec", 0.0)
+        else:
+            proof, solve_time = None, 0.0
+        results[stmt]     = proof
+        solve_times[stmt] = solve_time
+
+    elapsed_sec = sum(solve_times.values())
 
     total_pass = total_fail = 0
     scores: dict[str, tuple[int, int]] = {}
     print()
     for label, key, stmts in CATS:
-        r = {s: p for s, p, _ in results if s in stmts}
-        ok = sum(1 for s in stmts if r.get(s))
+        ok = sum(1 for s in stmts if results.get(s))
         scores[key] = (ok, len(stmts))
         total_pass += ok
         total_fail += len(stmts) - ok
         print(f"{label}: {ok}/{len(stmts)} ✓")
         for s in stmts:
-            p = r.get(s)
+            p = results.get(s)
             name = s.split()[1]
             icon = "✓" if p else "✗"
             proof_hint = f" ({p.split(chr(10))[0][:40]})" if p else ""
-            print(f"  {icon} {name}{proof_hint}")
+            cached_mark = " [cached]" if cache_key(s) in bench_cache and s not in new_results else ""
+            print(f"  {icon} {name}{proof_hint}{cached_mark}")
         print()
 
     total = total_pass + total_fail
     pct = total_pass / total * 100
     print(f"{'='*55}")
-    print(f"合計: {total_pass}/{total} ({pct:.0f}%)  [{elapsed_sec:.0f}s]")
+    print(f"合計: {total_pass}/{total} ({pct:.0f}%)  [累計証明時間 {elapsed_sec:.0f}s]")
 
     if save_label is not None:
         append_log(save_label, suite, test_hash, scores, total_pass, total, elapsed_sec)
@@ -198,9 +239,11 @@ if __name__ == "__main__":
     parser.add_argument("--save", metavar="LABEL", help="結果を bench_log.csv に追記する")
     parser.add_argument("--suite", metavar="NAME", default="core",
                         help="スイート名（デフォルト: core）。--save なしでは無視される")
+    parser.add_argument("--clear-cache", action="store_true",
+                        help=".bench_cache.json を無視して全定理を再実行する")
     args = parser.parse_args()
 
     if args.suite != "core" and args.save is None:
         parser.error("--suite は --save と一緒に使ってください")
 
-    run_benchmark(save_label=args.save, suite=args.suite)
+    run_benchmark(save_label=args.save, suite=args.suite, clear_cache=args.clear_cache)

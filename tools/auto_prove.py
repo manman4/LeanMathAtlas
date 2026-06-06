@@ -187,7 +187,7 @@ STEP_TACTICS = [
 ]
 
 # Max seconds per theorem for iterative proof search
-STEP_TIME_LIMIT = 30
+STEP_TIME_LIMIT = 10
 
 def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
@@ -325,6 +325,7 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
 
             for stmt in uncached:
                 example = to_example(stmt)
+                t_stmt = time.monotonic()
 
                 # Fetch the goal
                 goal = ""
@@ -382,7 +383,7 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
                             append_to_lean_db(stmt, proof, goal, lean_name)
                             index[cache_key(stmt)] = lean_name
 
-                new_results[stmt] = (proof, goal)
+                new_results[stmt] = (proof, goal, time.monotonic() - t_stmt)
 
         finally:
             session.close()
@@ -393,12 +394,13 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
     results = []
     for stmt in theorems:
         if stmt in new_results:
-            proof, goal = new_results[stmt]
+            proof, goal, solve_time = new_results[stmt]
         else:
             lean_name = index.get(cache_key(stmt), "")
             proof = lean_name  # already proved — return the Lean name
             goal = ""
-        results.append((stmt, proof, goal))
+            solve_time = 0.0
+        results.append((stmt, proof, goal, solve_time))
     return results
 
 # ────────────────────────────────────────────────
