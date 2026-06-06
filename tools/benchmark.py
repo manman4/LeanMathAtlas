@@ -66,9 +66,21 @@ INDUCTION = [
 ]
 
 HARD = [
-    # These require multi-step `have` with specific Mathlib lemmas — expected ✗
-    "theorem bench_hard_deriv (f : ℝ → ℝ) (a : ℝ) : HasDerivAt (fun x => 2 * Real.sin x) (2 * Real.cos a) a",
+    # Multi-step `have` with specific Mathlib lemmas
+    "theorem bench_hard_deriv (a : ℝ) : HasDerivAt (fun x => 2 * Real.sin x) (2 * Real.cos a) a",
     "theorem bench_hard_prime_inf : ∀ n : ℕ, ∃ p, n ≤ p ∧ Nat.Prime p",
+    # sqrt: needs Real.sqrt_sq
+    "theorem bench_hard_sqrt (a : ℝ) (ha : 0 ≤ a) : Real.sqrt (a ^ 2) = a",
+    # continuous composition: needs Continuous.comp or fun_prop
+    "theorem bench_hard_cont_comp (f g : ℝ → ℝ) (hf : Continuous f) (hg : Continuous g) : Continuous (f ∘ g)",
+    # chain rule sin(2x): needs HasDerivAt.comp
+    "theorem bench_hard_chain (a : ℝ) : HasDerivAt (fun x => Real.sin (2 * x)) (2 * Real.cos (2 * a)) a",
+    # irrational sqrt 2: direct Mathlib lemma
+    "theorem bench_hard_irrational_sqrt2 : Irrational (Real.sqrt 2)",
+    # integer mod mod: needs Int.emod_emod_of_dvd
+    "theorem bench_hard_emod (a b c : ℤ) (h : c ∣ b) : a % b % c = a % c",
+    # finset card of even numbers: needs Finset manipulation
+    "theorem bench_hard_card_filter (n : ℕ) : ((Finset.range (2 * n)).filter (fun k => k % 2 = 0)).card = n",
 ]
 
 ALL = LOGIC + ALGEBRA + INDUCTION + HARD
@@ -109,7 +121,7 @@ def run_benchmark(save_label: str | None = None, suite: str = "core"):
     print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
     print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
-    results = prove_all(ALL)
+    results = prove_all(ALL, dry_run=True)
 
     total_pass = total_fail = 0
     scores: dict[str, tuple[int, int]] = {}

@@ -122,7 +122,9 @@ class ReplSession:
 SIMPLE_TACTICS = [
     "rfl", "ring", "omega", "simp", "norm_num",
     "decide", "tauto", "linarith", "nlinarith", "aesop",
+    "fun_prop",
     "simp [*]", "simp_all", "push_cast; ring", "push_cast; omega",
+    "norm_cast", "norm_cast; ring", "norm_cast; omega",
 ]
 
 INDUCTION_TACTICS = [
@@ -140,6 +142,29 @@ ALL_TACTICS = SIMPLE_TACTICS + INDUCTION_TACTICS
 # Search tactics: tried last as fallback; proof is extracted from "Try this:" message
 SEARCH_TACTICS = ["exact?", "simp?"]
 
+# HasDerivAt-specific one-shot templates (tried before BFS for derivative goals)
+DERIV_TEMPLATES = [
+    # scalar multiple: c * sin/cos/exp
+    "exact (Real.hasDerivAt_sin _).const_mul _",
+    "exact (Real.hasDerivAt_cos _).const_mul _",
+    "exact (Real.hasDerivAt_exp _).const_mul _",
+    # negation
+    "exact (Real.hasDerivAt_sin _).neg",
+    "exact (Real.hasDerivAt_cos _).neg",
+    # chain rule: f(c * x) — comp gives g'*f', goal may have f'*g' (mul_comm)
+    "exact (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)",
+    "exact (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)",
+    # convert absorbs both function-form and mul_comm mismatches
+    "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
+    "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
+    # explicit two-have pattern (mirrors Derivatives.lean proof style)
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
+    # identity and constant
+    "exact hasDerivAt_id _",
+    "exact hasDerivAt_const _ _",
+]
+
 # Step-by-step tactics used in iterative BFS search
 STEP_TACTICS = [
     # Intro / elimination
@@ -153,6 +178,12 @@ STEP_TACTICS = [
     "obtain ⟨a, b⟩ := h",
     # Auto closers
     "tauto", "simp", "ring", "omega", "norm_num", "linarith", "aesop",
+    "fun_prop", "norm_cast",
+    # Derivative building blocks (for BFS multi-step)
+    "apply HasDerivAt.const_mul", "apply HasDerivAt.comp",
+    "apply HasDerivAt.neg", "apply HasDerivAt.add",
+    "exact Real.hasDerivAt_sin _", "exact Real.hasDerivAt_cos _",
+    "exact hasDerivAt_id _",
 ]
 
 # Max seconds per theorem for iterative proof search
@@ -162,12 +193,18 @@ def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
     if "∑" in goal or "Finset" in goal:
         return INDUCTION_TACTICS + SEARCH_TACTICS
+    if "Continuous" in goal or "Differentiable" in goal:
+        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
+    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
+        return DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+    if "Irrational" in goal:
+        return SEARCH_TACTICS
     if "^" in goal:
         return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
-        return ["ring", "linarith", "norm_num", "nlinarith"] + SEARCH_TACTICS
+        return ["ring", "linarith", "norm_num", "nlinarith", "fun_prop"] + SEARCH_TACTICS
     if "ℕ" in goal or "ℤ" in goal:
-        return ["omega", "simp", "rfl", "decide", "ring", "norm_num"] + SEARCH_TACTICS
+        return ["omega", "simp", "rfl", "decide", "ring", "norm_num", "norm_cast"] + SEARCH_TACTICS
     return ALL_TACTICS + SEARCH_TACTICS
 
 # ────────────────────────────────────────────────
@@ -244,22 +281,30 @@ def to_example(stmt: str) -> str:
 # Automated proving
 # ────────────────────────────────────────────────
 
-def prove_all(theorems: list) -> list:
+def prove_all(theorems: list, dry_run: bool = False) -> list:
+    """Attempt to prove each theorem.
+
+    dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
+    so that one run cannot contaminate the next).
+    """
     index = load_index()
-    uncached = [s for s in theorems if cache_key(s) not in index]
+    uncached = theorems if dry_run else [s for s in theorems if cache_key(s) not in index]
 
     new_results: dict[str, tuple] = {}
 
     if uncached:
-        # Pre-build so previously proved theorems are available in the REPL
-        subprocess.run(
-            ["lake", "build", "LeanMathAtlas.ProvedTheorems"],
-            cwd=WORKDIR, capture_output=True
-        )
+        if not dry_run:
+            subprocess.run(
+                ["lake", "build", "LeanMathAtlas.ProvedTheorems"],
+                cwd=WORKDIR, capture_output=True
+            )
         session = ReplSession()
         try:
-            print("  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
-            resp = session.send({"cmd": "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"})
+            print("  [repl] Loading Mathlib (~80s)..." if dry_run else "  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
+            # dry_run: import full Mathlib (no ProvedTheorems) so all lemmas are available
+            # but our previously proved theorems don't contaminate the results
+            imports = "import Mathlib" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
+            resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
             resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
             base_env = resp.get("env", env0)
@@ -280,16 +325,16 @@ def prove_all(theorems: list) -> list:
                     resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
                     if not has_error(resp):
                         if t in SEARCH_TACTICS:
-                            # exact? / simp? must report "Try this:" — skip if not found
                             extracted = extract_try_this(resp)
                             if extracted is None:
                                 continue
                             proof = extracted
                         else:
                             proof = t
-                        lean_name = lean_name_from(stmt)
-                        append_to_lean_db(stmt, proof, goal, lean_name)
-                        index[cache_key(stmt)] = lean_name
+                        if not dry_run:
+                            lean_name = lean_name_from(stmt)
+                            append_to_lean_db(stmt, proof, goal, lean_name)
+                            index[cache_key(stmt)] = lean_name
                         break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
@@ -298,15 +343,17 @@ def prove_all(theorems: list) -> list:
                     step_proof = prove_iterative(session, example, base_env)
                     if step_proof:
                         proof = step_proof
-                        lean_name = lean_name_from(stmt)
-                        append_to_lean_db(stmt, proof, goal, lean_name)
-                        index[cache_key(stmt)] = lean_name
+                        if not dry_run:
+                            lean_name = lean_name_from(stmt)
+                            append_to_lean_db(stmt, proof, goal, lean_name)
+                            index[cache_key(stmt)] = lean_name
 
                 new_results[stmt] = (proof, goal)
 
         finally:
             session.close()
-            save_index(index)
+            if not dry_run:
+                save_index(index)
 
     # Collect results in the original order
     results = []
