@@ -151,11 +151,15 @@ DERIV_TEMPLATES = [
     # negation
     "exact (Real.hasDerivAt_sin _).neg",
     "exact (Real.hasDerivAt_cos _).neg",
-    # chain rule: f(c * x) — result may need ring_nf for mul_comm
+    # chain rule: f(c * x) — comp gives g'*f', goal may have f'*g' (mul_comm)
     "exact (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)",
     "exact (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)",
-    "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _); ring_nf at h ⊢; exact h",
-    "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _); ring_nf at h ⊢; exact h",
+    # convert absorbs both function-form and mul_comm mismatches
+    "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
+    "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
+    # explicit two-have pattern (mirrors Derivatives.lean proof style)
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
     # identity and constant
     "exact hasDerivAt_id _",
     "exact hasDerivAt_const _ _",
