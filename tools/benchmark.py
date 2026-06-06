@@ -3,12 +3,26 @@
 Coverage benchmark: measure how many theorems auto_prove.py can solve.
 
 Categories:
-  A) Logic (Propositional-style) — main target for iterative BFS
-  B) Algebra (ring / omega)      — phase-1 should close most
-  C) Induction (Sequences)       — template matching
-  D) Hard (multi-step have)      — expected failures
+  logic     — propositional logic (tauto / BFS target)
+  algebra   — ring / omega
+  induction — summation formulas
+  hard      — multi-step have (expected failures)
 """
+import sys
+import csv
+import hashlib
+from datetime import date
+from pathlib import Path
 from auto_prove import prove_all, cache_key, load_index
+
+LOG_FILE = Path(__file__).parent / "bench_log.csv"
+LOG_HEADER = ["date", "label", "suite", "test_hash", "logic", "algebra", "induction", "hard", "total", "pct"]
+
+
+def compute_test_hash(problems: list[str]) -> str:
+    """Compute a short hash of the problem set to detect accidental changes."""
+    content = "\n".join(sorted(problems))
+    return hashlib.sha256(content.encode()).hexdigest()[:8]
 
 LOGIC = [
     # 含意
@@ -59,28 +73,53 @@ HARD = [
 
 ALL = LOGIC + ALGEBRA + INDUCTION + HARD
 
-def run_benchmark():
+CATS = [
+    ("logic     (命題論理)",     "logic",     LOGIC),
+    ("algebra   (ring/omega)",   "algebra",   ALGEBRA),
+    ("induction (帰納法)",       "induction", INDUCTION),
+    ("hard      (多ステップ)",   "hard",      HARD),
+]
+
+
+def append_log(label: str, suite: str, test_hash: str, scores: dict[str, tuple[int, int]], total_pass: int, total: int):
+    exists = LOG_FILE.exists()
+    with LOG_FILE.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=LOG_HEADER)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({
+            "date":      date.today().isoformat(),
+            "label":     label,
+            "suite":     suite,
+            "test_hash": test_hash,
+            "logic":     f"{scores['logic'][0]}/{scores['logic'][1]}",
+            "algebra":   f"{scores['algebra'][0]}/{scores['algebra'][1]}",
+            "induction": f"{scores['induction'][0]}/{scores['induction'][1]}",
+            "hard":      f"{scores['hard'][0]}/{scores['hard'][1]}",
+            "total":     f"{total_pass}/{total}",
+            "pct":       f"{total_pass / total * 100:.0f}%",
+        })
+    print(f"\n→ 結果を {LOG_FILE.name} に追記しました (suite: {suite!r}, label: {label!r}, test_hash: {test_hash})")
+
+
+def run_benchmark(save_label: str | None = None, suite: str = "core"):
+    test_hash = compute_test_hash(ALL)
     index = load_index()
     cached = sum(1 for s in ALL if cache_key(s) in index)
-    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===\n")
+    print(f"=== ベンチマーク開始: {len(ALL)} 件 ({cached} キャッシュ済 / {len(ALL)-cached} 未計測) ===")
+    print(f"    suite: {suite}, test_hash: {test_hash}\n")
 
     results = prove_all(ALL)
 
-    cats = [
-        ("A) 論理 (BFS 主ターゲット)", LOGIC),
-        ("B) 代数 (ring/omega)", ALGEBRA),
-        ("C) 帰納法 (テンプレート)", INDUCTION),
-        ("D) 難問 (多ステップ have)", HARD),
-    ]
-
     total_pass = total_fail = 0
+    scores: dict[str, tuple[int, int]] = {}
     print()
-    for label, stmts in cats:
+    for label, key, stmts in CATS:
         r = {s: p for s, p, _ in results if s in stmts}
-        ok  = sum(1 for s in stmts if r.get(s))
-        ng  = len(stmts) - ok
+        ok = sum(1 for s in stmts if r.get(s))
+        scores[key] = (ok, len(stmts))
         total_pass += ok
-        total_fail += ng
+        total_fail += len(stmts) - ok
         print(f"{label}: {ok}/{len(stmts)} ✓")
         for s in stmts:
             p = r.get(s)
@@ -94,8 +133,29 @@ def run_benchmark():
     pct = total_pass / total * 100
     print(f"{'='*55}")
     print(f"合計: {total_pass}/{total} ({pct:.0f}%)")
-    print(f"  以前の推計: 80/142 (56%)")
-    print(f"  今回計測:   {total_pass}/{total} ({pct:.0f}%) — サンプル {total} 件")
+
+    if save_label is not None:
+        append_log(save_label, suite, test_hash, scores, total_pass, total)
+
 
 if __name__ == "__main__":
-    run_benchmark()
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="auto_prove.py の証明カバレッジを計測する",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "examples:\n"
+            "  python3 benchmark.py\n"
+            "  python3 benchmark.py --save 'tauto追加'\n"
+            "  python3 benchmark.py --save 'label' --suite hard_v2"
+        ),
+    )
+    parser.add_argument("--save", metavar="LABEL", help="結果を bench_log.csv に追記する")
+    parser.add_argument("--suite", metavar="NAME", default="core",
+                        help="スイート名（デフォルト: core）。--save なしでは無視される")
+    args = parser.parse_args()
+
+    if args.suite != "core" and args.save is None:
+        parser.error("--suite は --save と一緒に使ってください")
+
+    run_benchmark(save_label=args.save, suite=args.suite)
