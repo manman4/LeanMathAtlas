@@ -157,9 +157,16 @@ DERIV_TEMPLATES = [
     # convert absorbs both function-form and mul_comm mismatches
     "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
     "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 1\n  ring",
+    # convert using 2 — allows deeper structural mismatches than using 1
+    "have h := (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 2\n  ring",
+    "have h := (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)\n  convert h using 2\n  ring",
+    # ring_nf normalises the derivative expression before exact: absorbs mul_comm without convert
+    "ring_nf\n  exact (Real.hasDerivAt_sin _).comp _ ((hasDerivAt_id _).const_mul _)",
+    "ring_nf\n  exact (Real.hasDerivAt_cos _).comp _ ((hasDerivAt_id _).const_mul _)",
     # explicit two-have pattern (mirrors Derivatives.lean proof style)
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 2\n  ring",
     # identity and constant
     "exact hasDerivAt_id _",
     "exact hasDerivAt_const _ _",
@@ -202,7 +209,7 @@ STEP_TACTICS = [
 # Max seconds per theorem for iterative proof search
 STEP_TIME_LIMIT = 10
 
-def select_tactics(goal: str) -> list:
+def select_tactics(goal: str, nonneg_tactic: str | None = None) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
     if "∑" in goal or "Finset" in goal:
         return INDUCTION_TACTICS + SEARCH_TACTICS
@@ -215,6 +222,13 @@ def select_tactics(goal: str) -> list:
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
     if "∃" in goal and "Fin" in goal:
         return FINTYPE_TEMPLATES + SEARCH_TACTICS
+    # ZMod goals: skip simple tactics that can't possibly work and go to search
+    if "ZMod" in goal:
+        return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
+    # Polynomial ≤ goals with non-negative ℝ variables: try nlinarith with dynamic witnesses
+    if "≤" in goal and "0 ≤" in goal and "^" in goal and nonneg_tactic:
+        return [nonneg_tactic, "field_simp\n  " + nonneg_tactic,
+                "ring", "nlinarith", "linarith"] + SEARCH_TACTICS
     if "^" in goal:
         return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
@@ -293,6 +307,38 @@ def extract_try_this(resp: dict) -> str | None:
 def to_example(stmt: str) -> str:
     return re.sub(r"^theorem\s+\S+", "example", stmt)
 
+def extract_nonneg_triples(goal: str) -> list[tuple[str, str]]:
+    """Extract (hypothesis, variable) pairs from '0 ≤ var' in the proof state.
+
+    Used to build generalizable nlinarith witnesses for polynomial inequalities
+    with non-negativity assumptions (AM-GM, Cauchy-Schwarz, etc.).
+    Returns pairs in order of appearance, e.g. [('ha','a'), ('hb','b'), ('hc','c')].
+    """
+    return re.findall(r'(\w+)\s*:\s*0\s*≤\s*(\w+)', goal)
+
+def nlinarith_nonneg3_tactic(goal: str) -> str | None:
+    """Build a generalizable nlinarith witness tactic for 3-variable non-negative ℝ inequalities.
+
+    For goals like 'a*b*c ≤ ((a+b+c)/3)^3' with 'ha:0≤a', 'hb:0≤b', 'hc:0≤c',
+    generates witnesses: pairwise squared differences + their products with non-neg vars.
+    This covers AM-GM (3-var) and related symmetric polynomial inequalities.
+    Returns None if fewer than 3 non-neg hypotheses are found.
+    """
+    pairs = extract_nonneg_triples(goal)
+    if len(pairs) < 3:
+        return None
+    (h1, v1), (h2, v2), (h3, v3) = pairs[0], pairs[1], pairs[2]
+    witnesses = [
+        f"sq_nonneg ({v1} - {v2})",
+        f"sq_nonneg ({v2} - {v3})",
+        f"sq_nonneg ({v1} - {v3})",
+        f"mul_nonneg {h1} (sq_nonneg ({v2} - {v3}))",
+        f"mul_nonneg {h2} (sq_nonneg ({v1} - {v3}))",
+        f"mul_nonneg {h3} (sq_nonneg ({v1} - {v2}))",
+        f"mul_nonneg (mul_nonneg {h1} {h2}) {h3}",
+    ]
+    return "nlinarith [" + ", ".join(witnesses) + "]"
+
 def fact_preamble(stmt: str) -> str:
     """Generate haveI lines for Nat.Prime hypotheses.
 
@@ -352,7 +398,8 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
 
                 # Phase 1: try each filtered tactic in one shot
                 proof = None
-                for t in select_tactics(goal):
+                nonneg_tac = nlinarith_nonneg3_tactic(goal)
+                for t in select_tactics(goal, nonneg_tactic=nonneg_tac):
                     resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
                     if not has_error(resp):
                         if t in SEARCH_TACTICS:
@@ -378,33 +425,41 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
                 if proof is None:
                     preamble = fact_preamble(stmt)
                     if preamble:
-                        for t in SIMPLE_TACTICS + SEARCH_TACTICS:
-                            resp = session.send({
-                                "cmd": f"{example} := by\n  {preamble}\n  {t}",
-                                "env": base_env
-                            })
-                            if t in SEARCH_TACTICS:
-                                # Extract suggestion regardless of errors, then verify separately
-                                extracted = extract_try_this(resp)
-                                if extracted:
-                                    resp2 = session.send({
-                                        "cmd": f"{example} := by\n  {preamble}\n  {extracted}",
-                                        "env": base_env
-                                    })
-                                    if not has_error(resp2):
-                                        proof = f"{preamble}\n  {extracted}"
-                                        if not dry_run:
-                                            lean_name = lean_name_from(stmt)
-                                            append_to_lean_db(stmt, proof, goal, lean_name)
-                                            index[cache_key(stmt)] = lean_name
-                                        break
-                            elif not has_error(resp):
-                                proof = f"{preamble}\n  {t}"
-                                if not dry_run:
-                                    lean_name = lean_name_from(stmt)
-                                    append_to_lean_db(stmt, proof, goal, lean_name)
-                                    index[cache_key(stmt)] = lean_name
+                        # Preprocessing variants: try cast normalisation before search tactics.
+                        # norm_cast / push_cast can reveal ZMod.wilsons_lemma and similar
+                        # lemmas that exact? misses when the goal has coercion noise.
+                        _cast_prefixes = ["", "norm_cast\n  ", "push_cast\n  "]
+                        _phase15_tactics = SIMPLE_TACTICS + SEARCH_TACTICS
+                        for _cast in _cast_prefixes:
+                            if proof is not None:
                                 break
+                            for t in _phase15_tactics:
+                                resp = session.send({
+                                    "cmd": f"{example} := by\n  {preamble}\n  {_cast}{t}",
+                                    "env": base_env
+                                })
+                                if t in SEARCH_TACTICS:
+                                    # Extract suggestion regardless of errors, then verify separately
+                                    extracted = extract_try_this(resp)
+                                    if extracted:
+                                        resp2 = session.send({
+                                            "cmd": f"{example} := by\n  {preamble}\n  {_cast}{extracted}",
+                                            "env": base_env
+                                        })
+                                        if not has_error(resp2):
+                                            proof = f"{preamble}\n  {_cast}{extracted}"
+                                            if not dry_run:
+                                                lean_name = lean_name_from(stmt)
+                                                append_to_lean_db(stmt, proof, goal, lean_name)
+                                                index[cache_key(stmt)] = lean_name
+                                            break
+                                elif not has_error(resp):
+                                    proof = f"{preamble}\n  {_cast}{t}"
+                                    if not dry_run:
+                                        lean_name = lean_name_from(stmt)
+                                        append_to_lean_db(stmt, proof, goal, lean_name)
+                                        index[cache_key(stmt)] = lean_name
+                                    break
 
                 # Phase 1.6: apply? + all_goals closer
                 # apply? finds any Mathlib lemma that partially matches the goal,

@@ -9,8 +9,8 @@ This document records design decisions and the reasoning behind things that were
 - 16 Lean proof files (★☆☆ / ★★☆ / ★★★), bilingual docs (`docs/ja/`, `docs/en/`)
 - `tools/auto_prove.py`: automated theorem prover, v0.1.14 (予定)
 - `tools/benchmark.py`: 46-problem benchmark suite, v0.1.12
-- Benchmark score: **42/46 (91%)**, competition 3/5
-- Unsolved: chain rule, card_filter (hard), Wilson, AM-GM 3変数 (competition)
+- Benchmark score: **43/46 (93%)**, competition 4/5
+- Unsolved: chain rule, card_filter (hard), Wilson (competition)
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history and [tools/BENCHMARK.md](tools/BENCHMARK.md) for precision records.
 
