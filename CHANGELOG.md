@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.0 | 2026-06-06 | Cleanup: README/ROADMAP updated to reflect all 16 implemented modules |
 | 0.0.9 | 2026-06-06 | Integration (interval integrals, FTC parts 1 & 2, concrete examples), all ★★★ Advanced complete |
 | 0.0.8 | 2026-06-06 | Ring Theory (CommRing, Ideal, quotient rings, prime/maximal ideal correspondence) |
 | 0.0.7 | 2026-06-06 | Group Theory (Group laws, Subgroup, Lagrange's theorem), Topology (open sets, compactness, connectedness) |

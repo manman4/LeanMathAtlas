@@ -8,25 +8,41 @@
 
 ## 内容
 
+難易度（★☆☆ / ★★☆ / ★★★）と日本語解説は [ROADMAP.md](ROADMAP.md) を参照してください。
+
 ```
 LeanMathAtlas/
-  Algebra/
-    BasicIdentities.lean   # 式の展開・因数分解・二次不等式・因数定理・剰余定理
-    Sequences.lean         # 等差・等比数列、和の公式（ガウス・平方和・立方和）
-  Analysis/
-    Trigonometry.lean      # 三角関数の基本公式・加法定理・2倍角公式
-  Combinatorics/
-    BinomialTheorem.lean   # 二項係数・パスカルの三角形・二項定理
-  NumberTheory/
-    NaturalNumbers.lean    # 帰納法・算術の基本法則・偶奇
+  Tactics.lean              # ★☆☆  入門: ring, omega, simp, decide など
+  Exercises.lean            # ★☆☆  穴埋め演習（sorry を証明に書き換える）
   Logic/
-    Propositional.lean     # 導入・除去規則・ド・モルガン・恒真式
-  ProvedTheorems.lean      # 自動生成: auto_prove.py が証明した定理
+    Propositional.lean      # ★☆☆  導入・除去規則、ド・モルガン、恒真式
+  NumberTheory/
+    NaturalNumbers.lean     # ★☆☆  帰納法・算術の基本法則・偶奇
+    Primes.lean             # ★★☆  Nat.Prime、GCD、互いに素、ユークリッドの定理
+    Modular.lean            # ★★☆  ZMod、フェルマーの小定理
+  Algebra/
+    BasicIdentities.lean    # ★☆☆  式の展開・因数分解・二次不等式
+    Sequences.lean          # ★☆☆  等差・等比数列、和の公式
+    Complex.lean            # ★★☆  ℂ、絶対値、共役、オイラーの公式、ド・モアブル
+    Groups.lean             # ★★★  群の法則、部分群、ラグランジュの定理
+    Rings.lean              # ★★★  環、イデアル、商環、素・極大イデアル対応
+  Analysis/
+    Trigonometry.lean       # ★☆☆  三角関数の基本公式・加法定理・2倍角公式
+    Derivatives.lean        # ★★☆  HasDerivAt、和・積・合成微分、三角関数の微分
+    Limits.lean             # ★★☆  ε-δ定義、Filter.Tendsto
+    Integration.lean        # ★★★  区間積分、微積分の基本定理（第1・2部）
+  Combinatorics/
+    BinomialTheorem.lean    # ★☆☆  二項係数・パスカルの三角形・二項定理
+  LinearAlgebra/
+    Vectors.lean            # ★★☆  内積、ノルム、コーシー・シュワルツ不等式
+  Topology/
+    Basic.lean              # ★★★  開集合、連続性、コンパクト性、連結性
+  ProvedTheorems.lean       # 自動生成: auto_prove.py が証明した定理
 
-docs/ja/                   # 各モジュールの日本語解説（Markdown）
+docs/ja/                    # 各モジュールの日本語解説（Markdown）
 tools/
-  auto_prove.py            # Lean REPL を使った自動証明スクリプト
-  benchmark.py             # 精度ベンチマーク
+  auto_prove.py             # Lean REPL を使った自動証明スクリプト
+  benchmark.py              # 精度ベンチマーク
 ```
 
 ## 環境の準備
@@ -57,7 +73,7 @@ Mathlib と REPL パッケージをダウンロードします（初回は数分
 lake build
 ```
 
-## [難易度マップ →](ROADMAP.md)
+## [難易度マップ →](ROADMAP.ja.md) · [Difficulty Map →](ROADMAP.md)
 
 ## 学習のしかた
 
