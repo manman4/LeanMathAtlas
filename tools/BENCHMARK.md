@@ -76,7 +76,7 @@ AM-GM 2変数 `2ab ≤ a²+b²`, `0 ≤ a²`, `ab = ba` (ℝ)
 | `bench_comp_wilson` | `(p-1)! ≡ -1 (mod p)` | ✗ haveI 後も exact? 未ヒット |
 | `bench_comp_pigeonhole` | `m < n → f: Fin n → Fin m` は衝突する | ✓ FINTYPE_TEMPLATES |
 | `bench_comp_fermat` | `a^p = a` in ZMod p | ✓ haveI Fact + exact? |
-| `bench_comp_am_gm3` | `abc ≤ ((a+b+c)/3)³` | ✗ nlinarith witness が必要 |
+| `bench_comp_am_gm3` | `abc ≤ ((a+b+c)/3)³` | ✓ 動的 nlinarith witness |
 
 ---
 
@@ -180,6 +180,21 @@ AM-GM 2変数 `2ab ≤ a²+b²`, `0 ≤ a²`, `ab = ba` (ℝ)
 
 ---
 
+### ver.10（動的 nlinarith witness + ZMod select_tactics + ring_nf DERIV_TEMPLATES）— 2026-06-06
+
+**変更内容**:
+- `nlinarith_nonneg3_tactic()`: ゴール文字列から `0 ≤ var` 仮定を動的抽出して nlinarith witness を生成
+  - 変数名に依存せず、3変数非負多項式不等式全般に適用可能
+  - 条件: `≤` + `0 ≤` + `^` がゴールに含まれる場合
+  - → `bench_comp_am_gm3` が解決（competition 4/5）
+- `select_tactics` に `ZMod` ブランチ追加: 無効な simple tactics をスキップして検索タクティクへ
+- DERIV_TEMPLATES に `ring_nf` 前処理テンプレートと `convert using 2` を追加
+- Phase 1.5 に `norm_cast`/`push_cast` 前処理バリアントを追加（ZMod coercion ゴール対策）
+
+**結果**: **43/46 (93%)**、`bench_comp_am_gm3` が解決
+
+---
+
 ## 現在の未解決問題（2026-06-06 時点）
 
 | 定理 | 失敗理由 | 次のアプローチ案 |
@@ -187,7 +202,7 @@ AM-GM 2変数 `2ab ≤ a²+b²`, `0 ≤ a²`, `ab = ba` (ℝ)
 | `bench_hard_chain` | sin(2x) の chain rule で `_` 型推論が失敗（convert テンプレート動かず） | 明示的な定数を使ったテンプレート |
 | `bench_hard_card_filter` | Finset.card の帰納法が必要 | 専用テンプレート |
 | `bench_comp_wilson` | `haveI` 後も `exact?` が `ZMod.wilsons_lemma` を見つけない（exact? タイムアウト疑い） | Mathlib 内検索・代替アプローチ |
-| `bench_comp_am_gm3` | `nlinarith` に witness `(a-b)^2` 系が必要 | nlinarith witness 自動生成 |
+| ~~`bench_comp_am_gm3`~~ | ~~`nlinarith` に witness が必要~~ | **解決済み** (ver.10) |
 
 ---
 
