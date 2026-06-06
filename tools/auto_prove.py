@@ -245,14 +245,18 @@ def select_tactics(goal: str) -> list:
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
     if "∃" in goal and "Fin" in goal:
         return FINTYPE_TEMPLATES + SEARCH_TACTICS
-    # Wilson's theorem: open scoped Nat shows goal as '↑(p-1)! = -1' (not .factorial).
-    # exact? times out before finding ZMod.wilsons_lemma, so we try it directly.
-    # In Lean 4 goals, '!' only appears as factorial notation (negation uses '¬').
-    if "!" in goal:
-        return [
-            "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  exact ZMod.wilsons_lemma p",
-            "haveI : Fact (Nat.Prime p) := ⟨hp⟩\n  simp [ZMod.wilsons_lemma]",
-        ] + SEARCH_TACTICS
+    # Factorial + prime goals (Wilson's theorem pattern).
+    # Detected by '!' in goal (open scoped Nat renders n! not Nat.factorial)
+    # combined with Nat.Prime in context (avoids false positives on other ! uses).
+    # Variable names are extracted dynamically so any naming convention works.
+    if "!" in goal and "Nat.Prime" in goal:
+        m = re.search(r'(\w+)\s*:\s*Nat\.Prime\s+(\w+)', goal)
+        if m:
+            hname, pvar = m.group(1), m.group(2)
+            return [
+                f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  exact ZMod.wilsons_lemma {pvar}",
+                f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  simp [ZMod.wilsons_lemma]",
+            ] + SEARCH_TACTICS
     # ZMod goals: skip simple tactics that can't possibly work and go to search.
     if "ZMod" in goal:
         return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
