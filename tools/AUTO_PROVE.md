@@ -62,12 +62,18 @@ auto_prove.py
   │    例: ⊢ 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
   │
   ├─【フェーズ 1】ゴールに合うタクティクスを一発で試す
-  │    rfl → ring → omega → exact? / simp? など
+  │    rfl → ring → omega → FINTYPE_TEMPLATES → exact? / simp? など
+  │    ゴール文字列でタクティクセットを絞り込む（select_tactics）
   │
   ├─【フェーズ 1.5】Nat.Prime 仮定がある場合のみ
-  │    haveI : Fact (Nat.Prime p) := ⟨hp⟩ を前置して exact? / simp? を試す
+  │    haveI : Fact (Nat.Prime p) := ⟨hp⟩ を前置して simp/norm_num/exact? などを試す
   │    Mathlib の [Fact (Nat.Prime p)] typeclass を要求するレンマを橋渡しする
   │    例: ZMod.pow_card（フェルマーの小定理）
+  │    ※ exact?/simp? はエラー有りでも "Try this:" を抽出して個別検証
+  │
+  ├─【フェーズ 1.6】apply? / refine? でレンマ候補を見つけてサブゴールを閉じる
+  │    apply? → "Try this: apply X" を抽出 → all_goals simp/omega で残ゴールを閉じる
+  │    preamble（haveI）あり・なし 両方を試す
   │
   ├─【フェーズ 2】失敗したらイテラティブ BFS（時間制限付き）
   │    1タクティクスずつ適用 → 途中ゴールを見て次を選ぶ
@@ -256,6 +262,7 @@ theorem my_thm (n : ℕ) : n + 0 = n := by
 | ゴールの特徴 | 試すタクティクス（順番に） |
 |-------------|----------------|
 | `∑` や `Finset` を含む | 帰納法 → `exact?` → `simp?` |
+| `∃` かつ `Fin` を含む | `apply Fintype.exists_ne_map_eq_of_card_lt` + closers → `exact?` → `simp?` |
 | `^`（べき乗）を含む | `ring`, `nlinarith`, 帰納法 → `exact?` → `simp?` |
 | `ℝ` や `ℚ` を含む | `ring`, `linarith`, `norm_num`, `nlinarith` → `exact?` → `simp?` |
 | `ℕ` や `ℤ` を含む | `omega`, `simp`, `rfl`, `decide`, `ring`, `norm_num` → `exact?` → `simp?` |
