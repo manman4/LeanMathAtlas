@@ -11,3 +11,5 @@ date,label,suite,test_hash,logic,algebra,induction,hard,competition,total,pct,el
 2026-06-06,ver.8 haveI Fact typeclass追加 (dry_run),competition,58ce068b,16/16,12/12,5/5,6/8,2/5,41/46,89%,493
 2026-06-06,Phase 1.5 拡張 + FINTYPE_TEMPLATES (Pigeonhole 解決),core,58ce068b,16/16,12/12,5/5,6/8,3/5,42/46,91%,189
 2026-06-06,動的nlinarith witness + ZMod select + ring_nf DERIV + cast前処理,core,58ce068b,16/16,12/12,5/5,6/8,4/5,43/46,93%,182
+2026-06-06,nlinarith_pairwise_sq追加 + competition 4問追加 (50問),core,a79fad09,16/16,12/12,5/5,6/8,8/9,47/50,94%,176
+2026-06-06,4問をALGEBRAに再分類 (50問ベースライン),core,e456a836,16/16,16/16,5/5,6/8,4/5,47/50,94%,185

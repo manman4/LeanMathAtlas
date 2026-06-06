@@ -80,6 +80,11 @@ ALGEBRA = [
     "theorem bench_am_gm (a b : ℝ) : 2 * a * b ≤ a^2 + b^2",
     "theorem bench_sq_nonneg (a : ℝ) : 0 ≤ a^2",
     "theorem bench_mul_comm_real (a b : ℝ) : a * b = b * a",
+    # polynomial inequalities (nlinarith with pairwise sq witnesses)
+    "theorem bench_cauchy2d (a b c d : ℝ) : (a ^ 2 + b ^ 2) * (c ^ 2 + d ^ 2) ≥ (a * c + b * d) ^ 2",
+    "theorem bench_sym3 (a b c : ℝ) : a ^ 2 + b ^ 2 + c ^ 2 ≥ a * b + b * c + a * c",
+    "theorem bench_cube_am_gm (a b c : ℝ) (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c) : a ^ 3 + b ^ 3 + c ^ 3 ≥ 3 * a * b * c",
+    "theorem bench_cs_sum (a b c : ℝ) : (a + b + c) ^ 2 ≤ 3 * (a ^ 2 + b ^ 2 + c ^ 2)",
 ]
 
 INDUCTION = [

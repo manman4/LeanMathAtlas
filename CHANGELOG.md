@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.16 | 2026-06-06 | auto_prove: extract_real_vars + nlinarith_pairwise_sq_tactic（対称・Cauchy-Schwarz型不等式を自動解決）; benchmark: 多項式不等式 4問をALGEBRAに追加 (47/50, 94%, test_hash: e456a836) |
 | 0.1.15 | 2026-06-06 | auto_prove: 動的 nlinarith witness (AM-GM3); ZMod select; ring_nf DERIV; cast前処理 (43/46, 93%) |
 | 0.1.14 | 2026-06-06 | auto_prove: FINTYPE_TEMPLATES (Pigeonhole); Phase 1.5 拡張・堅牢化; Phase 1.6 apply? 追加 (42/46, 91%) |
 | 0.1.13 | 2026-06-06 | docs: update AUTO_PROVE / BENCHMARK / PLANNING with current state and next development candidates |
