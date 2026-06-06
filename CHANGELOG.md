@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.1.18 | 2026-06-07 | auto_prove: open scoped Nat; !+Nat.Prime 検出で Wilson 解決; 変数名動的抽出で汎用化 — 50/50 (100%) 全問制覇 |
 | 0.1.17 | 2026-06-07 | auto_prove: chain_rule_deriv_tactics (明示的引数); FINSET_CARD_TEMPLATES (bijection + rw); open Nat; Wilson 検出 (49/50, 98%, hard 8/8) |
 | 0.1.16 | 2026-06-06 | auto_prove: extract_real_vars + nlinarith_pairwise_sq_tactic（対称・Cauchy-Schwarz型不等式を自動解決）; benchmark: 多項式不等式 4問をALGEBRAに追加 (47/50, 94%, test_hash: e456a836) |
 | 0.1.15 | 2026-06-06 | auto_prove: 動的 nlinarith witness (AM-GM3); ZMod select; ring_nf DERIV; cast前処理 (43/46, 93%) |
