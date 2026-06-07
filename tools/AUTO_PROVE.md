@@ -414,6 +414,43 @@ exact hg.comp a hf
 
 ---
 
+## norm_num の適切な使い方
+
+`norm_num` は **数値計算専用**のタクティク。以下のものにしか使えない。
+
+| 使ってよい | 使ってはいけない |
+|---|---|
+| 具体的な素数判定 (`Nat.Prime 2`) | 三角関数の恒等式 (`sin²x + cos²x = 1`) |
+| 具体的な数値計算 (`(I : ℂ) ^ 2 = -1`) | 抽象ベクトルのノルム (`‖x‖ = 0 ↔ x = 0`) |
+| 数値不等式 (`2 ≤ 3`) | 群の位数に関する命題 (`a ^ orderOf a = 1`) |
+| | 積分・極限の性質 |
+| | 多項式除法定理 |
+
+### 代替タクティク早見表
+
+| ゴール | 正しいタクティク |
+|---|---|
+| `sin x ^ 2 + cos x ^ 2 = 1` | `exact Real.sin_sq_add_cos_sq x` |
+| `‖exp (↑x * I)‖ = 1` | `exact norm_exp_ofReal_mul_I x` |
+| `a ^ orderOf a = 1` | `exact pow_orderOf_eq_one a` |
+| `a ^ Fintype.card G = 1` | `exact pow_card_eq_one` |
+| `Tendsto (fun _ => c) (𝓝 a) (𝓝 c)` | `exact tendsto_const_nhds` |
+| `∫ _ in a..b, c = (b - a) * c` | `simp [intervalIntegral.integral_const]` |
+| `∫ x in a..b, c • f x = c • ∫ ...` | `exact intervalIntegral.integral_smul c` |
+| `0 ≤ ‖x‖` | `exact norm_nonneg x` |
+| `‖x‖ = 0 ↔ x = 0` | `exact norm_eq_zero` |
+| `‖-x‖ = ‖x‖` | `exact norm_neg x` |
+| `p %ₘ (X - C a) = C (p.eval a)` | `exact Polynomial.modByMonic_X_sub_C_eq_C_eval p a` |
+
+### なぜ混入したか
+
+auto_prove の REPL エラー検出 (`has_error`) が `norm_num` の失敗を見逃した可能性がある。
+REPL が `norm_num` を試みて失敗した際、エラーメッセージの `severity` が `"error"` でなく
+`"warning"` や他のフィールドで返った場合、auto_prove は「証明成功」と誤判定して
+ProvedTheorems.lean に書き込んでしまう。
+
+---
+
 ## ProvedTheorems.lean の重複について
 
 ### 原因
