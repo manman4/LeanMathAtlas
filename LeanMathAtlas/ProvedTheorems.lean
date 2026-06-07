@@ -942,4 +942,24 @@ theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf 
 theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1 := by
   norm_num
 
+-- stmt: theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a * b + a * c
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b c : R
+--   ⊢ a * (b + c) = a * b + a * c
+-- added: 2026-06-07
+theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a * b + a * c := by
+  ring
+
+-- stmt: theorem my_ring_add_mul {R : Type*} [CommRing R] (a b c : R) : (a + b) * c = a * c + b * c
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b c : R
+--   ⊢ (a + b) * c = a * c + b * c
+-- added: 2026-06-07
+theorem my_ring_add_mul {R : Type*} [CommRing R] (a b c : R) : (a + b) * c = a * c + b * c := by
+  ring
+
 end AutoProved
