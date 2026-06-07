@@ -1049,4 +1049,23 @@ theorem my_ideal_mul_mem_left {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a 
 theorem my_ideal_mul_mem_right {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : a * r ∈ I := by
   exact Ideal.IsTwoSided.mul_mem_of_left r ha
 
+-- stmt: theorem my_mem_span_singleton_self {R : Type*} [CommRing R] (a : R) : a ∈ Ideal.span ({a} : Set R)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a ∈ Ideal.span {a}
+-- added: 2026-06-07
+theorem my_mem_span_singleton_self {R : Type*} [CommRing R] (a : R) : a ∈ Ideal.span ({a} : Set R) := by
+  exact Ideal.mem_span_singleton_self a
+
+-- stmt: theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   ⊢ Ideal.span {1} = ⊤
+-- added: 2026-06-07
+theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤ := by
+  simp
+
 end AutoProved
