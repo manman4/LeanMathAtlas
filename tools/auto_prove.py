@@ -35,6 +35,18 @@ def save_index(index: dict):
 def cache_key(stmt: str) -> str:
     return hashlib.sha256(stmt.strip().encode()).hexdigest()[:16]
 
+def extract_preamble(lean_file: Path) -> str:
+    """Extract open/variable lines from a .lean file as REPL preamble."""
+    lines = lean_file.read_text(encoding="utf-8").splitlines()
+    preamble = []
+    for line in lines:
+        s = line.strip()
+        if s.startswith("open ") or s.startswith("variable ") or s.startswith("set_option "):
+            preamble.append(s)
+        elif s.startswith("theorem ") or s.startswith("def ") or s.startswith("lemma "):
+            break
+    return "\n".join(preamble)
+
 # ────────────────────────────────────────────────
 # Writing to ProvedTheorems.lean
 # ────────────────────────────────────────────────
@@ -469,7 +481,7 @@ def fact_preamble(stmt: str) -> str:
 # Automated proving
 # ────────────────────────────────────────────────
 
-def prove_all(theorems: list, dry_run: bool = False) -> list:
+def prove_all(theorems: list, dry_run: bool = False, preamble: str = "") -> list:
     """Attempt to prove each theorem.
 
     dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
@@ -499,7 +511,10 @@ def prove_all(theorems: list, dry_run: bool = False) -> list:
             # open scoped Nat enables n! factorial notation (wilsons_lemma uses it)
             # Regular `open Nat` does NOT activate scoped notations like n!
             resp = session.send({"cmd": "open scoped Nat", "env": env1})
-            base_env = resp.get("env", env0)
+            env2 = resp.get("env", env0)
+            if preamble:
+                resp = session.send({"cmd": preamble, "env": env2})
+            base_env = resp.get("env", env2)
 
             for stmt in uncached:
                 example = to_example(stmt)
@@ -667,13 +682,23 @@ TESTS = [
 ]
 
 def main():
-    targets = sys.argv[1:] if len(sys.argv) > 1 else TESTS
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", type=Path, help="source .lean file to extract preamble from")
+    parser.add_argument("theorems", nargs="*")
+    args = parser.parse_args()
+
+    targets = args.theorems if args.theorems else TESTS
+    preamble = extract_preamble(args.file) if args.file else ""
+    if preamble:
+        print(f"[preamble] {preamble!r}")
+
     index = load_index()
     cached_count = sum(1 for s in targets if cache_key(s) in index)
     print(f"[run] {len(targets)} theorems ({cached_count} cached / {len(targets) - cached_count} uncached)")
 
     t0 = time.time()
-    results = prove_all(targets)
+    results = prove_all(targets, preamble=preamble)
     elapsed = time.time() - t0
 
     passed = failed = 0

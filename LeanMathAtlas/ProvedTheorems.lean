@@ -1478,4 +1478,12 @@ theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 
 theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := by
   exact Real.cos_two_mul x
 
+-- stmt: theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1
+-- goal:
+--   x : ℝ
+--   ⊢ sin x ^ 2 + cos x ^ 2 = 1
+-- added: 2026-06-07
+theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1 := by
+  norm_num
+
 end AutoProved
