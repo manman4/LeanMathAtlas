@@ -1068,4 +1068,14 @@ theorem my_mem_span_singleton_self {R : Type*} [CommRing R] (a : R) : a ∈ Idea
 theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤ := by
   simp
 
+-- stmt: theorem my_span_singleton_eq_top {R : Type*} [CommRing R] (a : R) : Ideal.span ({a} : Set R) = ⊤ ↔ IsUnit a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ Ideal.span {a} = ⊤ ↔ IsUnit a
+-- added: 2026-06-07
+theorem my_span_singleton_eq_top {R : Type*} [CommRing R] (a : R) : Ideal.span ({a} : Set R) = ⊤ ↔ IsUnit a := by
+  simp
+
 end AutoProved
