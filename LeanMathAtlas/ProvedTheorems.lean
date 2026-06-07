@@ -1568,4 +1568,416 @@ theorem euler_formula (x : ℝ) : exp (↑x * I) = cos ↑x + sin ↑x * I := by
 theorem norm_exp_I_eq_one (x : ℝ) : ‖exp (↑x * I)‖ = 1 := by
   norm_num
 
+-- stmt: theorem my_hasDerivAt_const (a c : ℝ) : HasDerivAt (fun _ => c) 0 a
+-- goal:
+--   a c : ℝ
+--   ⊢ HasDerivAt (fun x => c) 0 a
+-- added: 2026-06-07
+theorem my_hasDerivAt_const (a c : ℝ) : HasDerivAt (fun _ => c) 0 a := by
+  exact hasDerivAt_const _ _
+
+-- stmt: theorem my_hasDerivAt_id (a : ℝ) : HasDerivAt id 1 a
+-- goal:
+--   a : ℝ
+--   ⊢ HasDerivAt id 1 a
+-- added: 2026-06-07
+theorem my_hasDerivAt_id (a : ℝ) : HasDerivAt id 1 a := by
+  exact hasDerivAt_id _
+
+-- stmt: theorem my_hasDerivAt_pow (n : ℕ) (a : ℝ) : HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a
+-- goal:
+--   n : ℕ
+--   a : ℝ
+--   ⊢ HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a
+-- added: 2026-06-07
+theorem my_hasDerivAt_pow (n : ℕ) (a : ℝ) : HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a := by
+  exact hasDerivAt_pow n a
+
+-- stmt: theorem my_deriv_add {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x + g x) (f' + g') a
+-- goal:
+--   f g : ℝ → ℝ
+--   f' g' a : ℝ
+--   hf : HasDerivAt f f' a
+--   hg : HasDerivAt g g' a
+--   ⊢ HasDerivAt (fun x => f x + g x) (f' + g') a
+-- added: 2026-06-07
+theorem my_deriv_add {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x + g x) (f' + g') a := by
+  exact HasDerivAt.fun_add hf hg
+
+-- stmt: theorem my_deriv_const_mul {f : ℝ → ℝ} {f' a c : ℝ} (hf : HasDerivAt f f' a) : HasDerivAt (fun x => c * f x) (c * f') a
+-- goal:
+--   f : ℝ → ℝ
+--   f' a c : ℝ
+--   hf : HasDerivAt f f' a
+--   ⊢ HasDerivAt (fun x => c * f x) (c * f') a
+-- added: 2026-06-07
+theorem my_deriv_const_mul {f : ℝ → ℝ} {f' a c : ℝ} (hf : HasDerivAt f f' a) : HasDerivAt (fun x => c * f x) (c * f') a := by
+  exact HasDerivAt.const_mul c hf
+
+-- stmt: theorem my_deriv_mul {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x * g x) (f' * g a + f a * g') a
+-- goal:
+--   f g : ℝ → ℝ
+--   f' g' a : ℝ
+--   hf : HasDerivAt f f' a
+--   hg : HasDerivAt g g' a
+--   ⊢ HasDerivAt (fun x => f x * g x) (f' * g a + f a * g') a
+-- added: 2026-06-07
+theorem my_deriv_mul {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x * g x) (f' * g a + f a * g') a := by
+  exact HasDerivAt.fun_mul hf hg
+
+-- stmt: theorem my_deriv_comp {f g : ℝ → ℝ} {f' g' a : ℝ} (hg : HasDerivAt g g' (f a)) (hf : HasDerivAt f f' a) : HasDerivAt (g ∘ f) (g' * f') a
+-- goal:
+--   f g : ℝ → ℝ
+--   f' g' a : ℝ
+--   hg : HasDerivAt g g' (f a)
+--   hf : HasDerivAt f f' a
+--   ⊢ HasDerivAt (g ∘ f) (g' * f') a
+-- added: 2026-06-07
+theorem my_deriv_comp {f g : ℝ → ℝ} {f' g' a : ℝ} (hg : HasDerivAt g g' (f a)) (hf : HasDerivAt f f' a) : HasDerivAt (g ∘ f) (g' * f') a := by
+  exact HasDerivAt.comp a hg hf
+
+-- stmt: theorem tendsto_iff_eps_delta (f : ℝ → ℝ) (a b : ℝ) : Tendsto f (𝓝 a) (𝓝 b) ↔ ∀ ε > 0, ∃ δ > 0, ∀ x : ℝ, |x - a| < δ → |f x - b| < ε
+-- goal:
+--   f : ℝ → ℝ
+--   a b : ℝ
+--   ⊢ Tendsto f (𝓝 a) (𝓝 b) ↔ ∀ ε > 0, ∃ δ > 0, ∀ (x : ℝ), |x - a| < δ → |f x - b| < ε
+-- added: 2026-06-07
+theorem tendsto_iff_eps_delta (f : ℝ → ℝ) (a b : ℝ) : Tendsto f (𝓝 a) (𝓝 b) ↔ ∀ ε > 0, ∃ δ > 0, ∀ x : ℝ, |x - a| < δ → |f x - b| < ε := by
+  exact Metric.tendsto_nhds_nhds
+
+-- stmt: theorem tendsto_of_eps_delta {f : ℝ → ℝ} {a b : ℝ} (h : ∀ ε > 0, ∃ δ > 0, ∀ x : ℝ, |x - a| < δ → |f x - b| < ε) : Tendsto f (𝓝 a) (𝓝 b)
+-- goal:
+--   f : ℝ → ℝ
+--   a b : ℝ
+--   h : ∀ ε > 0, ∃ δ > 0, ∀ (x : ℝ), |x - a| < δ → |f x - b| < ε
+--   ⊢ Tendsto f (𝓝 a) (𝓝 b)
+-- added: 2026-06-07
+theorem tendsto_of_eps_delta {f : ℝ → ℝ} {a b : ℝ} (h : ∀ ε > 0, ∃ δ > 0, ∀ x : ℝ, |x - a| < δ → |f x - b| < ε) : Tendsto f (𝓝 a) (𝓝 b) := by
+  exact Metric.tendsto_nhds_nhds.mpr h
+
+-- stmt: theorem my_tendsto_const (a c : ℝ) : Tendsto (fun _ => c) (𝓝 a) (𝓝 c)
+-- goal:
+--   a c : ℝ
+--   ⊢ Tendsto (fun x => c) (𝓝 a) (𝓝 c)
+-- added: 2026-06-07
+theorem my_tendsto_const (a c : ℝ) : Tendsto (fun _ => c) (𝓝 a) (𝓝 c) := by
+  norm_num
+
+-- stmt: theorem my_tendsto_id (a : ℝ) : Tendsto id (𝓝 a) (𝓝 a)
+-- goal:
+--   a : ℝ
+--   ⊢ Tendsto id (𝓝 a) (𝓝 a)
+-- added: 2026-06-07
+theorem my_tendsto_id (a : ℝ) : Tendsto id (𝓝 a) (𝓝 a) := by
+  exact tendsto_ofReal_iff'.mp fun ⦃U⦄ a => a
+
+-- stmt: theorem tendsto_sq (a : ℝ) : Tendsto (fun x => x ^ 2) (𝓝 a) (𝓝 (a ^ 2))
+-- goal:
+--   a : ℝ
+--   ⊢ Tendsto (fun x => x ^ 2) (𝓝 a) (𝓝 (a ^ 2))
+-- added: 2026-06-07
+theorem tendsto_sq (a : ℝ) : Tendsto (fun x => x ^ 2) (𝓝 a) (𝓝 (a ^ 2)) := by
+  exact Tendsto.pow (fun ⦃U⦄ a => a) 2
+
+-- stmt: theorem my_tendsto_add {f g : ℝ → ℝ} {a b c : ℝ} (hf : Tendsto f (𝓝 a) (𝓝 b)) (hg : Tendsto g (𝓝 a) (𝓝 c)) : Tendsto (fun x => f x + g x) (𝓝 a) (𝓝 (b + c))
+-- goal:
+--   f g : ℝ → ℝ
+--   a b c : ℝ
+--   hf : Tendsto f (𝓝 a) (𝓝 b)
+--   hg : Tendsto g (𝓝 a) (𝓝 c)
+--   ⊢ Tendsto (fun x => f x + g x) (𝓝 a) (𝓝 (b + c))
+-- added: 2026-06-07
+theorem my_tendsto_add {f g : ℝ → ℝ} {a b c : ℝ} (hf : Tendsto f (𝓝 a) (𝓝 b)) (hg : Tendsto g (𝓝 a) (𝓝 c)) : Tendsto (fun x => f x + g x) (𝓝 a) (𝓝 (b + c)) := by
+  exact Tendsto.add hf hg
+
+-- stmt: theorem my_tendsto_const_mul {f : ℝ → ℝ} {a b : ℝ} (c : ℝ) (hf : Tendsto f (𝓝 a) (𝓝 b)) : Tendsto (fun x => c * f x) (𝓝 a) (𝓝 (c * b))
+-- goal:
+--   f : ℝ → ℝ
+--   a b c : ℝ
+--   hf : Tendsto f (𝓝 a) (𝓝 b)
+--   ⊢ Tendsto (fun x => c * f x) (𝓝 a) (𝓝 (c * b))
+-- added: 2026-06-07
+theorem my_tendsto_const_mul {f : ℝ → ℝ} {a b : ℝ} (c : ℝ) (hf : Tendsto f (𝓝 a) (𝓝 b)) : Tendsto (fun x => c * f x) (𝓝 a) (𝓝 (c * b)) := by
+  exact Tendsto.const_mul c hf
+
+-- stmt: theorem my_tendsto_mul {f g : ℝ → ℝ} {a b c : ℝ} (hf : Tendsto f (𝓝 a) (𝓝 b)) (hg : Tendsto g (𝓝 a) (𝓝 c)) : Tendsto (fun x => f x * g x) (𝓝 a) (𝓝 (b * c))
+-- goal:
+--   f g : ℝ → ℝ
+--   a b c : ℝ
+--   hf : Tendsto f (𝓝 a) (𝓝 b)
+--   hg : Tendsto g (𝓝 a) (𝓝 c)
+--   ⊢ Tendsto (fun x => f x * g x) (𝓝 a) (𝓝 (b * c))
+-- added: 2026-06-07
+theorem my_tendsto_mul {f g : ℝ → ℝ} {a b c : ℝ} (hf : Tendsto f (𝓝 a) (𝓝 b)) (hg : Tendsto g (𝓝 a) (𝓝 c)) : Tendsto (fun x => f x * g x) (𝓝 a) (𝓝 (b * c)) := by
+  exact Tendsto.mul hf hg
+
+-- stmt: theorem my_tendsto_comp {f g : ℝ → ℝ} {a b c : ℝ} (hg : Tendsto g (𝓝 b) (𝓝 c)) (hf : Tendsto f (𝓝 a) (𝓝 b)) : Tendsto (g ∘ f) (𝓝 a) (𝓝 c)
+-- goal:
+--   f g : ℝ → ℝ
+--   a b c : ℝ
+--   hg : Tendsto g (𝓝 b) (𝓝 c)
+--   hf : Tendsto f (𝓝 a) (𝓝 b)
+--   ⊢ Tendsto (g ∘ f) (𝓝 a) (𝓝 c)
+-- added: 2026-06-07
+theorem my_tendsto_comp {f g : ℝ → ℝ} {a b c : ℝ} (hg : Tendsto g (𝓝 b) (𝓝 c)) (hf : Tendsto f (𝓝 a) (𝓝 b)) : Tendsto (g ∘ f) (𝓝 a) (𝓝 c) := by
+  exact Tendsto.comp hg hf
+
+-- stmt: theorem continuousAt_iff_tendsto (f : ℝ → ℝ) (a : ℝ) : ContinuousAt f a ↔ Tendsto f (𝓝 a) (𝓝 (f a))
+-- goal:
+--   f : ℝ → ℝ
+--   a : ℝ
+--   ⊢ ContinuousAt f a ↔ Tendsto f (𝓝 a) (𝓝 (f a))
+-- added: 2026-06-07
+theorem continuousAt_iff_tendsto (f : ℝ → ℝ) (a : ℝ) : ContinuousAt f a ↔ Tendsto f (𝓝 a) (𝓝 (f a)) := by
+  aesop
+
+-- stmt: theorem continuous_poly (a : ℝ) : ContinuousAt (fun x => x ^ 2 + 3 * x + 1) a
+-- goal:
+--   a : ℝ
+--   ⊢ ContinuousAt (fun x => x ^ 2 + 3 * x + 1) a
+-- added: 2026-06-07
+theorem continuous_poly (a : ℝ) : ContinuousAt (fun x => x ^ 2 + 3 * x + 1) a := by
+  fun_prop
+
+-- stmt: theorem squeeze_tendsto {f g h : ℝ → ℝ} {a L : ℝ} (hg : Tendsto g (𝓝 a) (𝓝 L)) (hh : Tendsto h (𝓝 a) (𝓝 L)) (hfg : ∀ᶠ x in 𝓝 a, g x ≤ f x) (hfh : ∀ᶠ x in 𝓝 a, f x ≤ h x) : Tendsto f (𝓝 a) (𝓝 L)
+-- goal:
+--   f g h : ℝ → ℝ
+--   a L : ℝ
+--   hg : Tendsto g (𝓝 a) (𝓝 L)
+--   hh : Tendsto h (𝓝 a) (𝓝 L)
+--   hfg : ∀ᶠ (x : ℝ) in 𝓝 a, g x ≤ f x
+--   hfh : ∀ᶠ (x : ℝ) in 𝓝 a, f x ≤ h x
+--   ⊢ Tendsto f (𝓝 a) (𝓝 L)
+-- added: 2026-06-07
+theorem squeeze_tendsto {f g h : ℝ → ℝ} {a L : ℝ} (hg : Tendsto g (𝓝 a) (𝓝 L)) (hh : Tendsto h (𝓝 a) (𝓝 L)) (hfg : ∀ᶠ x in 𝓝 a, g x ≤ f x) (hfh : ∀ᶠ x in 𝓝 a, f x ≤ h x) : Tendsto f (𝓝 a) (𝓝 L) := by
+  exact Tendsto.squeeze' hg hh hfg hfh
+
+-- stmt: theorem my_integral_const (a b c : ℝ) : ∫ _ in a..b, c = (b - a) * c
+-- goal:
+--   a b c : ℝ
+--   ⊢ ∫ (x : ℝ) in a..b, c = (b - a) * c
+-- added: 2026-06-07
+theorem my_integral_const (a b c : ℝ) : ∫ _ in a..b, c = (b - a) * c := by
+  norm_num
+
+-- stmt: theorem my_integral_symm (f : ℝ → ℝ) (a b : ℝ) : ∫ x in b..a, f x = -∫ x in a..b, f x
+-- goal:
+--   f : ℝ → ℝ
+--   a b : ℝ
+--   ⊢ ∫ (x : ℝ) in b..a, f x = -∫ (x : ℝ) in a..b, f x
+-- added: 2026-06-07
+theorem my_integral_symm (f : ℝ → ℝ) (a b : ℝ) : ∫ x in b..a, f x = -∫ x in a..b, f x := by
+  exact intervalIntegral.integral_symm a b
+
+-- stmt: theorem my_integral_add (f g : ℝ → ℝ) (a b : ℝ) (hf : IntervalIntegrable f volume a b) (hg : IntervalIntegrable g volume a b) : ∫ x in a..b, (f x + g x) = (∫ x in a..b, f x) + ∫ x in a..b, g x
+-- goal:
+--   f g : ℝ → ℝ
+--   a b : ℝ
+--   hf : IntervalIntegrable f volume a b
+--   hg : IntervalIntegrable g volume a b
+--   ⊢ ∫ (x : ℝ) in a..b, f x + g x = (∫ (x : ℝ) in a..b, f x) + ∫ (x : ℝ) in a..b, g x
+-- added: 2026-06-07
+theorem my_integral_add (f g : ℝ → ℝ) (a b : ℝ) (hf : IntervalIntegrable f volume a b) (hg : IntervalIntegrable g volume a b) : ∫ x in a..b, (f x + g x) = (∫ x in a..b, f x) + ∫ x in a..b, g x := by
+  exact intervalIntegral.integral_add hf hg
+
+-- stmt: theorem my_integral_sub (f g : ℝ → ℝ) (a b : ℝ) (hf : IntervalIntegrable f volume a b) (hg : IntervalIntegrable g volume a b) : ∫ x in a..b, (f x - g x) = (∫ x in a..b, f x) - ∫ x in a..b, g x
+-- goal:
+--   f g : ℝ → ℝ
+--   a b : ℝ
+--   hf : IntervalIntegrable f volume a b
+--   hg : IntervalIntegrable g volume a b
+--   ⊢ ∫ (x : ℝ) in a..b, f x - g x = (∫ (x : ℝ) in a..b, f x) - ∫ (x : ℝ) in a..b, g x
+-- added: 2026-06-07
+theorem my_integral_sub (f g : ℝ → ℝ) (a b : ℝ) (hf : IntervalIntegrable f volume a b) (hg : IntervalIntegrable g volume a b) : ∫ x in a..b, (f x - g x) = (∫ x in a..b, f x) - ∫ x in a..b, g x := by
+  exact intervalIntegral.integral_sub hf hg
+
+-- stmt: theorem my_integral_smul (f : ℝ → ℝ) (c : ℝ) (a b : ℝ) : ∫ x in a..b, c • f x = c • ∫ x in a..b, f x
+-- goal:
+--   f : ℝ → ℝ
+--   c a b : ℝ
+--   ⊢ ∫ (x : ℝ) in a..b, c • f x = c • ∫ (x : ℝ) in a..b, f x
+-- added: 2026-06-07
+theorem my_integral_smul (f : ℝ → ℝ) (c : ℝ) (a b : ℝ) : ∫ x in a..b, c • f x = c • ∫ x in a..b, f x := by
+  norm_num
+
+-- stmt: theorem my_integral_add_adjacent (f : ℝ → ℝ) (a b c : ℝ) (hab : IntervalIntegrable f volume a b) (hbc : IntervalIntegrable f volume b c) : (∫ x in a..b, f x) + ∫ x in b..c, f x = ∫ x in a..c, f x
+-- goal:
+--   f : ℝ → ℝ
+--   a b c : ℝ
+--   hab : IntervalIntegrable f volume a b
+--   hbc : IntervalIntegrable f volume b c
+--   ⊢ (∫ (x : ℝ) in a..b, f x) + ∫ (x : ℝ) in b..c, f x = ∫ (x : ℝ) in a..c, f x
+-- added: 2026-06-07
+theorem my_integral_add_adjacent (f : ℝ → ℝ) (a b c : ℝ) (hab : IntervalIntegrable f volume a b) (hbc : IntervalIntegrable f volume b c) : (∫ x in a..b, f x) + ∫ x in b..c, f x = ∫ x in a..c, f x := by
+  exact intervalIntegral.integral_add_adjacent_intervals hab hbc
+
+-- stmt: theorem my_continuous_intervalIntegrable (f : ℝ → ℝ) (hf : Continuous f) (a b : ℝ) : IntervalIntegrable f volume a b
+-- goal:
+--   f : ℝ → ℝ
+--   hf : Continuous f
+--   a b : ℝ
+--   ⊢ IntervalIntegrable f volume a b
+-- added: 2026-06-07
+theorem my_continuous_intervalIntegrable (f : ℝ → ℝ) (hf : Continuous f) (a b : ℝ) : IntervalIntegrable f volume a b := by
+  exact Continuous.intervalIntegrable hf a b
+
+-- stmt: theorem my_ftc2 (F f : ℝ → ℝ) (a b : ℝ) (hderiv : ∀ x ∈ Set.uIcc a b, HasDerivAt F (f x) x) (hint : IntervalIntegrable f volume a b) : ∫ x in a..b, f x = F b - F a
+-- goal:
+--   F f : ℝ → ℝ
+--   a b : ℝ
+--   hderiv : ∀ x ∈ Set.uIcc a b, HasDerivAt F (f x) x
+--   hint : IntervalIntegrable f volume a b
+--   ⊢ ∫ (x : ℝ) in a..b, f x = F b - F a
+-- added: 2026-06-07
+theorem my_ftc2 (F f : ℝ → ℝ) (a b : ℝ) (hderiv : ∀ x ∈ Set.uIcc a b, HasDerivAt F (f x) x) (hint : IntervalIntegrable f volume a b) : ∫ x in a..b, f x = F b - F a := by
+  exact intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hint
+
+-- stmt: theorem my_ftc1 (f : ℝ → ℝ) (hf : Continuous f) (a b : ℝ) : deriv (fun u => ∫ x in a..u, f x) b = f b
+-- goal:
+--   f : ℝ → ℝ
+--   hf : Continuous f
+--   a b : ℝ
+--   ⊢ deriv (fun u => ∫ (x : ℝ) in a..u, f x) b = f b
+-- added: 2026-06-07
+theorem my_ftc1 (f : ℝ → ℝ) (hf : Continuous f) (a b : ℝ) : deriv (fun u => ∫ x in a..u, f x) b = f b := by
+  exact Continuous.deriv_integral f hf a b
+
+-- stmt: theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x : E
+--   ⊢ Type ?u.184
+-- added: 2026-06-07
+theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜 := by
+  assumption
+
+-- stmt: theorem my_norm_nonneg (x : E) : 0 ≤ ‖x‖
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x : E
+--   ⊢ 0 ≤ ‖x‖
+-- added: 2026-06-07
+theorem my_norm_nonneg (x : E) : 0 ≤ ‖x‖ := by
+  norm_num
+
+-- stmt: theorem my_norm_eq_zero (x : E) : ‖x‖ = 0 ↔ x = 0
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x : E
+--   ⊢ ‖x‖ = 0 ↔ x = 0
+-- added: 2026-06-07
+theorem my_norm_eq_zero (x : E) : ‖x‖ = 0 ↔ x = 0 := by
+  norm_num
+
+-- stmt: theorem my_norm_add_le (x y : E) : ‖x + y‖ ≤ ‖x‖ + ‖y‖
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x y : E
+--   ⊢ ‖x + y‖ ≤ ‖x‖ + ‖y‖
+-- added: 2026-06-07
+theorem my_norm_add_le (x y : E) : ‖x + y‖ ≤ ‖x‖ + ‖y‖ := by
+  exact norm_add_le x y
+
+-- stmt: theorem my_norm_neg (x : E) : ‖-x‖ = ‖x‖
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x : E
+--   ⊢ ‖-x‖ = ‖x‖
+-- added: 2026-06-07
+theorem my_norm_neg (x : E) : ‖-x‖ = ‖x‖ := by
+  norm_num
+
+-- stmt: theorem cauchy_schwarz (x y : E) : |inner (𝕜
+-- goal:
+--   E : Type u_1
+--   inst✝¹ : NormedAddCommGroup E
+--   inst✝ : InnerProductSpace ℝ E
+--   x y : E
+--   ⊢ Type ?u.297
+-- added: 2026-06-07
+theorem cauchy_schwarz (x y : E) : |inner (𝕜 := by
+  assumption
+
+-- stmt: theorem my_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
+-- goal:
+--   n : ℕ
+--   ⊢ 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
+-- added: 2026-06-07
+theorem my_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1) := by
+  induction n with
+    | zero => simp
+    | succ m ih =>
+      rw [Finset.sum_range_succ]; nlinarith [ih]
+
+-- stmt: theorem sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
+-- goal:
+--   n : ℕ
+--   ⊢ 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
+-- added: 2026-06-07
+theorem sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1) := by
+  induction n with
+    | zero => simp
+    | succ m ih =>
+      rw [Finset.sum_range_succ]; nlinarith [ih]
+
+-- stmt: theorem sum_geom (a r : ℝ) (n : ℕ) : (r - 1) * ∑ k ∈ Finset.range n, a * r ^ k = a * (r ^ n - 1)
+-- goal:
+--   a r : ℝ
+--   n : ℕ
+--   ⊢ (r - 1) * ∑ k ∈ Finset.range n, a * r ^ k = a * (r ^ n - 1)
+-- added: 2026-06-07
+theorem sum_geom (a r : ℝ) (n : ℕ) : (r - 1) * ∑ k ∈ Finset.range n, a * r ^ k = a * (r ^ n - 1) := by
+  induction n with
+    | zero => simp
+    | succ m ih =>
+      rw [Finset.sum_range_succ, mul_add, ih]; ring
+
+-- stmt: theorem sum_cubes (n : ℕ) : 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2
+-- goal:
+--   n : ℕ
+--   ⊢ 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2
+-- added: 2026-06-07
+theorem sum_cubes (n : ℕ) : 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2 := by
+  induction n with
+    | zero => simp
+    | succ m ih =>
+      rw [Finset.sum_range_succ]; nlinarith [ih]
+
+-- stmt: theorem binomial_theorem (a b : ℝ) (n : ℕ) : (a + b) ^ n = ∑ k ∈ range (n + 1), a ^ k * b ^ (n - k) * (n.choose k : ℝ)
+-- goal:
+--   a b : ℝ
+--   n : ℕ
+--   ⊢ (a + b) ^ n = ∑ k ∈ range (n + 1), a ^ k * b ^ (n - k) * ↑(n.choose k)
+-- added: 2026-06-07
+theorem binomial_theorem (a b : ℝ) (n : ℕ) : (a + b) ^ n = ∑ k ∈ range (n + 1), a ^ k * b ^ (n - k) * (n.choose k : ℝ) := by
+  exact add_pow a b n
+
+-- stmt: theorem sum_choose_eq_pow2 (n : ℕ) : ∑ k ∈ range (n + 1), n.choose k = 2 ^ n
+-- goal:
+--   n : ℕ
+--   ⊢ ∑ k ∈ range (n + 1), n.choose k = 2 ^ n
+-- added: 2026-06-07
+theorem sum_choose_eq_pow2 (n : ℕ) : ∑ k ∈ range (n + 1), n.choose k = 2 ^ n := by
+  exact Nat.sum_range_choose n
+
+-- stmt: theorem alternating_sum_choose (n : ℕ) (hn : 0 < n) : ∑ k ∈ range (n + 1), (-1 : ℤ) ^ k * n.choose k = 0
+-- goal:
+--   n : ℕ
+--   hn : 0 < n
+--   ⊢ ∑ k ∈ range (n + 1), (-1) ^ k * ↑(n.choose k) = 0
+-- added: 2026-06-07
+theorem alternating_sum_choose (n : ℕ) (hn : 0 < n) : ∑ k ∈ range (n + 1), (-1 : ℤ) ^ k * n.choose k = 0 := by
+  refine Int.alternating_sum_range_choose_of_ne ?_
+    all_goals omega
+
 end AutoProved
