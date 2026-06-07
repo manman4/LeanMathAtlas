@@ -1568,4 +1568,40 @@ theorem euler_formula (x : ℝ) : exp (↑x * I) = cos ↑x + sin ↑x * I := by
 theorem norm_exp_I_eq_one (x : ℝ) : ‖exp (↑x * I)‖ = 1 := by
   norm_num
 
+-- stmt: theorem my_hasDerivAt_const (a c : ℝ) : HasDerivAt (fun _ => c) 0 a
+-- goal:
+--   a c : ℝ
+--   ⊢ HasDerivAt (fun x => c) 0 a
+-- added: 2026-06-07
+theorem my_hasDerivAt_const (a c : ℝ) : HasDerivAt (fun _ => c) 0 a := by
+  exact hasDerivAt_const _ _
+
+-- stmt: theorem my_hasDerivAt_id (a : ℝ) : HasDerivAt id 1 a
+-- goal:
+--   a : ℝ
+--   ⊢ HasDerivAt id 1 a
+-- added: 2026-06-07
+theorem my_hasDerivAt_id (a : ℝ) : HasDerivAt id 1 a := by
+  exact hasDerivAt_id _
+
+-- stmt: theorem my_hasDerivAt_pow (n : ℕ) (a : ℝ) : HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a
+-- goal:
+--   n : ℕ
+--   a : ℝ
+--   ⊢ HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a
+-- added: 2026-06-07
+theorem my_hasDerivAt_pow (n : ℕ) (a : ℝ) : HasDerivAt (fun x => x ^ n) (↑n * a ^ (n - 1)) a := by
+  exact hasDerivAt_pow n a
+
+-- stmt: theorem my_deriv_add {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x + g x) (f' + g') a
+-- goal:
+--   f g : ℝ → ℝ
+--   f' g' a : ℝ
+--   hf : HasDerivAt f f' a
+--   hg : HasDerivAt g g' a
+--   ⊢ HasDerivAt (fun x => f x + g x) (f' + g') a
+-- added: 2026-06-07
+theorem my_deriv_add {f g : ℝ → ℝ} {f' g' a : ℝ} (hf : HasDerivAt f f' a) (hg : HasDerivAt g g' a) : HasDerivAt (fun x => f x + g x) (f' + g') a := by
+  exact HasDerivAt.fun_add hf hg
+
 end AutoProved
