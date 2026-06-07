@@ -479,4 +479,26 @@ theorem zmod_self (n : ℕ) : (n : ZMod n) = 0 := by
 theorem cong_iff_dvd (a b : ℤ) (n : ℕ) : (a : ZMod n) = b ↔ (n : ℤ) ∣ b - a := by
   exact ZMod.intCast_eq_intCast_iff_dvd_sub a b n
 
+-- stmt: theorem cong_add {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a + c = b + c
+-- goal:
+--   n : ℕ
+--   a b : ZMod n
+--   h : a = b
+--   c : ZMod n
+--   ⊢ a + c = b + c
+-- added: 2026-06-07
+theorem cong_add {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a + c = b + c := by
+  exact (add_left_inj c).mpr h
+
+-- stmt: theorem cong_mul {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a * c = b * c
+-- goal:
+--   n : ℕ
+--   a b : ZMod n
+--   h : a = b
+--   c : ZMod n
+--   ⊢ a * c = b * c
+-- added: 2026-06-07
+theorem cong_mul {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a * c = b * c := by
+  exact ZMod.valMinAbs_inj.mp (congrArg ZMod.valMinAbs (congrFun (congrArg HMul.hMul h) c))
+
 end AutoProved
