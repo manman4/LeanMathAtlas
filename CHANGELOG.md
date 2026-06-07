@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.1 | 2026-06-07 | fix: duplicate theorem guard in append_to_lean_db; whitespace normalization in batch_prove extract_theorems; add batch_prove.py; prove my_exists_le_maximal |
 | 0.3.0 | 2026-06-07 | feat: preamble support in auto_prove.py (--file flag extracts open/variable from source); bulk proofs added across Groups, Rings, Topology, Trigonometry, NumberTheory, Combinatorics |
 | 0.2.1 | 2026-06-07 | fix: unpack prove_all results as 4-tuple in main(); add mul_sum_diff / cube_sum to ProvedTheorems |
 | 0.2.0 | 2026-06-07 | auto_prove: open scoped Nat; !+Nat.Prime 検出で Wilson 解決; 変数名動的抽出で汎用化 — 50/50 (100%) 全問制覇 |
