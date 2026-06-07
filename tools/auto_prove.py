@@ -69,6 +69,11 @@ def tactic_block(tactic: str) -> str:
     return "\n".join(f"  {l}" for l in lines)
 
 def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str):
+    content = LEAN_DB_FILE.read_text(encoding="utf-8")
+    # Guard: skip if a theorem with this lean_name already exists
+    if re.search(rf'\btheorem {re.escape(lean_name)}\b', content):
+        print(f"  [skip-dup] {lean_name} already in ProvedTheorems.lean")
+        return
     goal_commented = "\n".join(f"--   {line}" for line in goal.split("\n"))
     entry = (
         f"\n"
@@ -78,7 +83,6 @@ def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str):
         f"theorem {lean_name} {stmt_body(stmt)} := by\n"
         f"{tactic_block(tactic)}\n"
     )
-    content = LEAN_DB_FILE.read_text(encoding="utf-8")
     # Insert before the closing namespace marker
     marker = "\nend AutoProved\n"
     if marker in content:
