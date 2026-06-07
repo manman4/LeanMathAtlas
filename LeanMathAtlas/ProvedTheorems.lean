@@ -814,7 +814,7 @@ theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.i
 --   ⊢ a ^ orderOf a = 1
 -- added: 2026-06-07
 theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1 := by
-  norm_num
+  exact pow_orderOf_eq_one a
 
 -- stmt: theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n
 -- goal:
@@ -848,7 +848,7 @@ theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf 
 --   ⊢ a ^ Fintype.card G = 1
 -- added: 2026-06-07
 theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1 := by
-  norm_num
+  exact pow_card_eq_one
 
 -- stmt: theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a * b + a * c
 -- goal:
@@ -1262,7 +1262,7 @@ theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : 
 --   ⊢ Real.sin x ^ 2 + Real.cos x ^ 2 = 1
 -- added: 2026-06-07
 theorem pythagorean (x : ℝ) : Real.sin x ^ 2 + Real.cos x ^ 2 = 1 := by
-  norm_num
+  exact Real.sin_sq_add_cos_sq x
 
 -- stmt: theorem sin_double (x : ℝ) : Real.sin (2 * x) = 2 * Real.sin x * Real.cos x
 -- goal:
@@ -1392,7 +1392,7 @@ theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := 
 --   ⊢ sin x ^ 2 + cos x ^ 2 = 1
 -- added: 2026-06-07
 theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1 := by
-  norm_num
+  linarith [Real.sin_sq_add_cos_sq x]
 
 -- stmt: theorem my_exists_le_maximal (I : Ideal R) (hI : I ≠ ⊤) : ∃ M : Ideal R, M.IsMaximal ∧ I ≤ M
 -- goal:
@@ -1474,7 +1474,7 @@ theorem euler_formula (x : ℝ) : exp (↑x * I) = cos ↑x + sin ↑x * I := by
 --   ⊢ ‖cexp (↑x * I)‖ = 1
 -- added: 2026-06-07
 theorem norm_exp_I_eq_one (x : ℝ) : ‖exp (↑x * I)‖ = 1 := by
-  norm_num
+  exact norm_exp_ofReal_mul_I x
 
 -- stmt: theorem my_hasDerivAt_const (a c : ℝ) : HasDerivAt (fun _ => c) 0 a
 -- goal:
@@ -1569,7 +1569,7 @@ theorem tendsto_of_eps_delta {f : ℝ → ℝ} {a b : ℝ} (h : ∀ ε > 0, ∃ 
 --   ⊢ Tendsto (fun x => c) (𝓝 a) (𝓝 c)
 -- added: 2026-06-07
 theorem my_tendsto_const (a c : ℝ) : Tendsto (fun _ => c) (𝓝 a) (𝓝 c) := by
-  norm_num
+  exact tendsto_const_nhds
 
 -- stmt: theorem my_tendsto_id (a : ℝ) : Tendsto id (𝓝 a) (𝓝 a)
 -- goal:
@@ -1666,7 +1666,7 @@ theorem squeeze_tendsto {f g h : ℝ → ℝ} {a L : ℝ} (hg : Tendsto g (𝓝 
 --   ⊢ ∫ (x : ℝ) in a..b, c = (b - a) * c
 -- added: 2026-06-07
 theorem my_integral_const (a b c : ℝ) : ∫ _ in a..b, c = (b - a) * c := by
-  norm_num
+  simp [intervalIntegral.integral_const]
 
 -- stmt: theorem my_integral_symm (f : ℝ → ℝ) (a b : ℝ) : ∫ x in b..a, f x = -∫ x in a..b, f x
 -- goal:
@@ -1706,7 +1706,7 @@ theorem my_integral_sub (f g : ℝ → ℝ) (a b : ℝ) (hf : IntervalIntegrable
 --   ⊢ ∫ (x : ℝ) in a..b, c • f x = c • ∫ (x : ℝ) in a..b, f x
 -- added: 2026-06-07
 theorem my_integral_smul (f : ℝ → ℝ) (c : ℝ) (a b : ℝ) : ∫ x in a..b, c • f x = c • ∫ x in a..b, f x := by
-  norm_num
+  exact intervalIntegral.integral_smul c
 
 -- stmt: theorem my_integral_add_adjacent (f : ℝ → ℝ) (a b c : ℝ) (hab : IntervalIntegrable f volume a b) (hbc : IntervalIntegrable f volume b c) : (∫ x in a..b, f x) + ∫ x in b..c, f x = ∫ x in a..c, f x
 -- goal:
@@ -1770,7 +1770,7 @@ theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜 := ℝ) x x := by
 --   ⊢ 0 ≤ ‖x‖
 -- added: 2026-06-07
 theorem my_norm_nonneg (x : E) : 0 ≤ ‖x‖ := by
-  norm_num
+  exact norm_nonneg x
 
 -- stmt: theorem my_norm_eq_zero (x : E) : ‖x‖ = 0 ↔ x = 0
 -- goal:
@@ -1781,7 +1781,7 @@ theorem my_norm_nonneg (x : E) : 0 ≤ ‖x‖ := by
 --   ⊢ ‖x‖ = 0 ↔ x = 0
 -- added: 2026-06-07
 theorem my_norm_eq_zero (x : E) : ‖x‖ = 0 ↔ x = 0 := by
-  norm_num
+  exact norm_eq_zero
 
 -- stmt: theorem my_norm_add_le (x y : E) : ‖x + y‖ ≤ ‖x‖ + ‖y‖
 -- goal:
@@ -1803,7 +1803,7 @@ theorem my_norm_add_le (x y : E) : ‖x + y‖ ≤ ‖x‖ + ‖y‖ := by
 --   ⊢ ‖-x‖ = ‖x‖
 -- added: 2026-06-07
 theorem my_norm_neg (x : E) : ‖-x‖ = ‖x‖ := by
-  norm_num
+  exact norm_neg x
 
 -- stmt: theorem cauchy_schwarz (x y : E) : |inner (𝕜 := ℝ) x y| ≤ ‖x‖ * ‖y‖
 -- goal:
@@ -1895,7 +1895,7 @@ theorem alternating_sum_choose (n : ℕ) (hn : 0 < n) : ∑ k ∈ range (n + 1),
 --   ⊢ p %ₘ (X - C a) = C (eval a p)
 -- added: 2026-06-07
 theorem remainder_theorem (p : ℝ[X]) (a : ℝ) : p %ₘ (X - C a) = C (p.eval a) := by
-  norm_num
+  exact Polynomial.modByMonic_X_sub_C_eq_C_eval p a
 
 -- stmt: theorem normSq_sq (z : ℂ) : normSq z = z.re ^ 2 + z.im ^ 2
 -- goal:
