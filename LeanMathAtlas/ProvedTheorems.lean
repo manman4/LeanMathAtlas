@@ -1183,4 +1183,131 @@ theorem my_isClosed_compl_iff {X : Type*} [TopologicalSpace X] {s : Set X} : IsC
 theorem my_isClosed_union {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsClosed s) (ht : IsClosed t) : IsClosed (s ∪ t) := by
   exact IsClosed.union hs ht
 
+-- stmt: theorem my_isOpen_iUnion {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsOpen (f i)) : IsOpen (⋃ i, f i)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ι : Type u_2
+--   f : ι → Set X
+--   h : ∀ (i : ι), IsOpen (f i)
+--   ⊢ IsOpen (⋃ i, f i)
+-- added: 2026-06-07
+theorem my_isOpen_iUnion {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsOpen (f i)) : IsOpen (⋃ i, f i) := by
+  exact isOpen_iUnion h
+
+-- stmt: theorem my_isClosed_iInter {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsClosed (f i)) : IsClosed (⋂ i, f i)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ι : Type u_2
+--   f : ι → Set X
+--   h : ∀ (i : ι), IsClosed (f i)
+--   ⊢ IsClosed (⋂ i, f i)
+-- added: 2026-06-07
+theorem my_isClosed_iInter {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsClosed (f i)) : IsClosed (⋂ i, f i) := by
+  exact isClosed_iInter h
+
+-- stmt: theorem my_isOpen_preimage {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {f : X → Y} (hf : Continuous f) {s : Set Y} (hs : IsOpen s) : IsOpen (f ⁻¹' s)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   f : X → Y
+--   hf : Continuous f
+--   s : Set Y
+--   hs : IsOpen s
+--   ⊢ IsOpen (f ⁻¹' s)
+-- added: 2026-06-07
+theorem my_isOpen_preimage {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {f : X → Y} (hf : Continuous f) {s : Set Y} (hs : IsOpen s) : IsOpen (f ⁻¹' s) := by
+  exact hf.isOpen_preimage s hs
+
+-- stmt: theorem my_continuous_comp {X Y Z : Type*} [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] {f : X → Y} {g : Y → Z} (hf : Continuous f) (hg : Continuous g) : Continuous (g ∘ f)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   Z : Type u_3
+--   inst✝² : TopologicalSpace X
+--   inst✝¹ : TopologicalSpace Y
+--   inst✝ : TopologicalSpace Z
+--   f : X → Y
+--   g : Y → Z
+--   hf : Continuous f
+--   hg : Continuous g
+--   ⊢ Continuous (g ∘ f)
+-- added: 2026-06-07
+theorem my_continuous_comp {X Y Z : Type*} [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] {f : X → Y} {g : Y → Z} (hf : Continuous f) (hg : Continuous g) : Continuous (g ∘ f) := by
+  fun_prop
+
+-- stmt: theorem my_continuous_id {X : Type*} [TopologicalSpace X] : Continuous (id : X → X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ Continuous id
+-- added: 2026-06-07
+theorem my_continuous_id {X : Type*} [TopologicalSpace X] : Continuous (id : X → X) := by
+  fun_prop
+
+-- stmt: theorem my_continuous_const {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {y : Y} : Continuous (fun _ : X => y)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   y : Y
+--   ⊢ Continuous fun x => y
+-- added: 2026-06-07
+theorem my_continuous_const {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {y : Y} : Continuous (fun _ : X => y) := by
+  fun_prop
+
+-- stmt: theorem my_isCompact_inter_right {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) : IsCompact (s ∩ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsCompact s
+--   ht : IsClosed t
+--   ⊢ IsCompact (s ∩ t)
+-- added: 2026-06-07
+theorem my_isCompact_inter_right {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) : IsCompact (s ∩ t) := by
+  exact IsCompact.inter_right hs ht
+
+-- stmt: theorem my_isCompact_of_isClosed_subset {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) (h : t ⊆ s) : IsCompact t
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsCompact s
+--   ht : IsClosed t
+--   h : t ⊆ s
+--   ⊢ IsCompact t
+-- added: 2026-06-07
+theorem my_isCompact_of_isClosed_subset {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) (h : t ⊆ s) : IsCompact t := by
+  exact IsCompact.of_isClosed_subset hs ht h
+
+-- stmt: theorem my_isCompact_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {s : Set X} {f : X → Y} (hs : IsCompact s) (hf : Continuous f) : IsCompact (f '' s)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   s : Set X
+--   f : X → Y
+--   hs : IsCompact s
+--   hf : Continuous f
+--   ⊢ IsCompact (f '' s)
+-- added: 2026-06-07
+theorem my_isCompact_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {s : Set X} {f : X → Y} (hs : IsCompact s) (hf : Continuous f) : IsCompact (f '' s) := by
+  exact IsCompact.image hs hf
+
+-- stmt: theorem my_isConnected_singleton {X : Type*} [TopologicalSpace X] {x : X} : IsConnected ({x} : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   x : X
+--   ⊢ IsConnected {x}
+-- added: 2026-06-07
+theorem my_isConnected_singleton {X : Type*} [TopologicalSpace X] {x : X} : IsConnected ({x} : Set X) := by
+  exact isConnected_singleton
+
 end AutoProved
