@@ -786,4 +786,26 @@ theorem my_inv_inv {G : Type*} [Group G] (a : G) : a⁻¹⁻¹ = a := by
 theorem my_mul_inv_rev {G : Type*} [Group G] (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
   simp
 
+-- stmt: theorem my_mul_left_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = a * c) : b = c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = a * c
+--   ⊢ b = c
+-- added: 2026-06-07
+theorem my_mul_left_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = a * c) : b = c := by
+  aesop
+
+-- stmt: theorem my_mul_right_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = c * b) : a = c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = c * b
+--   ⊢ a = c
+-- added: 2026-06-07
+theorem my_mul_right_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = c * b) : a = c := by
+  aesop
+
 end AutoProved
