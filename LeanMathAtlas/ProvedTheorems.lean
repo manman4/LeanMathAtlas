@@ -379,4 +379,20 @@ theorem cube_diff (a b : ℝ) : (a - b)^3 = a^3 - 3*a^2*b + 3*a*b^2 - b^3 := by
 theorem factor_diff_sq (a b : ℝ) : a^2 - b^2 = (a + b) * (a - b) := by
   ring
 
+-- stmt: theorem factor_sum_cubes (a b : ℝ) : a^3 + b^3 = (a + b) * (a^2 - a*b + b^2)
+-- goal:
+--   a b : ℝ
+--   ⊢ a ^ 3 + b ^ 3 = (a + b) * (a ^ 2 - a * b + b ^ 2)
+-- added: 2026-06-07
+theorem factor_sum_cubes (a b : ℝ) : a^3 + b^3 = (a + b) * (a^2 - a*b + b^2) := by
+  ring
+
+-- stmt: theorem factor_diff_cubes (a b : ℝ) : a^3 - b^3 = (a - b) * (a^2 + a*b + b^2)
+-- goal:
+--   a b : ℝ
+--   ⊢ a ^ 3 - b ^ 3 = (a - b) * (a ^ 2 + a * b + b ^ 2)
+-- added: 2026-06-07
+theorem factor_diff_cubes (a b : ℝ) : a^3 - b^3 = (a - b) * (a^2 + a*b + b^2) := by
+  ring
+
 end AutoProved
