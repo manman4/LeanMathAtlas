@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.2 | 2026-06-07 | prove: Algebra/Complex 9/11 (I_sq, norm_mul, conj_*, euler_formula, norm_exp_I_eq_one) |
 | 0.3.1 | 2026-06-07 | fix: duplicate theorem guard in append_to_lean_db; whitespace normalization in batch_prove extract_theorems; add batch_prove.py; prove my_exists_le_maximal |
 | 0.3.0 | 2026-06-07 | feat: preamble support in auto_prove.py (--file flag extracts open/variable from source); bulk proofs added across Groups, Rings, Topology, Trigonometry, NumberTheory, Combinatorics |
 | 0.2.1 | 2026-06-07 | fix: unpack prove_all results as 4-tuple in main(); add mul_sum_diff / cube_sum to ProvedTheorems |
