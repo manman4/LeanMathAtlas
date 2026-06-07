@@ -701,4 +701,21 @@ theorem choose_zero (n : ℕ) : n.choose 0 = 1 := by
 theorem choose_self (n : ℕ) : n.choose n = 1 := by
   simp
 
+-- stmt: theorem choose_one (n : ℕ) : n.choose 1 = n
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose 1 = n
+-- added: 2026-06-07
+theorem choose_one (n : ℕ) : n.choose 1 = n := by
+  simp
+
+-- stmt: theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k)
+-- goal:
+--   n k : ℕ
+--   h : k ≤ n
+--   ⊢ n.choose k = n.choose (n - k)
+-- added: 2026-06-07
+theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k) := by
+  exact Eq.symm (Nat.choose_symm h)
+
 end AutoProved
