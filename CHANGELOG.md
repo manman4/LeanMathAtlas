@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.5 | 2026-06-07 | feat(auto_prove): INNER_PRODUCT_TACTICS / COMPLEX_TACTICS / TRIG_DOUBLE_TACTICS 追加; de_moivre・normSq_sq・one_add_tan_sq 証明; 過学習タクティク(TAN_TACTICS/cos_double fallback)削除 |
 | 0.3.4 | 2026-06-07 | feat: file-based benchmark (tools/bench/*.lean); prove: remainder_theorem |
 | 0.3.3 | 2026-06-07 | prove: 40 theorems (Derivatives/Limits/Integration/Vectors/Combinatorics/Sequences); 34 skipped (auto_prove未対応) |
 | 0.3.2 | 2026-06-07 | prove: Algebra/Complex 9/11 (I_sq, norm_mul, conj_*, euler_formula, norm_exp_I_eq_one) |

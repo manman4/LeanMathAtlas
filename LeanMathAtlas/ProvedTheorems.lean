@@ -1989,4 +1989,33 @@ theorem alternating_sum_choose (n : ℕ) (hn : 0 < n) : ∑ k ∈ range (n + 1),
 theorem remainder_theorem (p : ℝ[X]) (a : ℝ) : p %ₘ (X - C a) = C (p.eval a) := by
   norm_num
 
+-- stmt: theorem normSq_sq (z : ℂ) : normSq z = z.re ^ 2 + z.im ^ 2
+-- goal:
+--   z : ℂ
+--   ⊢ normSq z = z.re ^ 2 + z.im ^ 2
+-- added: 2026-06-07
+theorem normSq_sq (z : ℂ) : normSq z = z.re ^ 2 + z.im ^ 2 := by
+  simp [normSq_apply, sq]
+
+-- stmt: theorem de_moivre (θ : ℝ) (n : ℕ) : (exp (↑θ * I)) ^ n = exp (↑n * ↑θ * I)
+-- goal:
+--   θ : ℝ
+--   n : ℕ
+--   ⊢ cexp (↑θ * I) ^ n = cexp (↑n * ↑θ * I)
+-- added: 2026-06-07
+theorem de_moivre (θ : ℝ) (n : ℕ) : (exp (↑θ * I)) ^ n = exp (↑n * ↑θ * I) := by
+  rw [← exp_nat_mul]; congr 1; ring
+
+-- stmt: theorem one_add_tan_sq (x : ℝ) (hx : cos x ≠ 0) : 1 + tan x ^ 2 = 1 / cos x ^ 2
+-- goal:
+--   x : ℝ
+--   hx : cos x ≠ 0
+--   ⊢ 1 + tan x ^ 2 = 1 / cos x ^ 2
+-- added: 2026-06-07
+theorem one_add_tan_sq (x : ℝ) (hx : cos x ≠ 0) : 1 + tan x ^ 2 = 1 / cos x ^ 2 := by
+  simp only [Real.tan_eq_sin_div_cos, div_pow]
+    have hx2 : cos x ^ 2 ≠ 0 := pow_ne_zero 2 hx
+    field_simp [hx2]
+    linarith [sin_sq_add_cos_sq x]
+
 end AutoProved
