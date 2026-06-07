@@ -428,4 +428,20 @@ theorem my_zero_add (n : Nat) : 0 + n = n := by
 theorem my_add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
   omega
 
+-- stmt: theorem my_add_comm (a b : Nat) : a + b = b + a
+-- goal:
+--   a b : ℕ
+--   ⊢ a + b = b + a
+-- added: 2026-06-07
+theorem my_add_comm (a b : Nat) : a + b = b + a := by
+  omega
+
+-- stmt: theorem double_eq_two_mul (n : Nat) : n + n = 2 * n
+-- goal:
+--   n : ℕ
+--   ⊢ n + n = 2 * n
+-- added: 2026-06-07
+theorem double_eq_two_mul (n : Nat) : n + n = 2 * n := by
+  omega
+
 end AutoProved
