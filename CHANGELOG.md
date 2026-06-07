@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.0 | 2026-06-07 | feat: preamble support in auto_prove.py (--file flag extracts open/variable from source); bulk proofs added across Groups, Rings, Topology, Trigonometry, NumberTheory, Combinatorics |
 | 0.2.1 | 2026-06-07 | fix: unpack prove_all results as 4-tuple in main(); add mul_sum_diff / cube_sum to ProvedTheorems |
 | 0.2.0 | 2026-06-07 | auto_prove: open scoped Nat; !+Nat.Prime 検出で Wilson 解決; 変数名動的抽出で汎用化 — 50/50 (100%) 全問制覇 |
 | 0.1.17 | 2026-06-07 | auto_prove: chain_rule_deriv_tactics (明示的引数); FINSET_CARD_TEMPLATES (bijection + rw); open Nat; Wilson 検出 (49/50, 98%, hard 8/8) |
