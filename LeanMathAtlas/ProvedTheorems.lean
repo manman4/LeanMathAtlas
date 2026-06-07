@@ -1310,4 +1310,42 @@ theorem my_isCompact_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace 
 theorem my_isConnected_singleton {X : Type*} [TopologicalSpace X] {x : X} : IsConnected ({x} : Set X) := by
   exact isConnected_singleton
 
+-- stmt: theorem my_isConnected_union {X : Type*} [TopologicalSpace X] {s t : Set X} (H : (s ∩ t).Nonempty) (hs : IsConnected s) (ht : IsConnected t) : IsConnected (s ∪ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   H : (s ∩ t).Nonempty
+--   hs : IsConnected s
+--   ht : IsConnected t
+--   ⊢ IsConnected (s ∪ t)
+-- added: 2026-06-07
+theorem my_isConnected_union {X : Type*} [TopologicalSpace X] {s t : Set X} (H : (s ∩ t).Nonempty) (hs : IsConnected s) (ht : IsConnected t) : IsConnected (s ∪ t) := by
+  exact IsConnected.union H hs ht
+
+-- stmt: theorem my_isConnected_univ {X : Type*} [TopologicalSpace X] [ConnectedSpace X] : IsConnected (Set.univ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : ConnectedSpace X
+--   ⊢ IsConnected Set.univ
+-- added: 2026-06-07
+theorem my_isConnected_univ {X : Type*} [TopologicalSpace X] [ConnectedSpace X] : IsConnected (Set.univ : Set X) := by
+  (expose_names; exact connectedSpace_iff_univ.mp inst_1)
+
+-- stmt: theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : Set X} (hs : IsCompact s) {ι : Type*} (U : ι → Set X) (hU : ∀ i, IsOpen (U i)) (hcover : s ⊆ ⋃ i, U i) : ∃ t : Finset ι, s ⊆ ⋃ i ∈ t, U i
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s : Set X
+--   hs : IsCompact s
+--   ι : Type u_2
+--   U : ι → Set X
+--   hU : ∀ (i : ι), IsOpen (U i)
+--   hcover : s ⊆ ⋃ i, U i
+--   ⊢ ∃ t, s ⊆ ⋃ i ∈ t, U i
+-- added: 2026-06-07
+theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : Set X} (hs : IsCompact s) {ι : Type*} (U : ι → Set X) (hU : ∀ i, IsOpen (U i)) (hcover : s ⊆ ⋃ i, U i) : ∃ t : Finset ι, s ⊆ ⋃ i ∈ t, U i := by
+  exact IsCompact.elim_finite_subcover hs U hU hcover
+
 end AutoProved
