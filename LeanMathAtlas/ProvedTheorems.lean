@@ -633,4 +633,20 @@ theorem my_gcd_comm (a b : ℕ) : Nat.gcd a b = Nat.gcd b a := by
 theorem my_gcd_zero_right (a : ℕ) : Nat.gcd a 0 = a := by
   simp
 
+-- stmt: theorem my_gcd_zero_left (a : ℕ) : Nat.gcd 0 a = a
+-- goal:
+--   a : ℕ
+--   ⊢ Nat.gcd 0 a = a
+-- added: 2026-06-07
+theorem my_gcd_zero_left (a : ℕ) : Nat.gcd 0 a = a := by
+  simp
+
+-- stmt: theorem my_gcd_self (a : ℕ) : Nat.gcd a a = a
+-- goal:
+--   a : ℕ
+--   ⊢ a.gcd a = a
+-- added: 2026-06-07
+theorem my_gcd_self (a : ℕ) : Nat.gcd a a = a := by
+  simp
+
 end AutoProved
