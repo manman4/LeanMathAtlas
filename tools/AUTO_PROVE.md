@@ -414,6 +414,49 @@ exact hg.comp a hf
 
 ---
 
+## ProvedTheorems.lean の重複について
+
+### 原因
+
+`cache_key` は **定理名を含む stmt 全体** の SHA256 で計算される。そのため、同一命題でも名前が異なれば別エントリとして扱われ、重複が発生する。
+
+```
+theorem t6          (n : ℕ) : 2 * ∑ k, k = n*(n+1)   ← 初期実験
+theorem bench_sum_gauss ...                             ← ベンチマーク追加時
+theorem my_gauss    (n : ℕ) : 2 * ∑ k, k = n*(n+1)   ← ソースファイル由来
+```
+
+3 件はすべて別の cache_key を持つため、それぞれ独立に証明・追記される。
+
+### 検出方法
+
+```python
+# stmt コメントの命題部分（定理名除く）を正規化して重複グループを見つける
+def normalize(s):
+    s = re.sub(r'^theorem \S+', '', s).strip()
+    return re.sub(r'\s+', ' ', s)
+```
+
+### 対処方針
+
+- **定期的に手動で確認・削除する**。自動化は cache_key の設計変更を伴うため現状は行わない。
+- 削除する際は `t*`（初期実験）や `bench_*`（ベンチマーク由来）を除去し、ソースファイル由来の正規名を残す。
+- `.proof_index.json` は gitignore 対象のローカルキャッシュなので、削除後に再ビルドしても問題ない（再証明はスキップされる）。
+
+### 既知の重複（v0.3.6 で解消済み）
+
+| 残した名前 | 削除した名前 |
+|---|---|
+| `sq_sum` | `t4`, `bench_sq_sum` |
+| `my_gauss` | `t6`, `bench_sum_gauss` |
+| `sum_sq` | `t7`, `bench_sum_sq` |
+| `bench_nat_assoc` | `t5` |
+| `sq_diff` | `bench_sq_diff` |
+| `mul_sum_diff` | `bench_diff_sq` |
+| `cube_sum` | `bench_cube_sum` |
+
+---
+
 ## 改善を追加するときの基準
 
 タクティクスやテンプレートを追加する際は、**汎用性があるかどうか**を必ず確認すること。
