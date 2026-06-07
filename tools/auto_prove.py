@@ -243,10 +243,10 @@ DERIV_TEMPLATES = [
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 2\n  ring",
     # simp [Function.comp, id] unwraps ∘ notation; norm_num simplifies 2*1→2;
     # then convert + ring handles the remaining mul_comm mismatch.
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
     # identity and constant
     "exact hasDerivAt_id _",
     "exact hasDerivAt_const _ _",
@@ -324,20 +324,25 @@ def select_tactics(goal: str) -> list:
     # open Complex 環境では "Complex" がゴールに現れないため、exp + I の組み合わせでも検出
     if "exp" in goal and re.search(r'\^\s*\w+', goal) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', goal)):
         return COMPLEX_TACTICS + SEARCH_TACTICS
+    # HasDerivAt / HasFDerivAt: must come before trig check because HasDerivAt goals
+    # often contain "sin"/"cos" and "=>" (lambda), making "=" in goal True spuriously.
+    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
+        chain_tactics = chain_rule_deriv_tactics(goal)
+        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+    if "Continuous" in goal or "Differentiable" in goal:
+        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     # Trig double-angle goals: cos_two_mul / sin_sq_add_cos_sq が必要なゴール
     # "cos" と "sin" が両方あり等式・不等式を含む場合のみ発火
-    if "cos" in goal and "sin" in goal and ("=" in goal or "≤" in goal):
+    # "=" in goal は lambda "=>" も引っかかるため、⊢ 以降で "=>" 以外の "=" か "≤" を検索する
+    if "cos" in goal and "sin" in goal and (
+        "≤" in goal or re.search(r'⊢[^\n]*(?<!=)=(?![>=])', goal)
+    ):
         return TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if "∑" in goal or "Finset" in goal:
         # card goals: try bijection-based templates before induction
         if ".card" in goal:
             return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
         return INDUCTION_TACTICS + SEARCH_TACTICS
-    if "Continuous" in goal or "Differentiable" in goal:
-        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
-    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
-        chain_tactics = chain_rule_deriv_tactics(goal)
-        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Irrational" in goal:
         return SEARCH_TACTICS
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
@@ -491,8 +496,12 @@ def chain_rule_deriv_tactics(goal: str) -> list[str]:
     inner = f"({coeff} * {pt})"
     base = f"(Real.hasDerivAt_{fn} {inner}).comp {pt} ((hasDerivAt_id {pt}).const_mul {coeff})"
     return [
+        # id_eq (not bare `id`) is the correct simp lemma for `id x = x` in Lean 4
+        f"have h := {base}\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
+        # ring_nf normalises both sides to the same form before exact
+        f"have h := {base}\n  simp only [Function.comp, id_eq, mul_one, mul_comm] at h\n  exact h",
+        # fallback: skip simp and rely on convert depth-1 + ring
         f"have h := {base}\n  convert h using 1\n  ring",
-        f"have h := {base}\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
     ]
 
 def extract_real_vars(goal: str) -> list[str]:
@@ -618,6 +627,7 @@ def have_closers(have_line: str, remaining_goal: str) -> list[str]:
             f"simp [{name}]",
             f"linarith [{name}]",
             f"nlinarith [{name}]",
+            f"nlinarith [{name}, sq_nonneg _]",
         ] + closers
 
     # Append goal-selected closers for the remaining goal
