@@ -766,4 +766,24 @@ theorem my_mul_inv_cancel {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1 := by
 theorem my_inv_mul_cancel {G : Type*} [Group G] (a : G) : a⁻¹ * a = 1 := by
   simp
 
+-- stmt: theorem my_inv_inv {G : Type*} [Group G] (a : G) : a⁻¹⁻¹ = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a⁻¹⁻¹ = a
+-- added: 2026-06-07
+theorem my_inv_inv {G : Type*} [Group G] (a : G) : a⁻¹⁻¹ = a := by
+  simp
+
+-- stmt: theorem my_mul_inv_rev {G : Type*} [Group G] (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b : G
+--   ⊢ (a * b)⁻¹ = b⁻¹ * a⁻¹
+-- added: 2026-06-07
+theorem my_mul_inv_rev {G : Type*} [Group G] (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
+  simp
+
 end AutoProved
