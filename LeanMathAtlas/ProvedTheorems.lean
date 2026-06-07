@@ -580,4 +580,23 @@ theorem prime_ge_two (p : ℕ) (hp : Nat.Prime p) : 2 ≤ p := by
 theorem prime_odd_or_two (p : ℕ) (hp : Nat.Prime p) (hne : p ≠ 2) : p % 2 = 1 := by
   exact (Nat.Prime.mod_two_eq_one_iff_ne_two hp).mpr hne
 
+-- stmt: theorem prime_divisors (p : ℕ) (hp : Nat.Prime p) (k : ℕ) (hk : k ∣ p) : k = 1 ∨ k = p
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   k : ℕ
+--   hk : k ∣ p
+--   ⊢ k = 1 ∨ k = p
+-- added: 2026-06-07
+theorem prime_divisors (p : ℕ) (hp : Nat.Prime p) (k : ℕ) (hk : k ∣ p) : k = 1 ∨ k = p := by
+  exact (Nat.dvd_prime hp).mp hk
+
+-- stmt: theorem my_gcd_dvd_left (a b : ℕ) : Nat.gcd a b ∣ a
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b ∣ a
+-- added: 2026-06-07
+theorem my_gcd_dvd_left (a b : ℕ) : Nat.gcd a b ∣ a := by
+  exact Nat.gcd_dvd_left a b
+
 end AutoProved
