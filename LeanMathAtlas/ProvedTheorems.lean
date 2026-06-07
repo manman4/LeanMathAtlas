@@ -726,4 +726,24 @@ theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k) :=
 theorem pascal (n k : ℕ) : n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1) := by
   rfl
 
+-- stmt: theorem my_mul_one {G : Type*} [Group G] (a : G) : a * 1 = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a * 1 = a
+-- added: 2026-06-07
+theorem my_mul_one {G : Type*} [Group G] (a : G) : a * 1 = a := by
+  simp
+
+-- stmt: theorem my_one_mul {G : Type*} [Group G] (a : G) : 1 * a = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ 1 * a = a
+-- added: 2026-06-07
+theorem my_one_mul {G : Type*} [Group G] (a : G) : 1 * a = a := by
+  simp
+
 end AutoProved
