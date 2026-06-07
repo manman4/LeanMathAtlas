@@ -412,4 +412,20 @@ theorem sq_nonneg_form (a b : ℝ) : (a + b)^2 ≥ 0 := by
 theorem vertex_form_nonneg (a p q x : ℝ) (ha : 0 ≤ a) : a * (x - p)^2 + q ≥ q := by
   nlinarith [sq_nonneg (a - p), sq_nonneg (a - q), sq_nonneg (a - x), sq_nonneg (p - q), sq_nonneg (p - x), sq_nonneg (q - x), sq_nonneg (a*x - p*q)]
 
+-- stmt: theorem my_zero_add (n : Nat) : 0 + n = n
+-- goal:
+--   n : ℕ
+--   ⊢ 0 + n = n
+-- added: 2026-06-07
+theorem my_zero_add (n : Nat) : 0 + n = n := by
+  omega
+
+-- stmt: theorem my_add_assoc (a b c : Nat) : (a + b) + c = a + (b + c)
+-- goal:
+--   a b c : ℕ
+--   ⊢ a + b + c = a + (b + c)
+-- added: 2026-06-07
+theorem my_add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
+  omega
+
 end AutoProved
