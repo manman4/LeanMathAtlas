@@ -1348,4 +1348,62 @@ theorem my_isConnected_univ {X : Type*} [TopologicalSpace X] [ConnectedSpace X] 
 theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : Set X} (hs : IsCompact s) {ι : Type*} (U : ι → Set X) (hU : ∀ i, IsOpen (U i)) (hcover : s ⊆ ⋃ i, U i) : ∃ t : Finset ι, s ⊆ ⋃ i ∈ t, U i := by
   exact IsCompact.elim_finite_subcover hs U hU hcover
 
+-- stmt: theorem pythagorean (x : ℝ) : Real.sin x ^ 2 + Real.cos x ^ 2 = 1
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin x ^ 2 + Real.cos x ^ 2 = 1
+-- added: 2026-06-07
+theorem pythagorean (x : ℝ) : Real.sin x ^ 2 + Real.cos x ^ 2 = 1 := by
+  norm_num
+
+-- stmt: theorem sin_double (x : ℝ) : Real.sin (2 * x) = 2 * Real.sin x * Real.cos x
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin (2 * x) = 2 * Real.sin x * Real.cos x
+-- added: 2026-06-07
+theorem sin_double (x : ℝ) : Real.sin (2 * x) = 2 * Real.sin x * Real.cos x := by
+  exact Real.sin_two_mul x
+
+-- stmt: theorem sin_zero : Real.sin 0 = 0
+-- goal:
+--   ⊢ Real.sin 0 = 0
+-- added: 2026-06-07
+theorem sin_zero : Real.sin 0 = 0 := by
+  simp
+
+-- stmt: theorem cos_zero : Real.cos 0 = 1
+-- goal:
+--   ⊢ Real.cos 0 = 1
+-- added: 2026-06-07
+theorem cos_zero : Real.cos 0 = 1 := by
+  simp
+
+-- stmt: theorem sin_pi_div_two : Real.sin (Real.pi / 2) = 1
+-- goal:
+--   ⊢ Real.sin (Real.pi / 2) = 1
+-- added: 2026-06-07
+theorem sin_pi_div_two : Real.sin (Real.pi / 2) = 1 := by
+  simp
+
+-- stmt: theorem cos_pi_div_two : Real.cos (Real.pi / 2) = 0
+-- goal:
+--   ⊢ Real.cos (Real.pi / 2) = 0
+-- added: 2026-06-07
+theorem cos_pi_div_two : Real.cos (Real.pi / 2) = 0 := by
+  simp
+
+-- stmt: theorem sin_pi : Real.sin Real.pi = 0
+-- goal:
+--   ⊢ Real.sin Real.pi = 0
+-- added: 2026-06-07
+theorem sin_pi : Real.sin Real.pi = 0 := by
+  simp
+
+-- stmt: theorem cos_pi : Real.cos Real.pi = -1
+-- goal:
+--   ⊢ Real.cos Real.pi = -1
+-- added: 2026-06-07
+theorem cos_pi : Real.cos Real.pi = -1 := by
+  simp
+
 end AutoProved
