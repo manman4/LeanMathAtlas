@@ -395,4 +395,21 @@ theorem factor_sum_cubes (a b : ℝ) : a^3 + b^3 = (a + b) * (a^2 - a*b + b^2) :
 theorem factor_diff_cubes (a b : ℝ) : a^3 - b^3 = (a - b) * (a^2 + a*b + b^2) := by
   ring
 
+-- stmt: theorem sq_nonneg_form (a b : ℝ) : (a + b)^2 ≥ 0
+-- goal:
+--   a b : ℝ
+--   ⊢ (a + b) ^ 2 ≥ 0
+-- added: 2026-06-07
+theorem sq_nonneg_form (a b : ℝ) : (a + b)^2 ≥ 0 := by
+  nlinarith [sq_nonneg (a - b)]
+
+-- stmt: theorem vertex_form_nonneg (a p q x : ℝ) (ha : 0 ≤ a) : a * (x - p)^2 + q ≥ q
+-- goal:
+--   a p q x : ℝ
+--   ha : 0 ≤ a
+--   ⊢ a * (x - p) ^ 2 + q ≥ q
+-- added: 2026-06-07
+theorem vertex_form_nonneg (a p q x : ℝ) (ha : 0 ≤ a) : a * (x - p)^2 + q ≥ q := by
+  nlinarith [sq_nonneg (a - p), sq_nonneg (a - q), sq_nonneg (a - x), sq_nonneg (p - q), sq_nonneg (p - x), sq_nonneg (q - x), sq_nonneg (a*x - p*q)]
+
 end AutoProved
