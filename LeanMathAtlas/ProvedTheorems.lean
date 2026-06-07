@@ -920,4 +920,26 @@ theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1 
 theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n := by
   exact orderOf_dvd_of_pow_eq_one h
 
+-- stmt: theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf a ∣ Fintype.card G
+-- goal:
+--   G : Type u_1
+--   inst✝¹ : Group G
+--   inst✝ : Fintype G
+--   a : G
+--   ⊢ orderOf a ∣ Fintype.card G
+-- added: 2026-06-07
+theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf a ∣ Fintype.card G := by
+  exact orderOf_dvd_card
+
+-- stmt: theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1
+-- goal:
+--   G : Type u_1
+--   inst✝¹ : Group G
+--   inst✝ : Fintype G
+--   a : G
+--   ⊢ a ^ Fintype.card G = 1
+-- added: 2026-06-07
+theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1 := by
+  norm_num
+
 end AutoProved
