@@ -685,4 +685,20 @@ theorem coprime_dvd_of_dvd_mul {k m n : ℕ} (hco : Nat.Coprime k n) (h : k ∣ 
 theorem exists_prime_ge (n : ℕ) : ∃ p, n ≤ p ∧ Nat.Prime p := by
   exact Nat.exists_infinite_primes n
 
+-- stmt: theorem choose_zero (n : ℕ) : n.choose 0 = 1
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose 0 = 1
+-- added: 2026-06-07
+theorem choose_zero (n : ℕ) : n.choose 0 = 1 := by
+  simp
+
+-- stmt: theorem choose_self (n : ℕ) : n.choose n = 1
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose n = 1
+-- added: 2026-06-07
+theorem choose_self (n : ℕ) : n.choose n = 1 := by
+  simp
+
 end AutoProved
