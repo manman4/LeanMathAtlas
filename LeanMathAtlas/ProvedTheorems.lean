@@ -363,4 +363,1127 @@ theorem mul_sum_diff (a b : ℝ) : (a + b) * (a - b) = a^2 - b^2 := by
 theorem cube_sum (a b : ℝ) : (a + b)^3 = a^3 + 3*a^2*b + 3*a*b^2 + b^3 := by
   ring
 
+-- stmt: theorem cube_diff (a b : ℝ) : (a - b)^3 = a^3 - 3*a^2*b + 3*a*b^2 - b^3
+-- goal:
+--   a b : ℝ
+--   ⊢ (a - b) ^ 3 = a ^ 3 - 3 * a ^ 2 * b + 3 * a * b ^ 2 - b ^ 3
+-- added: 2026-06-07
+theorem cube_diff (a b : ℝ) : (a - b)^3 = a^3 - 3*a^2*b + 3*a*b^2 - b^3 := by
+  ring
+
+-- stmt: theorem factor_diff_sq (a b : ℝ) : a^2 - b^2 = (a + b) * (a - b)
+-- goal:
+--   a b : ℝ
+--   ⊢ a ^ 2 - b ^ 2 = (a + b) * (a - b)
+-- added: 2026-06-07
+theorem factor_diff_sq (a b : ℝ) : a^2 - b^2 = (a + b) * (a - b) := by
+  ring
+
+-- stmt: theorem factor_sum_cubes (a b : ℝ) : a^3 + b^3 = (a + b) * (a^2 - a*b + b^2)
+-- goal:
+--   a b : ℝ
+--   ⊢ a ^ 3 + b ^ 3 = (a + b) * (a ^ 2 - a * b + b ^ 2)
+-- added: 2026-06-07
+theorem factor_sum_cubes (a b : ℝ) : a^3 + b^3 = (a + b) * (a^2 - a*b + b^2) := by
+  ring
+
+-- stmt: theorem factor_diff_cubes (a b : ℝ) : a^3 - b^3 = (a - b) * (a^2 + a*b + b^2)
+-- goal:
+--   a b : ℝ
+--   ⊢ a ^ 3 - b ^ 3 = (a - b) * (a ^ 2 + a * b + b ^ 2)
+-- added: 2026-06-07
+theorem factor_diff_cubes (a b : ℝ) : a^3 - b^3 = (a - b) * (a^2 + a*b + b^2) := by
+  ring
+
+-- stmt: theorem sq_nonneg_form (a b : ℝ) : (a + b)^2 ≥ 0
+-- goal:
+--   a b : ℝ
+--   ⊢ (a + b) ^ 2 ≥ 0
+-- added: 2026-06-07
+theorem sq_nonneg_form (a b : ℝ) : (a + b)^2 ≥ 0 := by
+  nlinarith [sq_nonneg (a - b)]
+
+-- stmt: theorem vertex_form_nonneg (a p q x : ℝ) (ha : 0 ≤ a) : a * (x - p)^2 + q ≥ q
+-- goal:
+--   a p q x : ℝ
+--   ha : 0 ≤ a
+--   ⊢ a * (x - p) ^ 2 + q ≥ q
+-- added: 2026-06-07
+theorem vertex_form_nonneg (a p q x : ℝ) (ha : 0 ≤ a) : a * (x - p)^2 + q ≥ q := by
+  nlinarith [sq_nonneg (a - p), sq_nonneg (a - q), sq_nonneg (a - x), sq_nonneg (p - q), sq_nonneg (p - x), sq_nonneg (q - x), sq_nonneg (a*x - p*q)]
+
+-- stmt: theorem my_zero_add (n : Nat) : 0 + n = n
+-- goal:
+--   n : ℕ
+--   ⊢ 0 + n = n
+-- added: 2026-06-07
+theorem my_zero_add (n : Nat) : 0 + n = n := by
+  omega
+
+-- stmt: theorem my_add_assoc (a b c : Nat) : (a + b) + c = a + (b + c)
+-- goal:
+--   a b c : ℕ
+--   ⊢ a + b + c = a + (b + c)
+-- added: 2026-06-07
+theorem my_add_assoc (a b c : Nat) : (a + b) + c = a + (b + c) := by
+  omega
+
+-- stmt: theorem my_add_comm (a b : Nat) : a + b = b + a
+-- goal:
+--   a b : ℕ
+--   ⊢ a + b = b + a
+-- added: 2026-06-07
+theorem my_add_comm (a b : Nat) : a + b = b + a := by
+  omega
+
+-- stmt: theorem double_eq_two_mul (n : Nat) : n + n = 2 * n
+-- goal:
+--   n : ℕ
+--   ⊢ n + n = 2 * n
+-- added: 2026-06-07
+theorem double_eq_two_mul (n : Nat) : n + n = 2 * n := by
+  omega
+
+-- stmt: theorem my_zero_le (n : Nat) : 0 ≤ n
+-- goal:
+--   n : ℕ
+--   ⊢ 0 ≤ n
+-- added: 2026-06-07
+theorem my_zero_le (n : Nat) : 0 ≤ n := by
+  omega
+
+-- stmt: theorem even_add_even (a b : Nat) (ha : Even a) (hb : Even b) : Even (a + b)
+-- goal:
+--   a b : ℕ
+--   ha : Even a
+--   hb : Even b
+--   ⊢ Even (a + b)
+-- added: 2026-06-07
+theorem even_add_even (a b : Nat) (ha : Even a) (hb : Even b) : Even (a + b) := by
+  exact Even.add ha hb
+
+-- stmt: theorem zmod_self (n : ℕ) : (n : ZMod n) = 0
+-- goal:
+--   n : ℕ
+--   ⊢ ↑n = 0
+-- added: 2026-06-07
+theorem zmod_self (n : ℕ) : (n : ZMod n) = 0 := by
+  simp
+
+-- stmt: theorem cong_iff_dvd (a b : ℤ) (n : ℕ) : (a : ZMod n) = b ↔ (n : ℤ) ∣ b - a
+-- goal:
+--   a b : ℤ
+--   n : ℕ
+--   ⊢ ↑a = ↑b ↔ ↑n ∣ b - a
+-- added: 2026-06-07
+theorem cong_iff_dvd (a b : ℤ) (n : ℕ) : (a : ZMod n) = b ↔ (n : ℤ) ∣ b - a := by
+  exact ZMod.intCast_eq_intCast_iff_dvd_sub a b n
+
+-- stmt: theorem cong_add {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a + c = b + c
+-- goal:
+--   n : ℕ
+--   a b : ZMod n
+--   h : a = b
+--   c : ZMod n
+--   ⊢ a + c = b + c
+-- added: 2026-06-07
+theorem cong_add {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a + c = b + c := by
+  exact (add_left_inj c).mpr h
+
+-- stmt: theorem cong_mul {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a * c = b * c
+-- goal:
+--   n : ℕ
+--   a b : ZMod n
+--   h : a = b
+--   c : ZMod n
+--   ⊢ a * c = b * c
+-- added: 2026-06-07
+theorem cong_mul {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a * c = b * c := by
+  exact ZMod.valMinAbs_inj.mp (congrArg ZMod.valMinAbs (congrFun (congrArg HMul.hMul h) c))
+
+-- stmt: theorem zmod_prime_inv {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a * a⁻¹ = 1
+-- goal:
+--   p : ℕ
+--   inst✝ : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ha : a ≠ 0
+--   ⊢ a * a⁻¹ = 1
+-- added: 2026-06-07
+theorem zmod_prime_inv {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a * a⁻¹ = 1 := by
+  exact CommGroupWithZero.mul_inv_cancel a ha
+
+-- stmt: theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a ^ (p - 1) = 1
+-- goal:
+--   p : ℕ
+--   inst✝ : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ha : a ≠ 0
+--   ⊢ a ^ (p - 1) = 1
+-- added: 2026-06-07
+theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a ^ (p - 1) = 1 := by
+  exact ZMod.pow_card_sub_one_eq_one ha
+
+-- stmt: theorem fermat_little_all {p : ℕ} [hp : Fact (Nat.Prime p)] (a : ZMod p) : a ^ p = a
+-- goal:
+--   p : ℕ
+--   hp : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ⊢ a ^ p = a
+-- added: 2026-06-07
+theorem fermat_little_all {p : ℕ} [hp : Fact (Nat.Prime p)] (a : ZMod p) : a ^ p = a := by
+  simp
+
+-- stmt: theorem two_prime : Nat.Prime 2
+-- goal:
+--   ⊢ Nat.Prime 2
+-- added: 2026-06-07
+theorem two_prime : Nat.Prime 2 := by
+  norm_num
+
+-- stmt: theorem three_prime : Nat.Prime 3
+-- goal:
+--   ⊢ Nat.Prime 3
+-- added: 2026-06-07
+theorem three_prime : Nat.Prime 3 := by
+  norm_num
+
+-- stmt: theorem five_prime : Nat.Prime 5
+-- goal:
+--   ⊢ Nat.Prime 5
+-- added: 2026-06-07
+theorem five_prime : Nat.Prime 5 := by
+  norm_num
+
+-- stmt: theorem seven_prime : Nat.Prime 7
+-- goal:
+--   ⊢ Nat.Prime 7
+-- added: 2026-06-07
+theorem seven_prime : Nat.Prime 7 := by
+  norm_num
+
+-- stmt: theorem prime_ge_two (p : ℕ) (hp : Nat.Prime p) : 2 ≤ p
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   ⊢ 2 ≤ p
+-- added: 2026-06-07
+theorem prime_ge_two (p : ℕ) (hp : Nat.Prime p) : 2 ≤ p := by
+  exact Nat.Prime.two_le hp
+
+-- stmt: theorem prime_odd_or_two (p : ℕ) (hp : Nat.Prime p) (hne : p ≠ 2) : p % 2 = 1
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   hne : p ≠ 2
+--   ⊢ p % 2 = 1
+-- added: 2026-06-07
+theorem prime_odd_or_two (p : ℕ) (hp : Nat.Prime p) (hne : p ≠ 2) : p % 2 = 1 := by
+  exact (Nat.Prime.mod_two_eq_one_iff_ne_two hp).mpr hne
+
+-- stmt: theorem prime_divisors (p : ℕ) (hp : Nat.Prime p) (k : ℕ) (hk : k ∣ p) : k = 1 ∨ k = p
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   k : ℕ
+--   hk : k ∣ p
+--   ⊢ k = 1 ∨ k = p
+-- added: 2026-06-07
+theorem prime_divisors (p : ℕ) (hp : Nat.Prime p) (k : ℕ) (hk : k ∣ p) : k = 1 ∨ k = p := by
+  exact (Nat.dvd_prime hp).mp hk
+
+-- stmt: theorem my_gcd_dvd_left (a b : ℕ) : Nat.gcd a b ∣ a
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b ∣ a
+-- added: 2026-06-07
+theorem my_gcd_dvd_left (a b : ℕ) : Nat.gcd a b ∣ a := by
+  exact Nat.gcd_dvd_left a b
+
+-- stmt: theorem my_gcd_dvd_right (a b : ℕ) : Nat.gcd a b ∣ b
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b ∣ b
+-- added: 2026-06-07
+theorem my_gcd_dvd_right (a b : ℕ) : Nat.gcd a b ∣ b := by
+  exact Nat.gcd_dvd_right a b
+
+-- stmt: theorem my_dvd_gcd {k a b : ℕ} (ha : k ∣ a) (hb : k ∣ b) : k ∣ Nat.gcd a b
+-- goal:
+--   k a b : ℕ
+--   ha : k ∣ a
+--   hb : k ∣ b
+--   ⊢ k ∣ a.gcd b
+-- added: 2026-06-07
+theorem my_dvd_gcd {k a b : ℕ} (ha : k ∣ a) (hb : k ∣ b) : k ∣ Nat.gcd a b := by
+  exact Nat.dvd_gcd ha hb
+
+-- stmt: theorem my_gcd_comm (a b : ℕ) : Nat.gcd a b = Nat.gcd b a
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b = b.gcd a
+-- added: 2026-06-07
+theorem my_gcd_comm (a b : ℕ) : Nat.gcd a b = Nat.gcd b a := by
+  exact Nat.gcd_comm a b
+
+-- stmt: theorem my_gcd_zero_right (a : ℕ) : Nat.gcd a 0 = a
+-- goal:
+--   a : ℕ
+--   ⊢ a.gcd 0 = a
+-- added: 2026-06-07
+theorem my_gcd_zero_right (a : ℕ) : Nat.gcd a 0 = a := by
+  simp
+
+-- stmt: theorem my_gcd_zero_left (a : ℕ) : Nat.gcd 0 a = a
+-- goal:
+--   a : ℕ
+--   ⊢ Nat.gcd 0 a = a
+-- added: 2026-06-07
+theorem my_gcd_zero_left (a : ℕ) : Nat.gcd 0 a = a := by
+  simp
+
+-- stmt: theorem my_gcd_self (a : ℕ) : Nat.gcd a a = a
+-- goal:
+--   a : ℕ
+--   ⊢ a.gcd a = a
+-- added: 2026-06-07
+theorem my_gcd_self (a : ℕ) : Nat.gcd a a = a := by
+  simp
+
+-- stmt: theorem coprime_succ (n : ℕ) : Nat.Coprime n (n + 1)
+-- goal:
+--   n : ℕ
+--   ⊢ n.Coprime (n + 1)
+-- added: 2026-06-07
+theorem coprime_succ (n : ℕ) : Nat.Coprime n (n + 1) := by
+  simp
+
+-- stmt: theorem prime_coprime_of_not_dvd {p n : ℕ} (hp : Nat.Prime p) (h : ¬ p ∣ n) : Nat.Coprime p n
+-- goal:
+--   p n : ℕ
+--   hp : Nat.Prime p
+--   h : ¬p ∣ n
+--   ⊢ p.Coprime n
+-- added: 2026-06-07
+theorem prime_coprime_of_not_dvd {p n : ℕ} (hp : Nat.Prime p) (h : ¬ p ∣ n) : Nat.Coprime p n := by
+  exact (Nat.Prime.coprime_iff_not_dvd hp).mpr h
+
+-- stmt: theorem coprime_dvd_of_dvd_mul {k m n : ℕ} (hco : Nat.Coprime k n) (h : k ∣ m * n) : k ∣ m
+-- goal:
+--   k m n : ℕ
+--   hco : k.Coprime n
+--   h : k ∣ m * n
+--   ⊢ k ∣ m
+-- added: 2026-06-07
+theorem coprime_dvd_of_dvd_mul {k m n : ℕ} (hco : Nat.Coprime k n) (h : k ∣ m * n) : k ∣ m := by
+  exact Nat.Coprime.dvd_of_dvd_mul_right hco h
+
+-- stmt: theorem exists_prime_ge (n : ℕ) : ∃ p, n ≤ p ∧ Nat.Prime p
+-- goal:
+--   n : ℕ
+--   ⊢ ∃ p, n ≤ p ∧ Nat.Prime p
+-- added: 2026-06-07
+theorem exists_prime_ge (n : ℕ) : ∃ p, n ≤ p ∧ Nat.Prime p := by
+  exact Nat.exists_infinite_primes n
+
+-- stmt: theorem choose_zero (n : ℕ) : n.choose 0 = 1
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose 0 = 1
+-- added: 2026-06-07
+theorem choose_zero (n : ℕ) : n.choose 0 = 1 := by
+  simp
+
+-- stmt: theorem choose_self (n : ℕ) : n.choose n = 1
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose n = 1
+-- added: 2026-06-07
+theorem choose_self (n : ℕ) : n.choose n = 1 := by
+  simp
+
+-- stmt: theorem choose_one (n : ℕ) : n.choose 1 = n
+-- goal:
+--   n : ℕ
+--   ⊢ n.choose 1 = n
+-- added: 2026-06-07
+theorem choose_one (n : ℕ) : n.choose 1 = n := by
+  simp
+
+-- stmt: theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k)
+-- goal:
+--   n k : ℕ
+--   h : k ≤ n
+--   ⊢ n.choose k = n.choose (n - k)
+-- added: 2026-06-07
+theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k) := by
+  exact Eq.symm (Nat.choose_symm h)
+
+-- stmt: theorem pascal (n k : ℕ) : n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1)
+-- goal:
+--   n k : ℕ
+--   ⊢ n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1)
+-- added: 2026-06-07
+theorem pascal (n k : ℕ) : n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1) := by
+  rfl
+
+-- stmt: theorem my_mul_one {G : Type*} [Group G] (a : G) : a * 1 = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a * 1 = a
+-- added: 2026-06-07
+theorem my_mul_one {G : Type*} [Group G] (a : G) : a * 1 = a := by
+  simp
+
+-- stmt: theorem my_one_mul {G : Type*} [Group G] (a : G) : 1 * a = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ 1 * a = a
+-- added: 2026-06-07
+theorem my_one_mul {G : Type*} [Group G] (a : G) : 1 * a = a := by
+  simp
+
+-- stmt: theorem my_mul_inv_cancel {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a * a⁻¹ = 1
+-- added: 2026-06-07
+theorem my_mul_inv_cancel {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1 := by
+  simp
+
+-- stmt: theorem my_inv_mul_cancel {G : Type*} [Group G] (a : G) : a⁻¹ * a = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a⁻¹ * a = 1
+-- added: 2026-06-07
+theorem my_inv_mul_cancel {G : Type*} [Group G] (a : G) : a⁻¹ * a = 1 := by
+  simp
+
+-- stmt: theorem my_inv_inv {G : Type*} [Group G] (a : G) : a⁻¹⁻¹ = a
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a⁻¹⁻¹ = a
+-- added: 2026-06-07
+theorem my_inv_inv {G : Type*} [Group G] (a : G) : a⁻¹⁻¹ = a := by
+  simp
+
+-- stmt: theorem my_mul_inv_rev {G : Type*} [Group G] (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b : G
+--   ⊢ (a * b)⁻¹ = b⁻¹ * a⁻¹
+-- added: 2026-06-07
+theorem my_mul_inv_rev {G : Type*} [Group G] (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
+  simp
+
+-- stmt: theorem my_mul_left_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = a * c) : b = c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = a * c
+--   ⊢ b = c
+-- added: 2026-06-07
+theorem my_mul_left_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = a * c) : b = c := by
+  aesop
+
+-- stmt: theorem my_mul_right_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = c * b) : a = c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = c * b
+--   ⊢ a = c
+-- added: 2026-06-07
+theorem my_mul_right_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = c * b) : a = c := by
+  aesop
+
+-- stmt: theorem my_one_unique {G : Type*} [Group G] {e : G} (h : ∀ a : G, e * a = a) : e = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   e : G
+--   h : ∀ (a : G), e * a = a
+--   ⊢ e = 1
+-- added: 2026-06-07
+theorem my_one_unique {G : Type*} [Group G] {e : G} (h : ∀ a : G, e * a = a) : e = 1 := by
+  aesop
+
+-- stmt: theorem my_eq_inv_mul_of_mul_eq {G : Type*} [Group G] {a b c : G} (h : a * b = c) : b = a⁻¹ * c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = c
+--   ⊢ b = a⁻¹ * c
+-- added: 2026-06-07
+theorem my_eq_inv_mul_of_mul_eq {G : Type*} [Group G] {a b c : G} (h : a * b = c) : b = a⁻¹ * c := by
+  aesop
+
+-- stmt: theorem my_subgroup_one {G : Type*} [Group G] (H : Subgroup G) : (1 : G) ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ 1 ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_one {G : Type*} [Group G] (H : Subgroup G) : (1 : G) ∈ H := by
+  simp
+
+-- stmt: theorem my_subgroup_inv {G : Type*} [Group G] {H : Subgroup G} {a : G} (ha : a ∈ H) : a⁻¹ ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   a : G
+--   ha : a ∈ H
+--   ⊢ a⁻¹ ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_inv {G : Type*} [Group G] {H : Subgroup G} {a : G} (ha : a ∈ H) : a⁻¹ ∈ H := by
+  aesop
+
+-- stmt: theorem my_subgroup_mul {G : Type*} [Group G] {H : Subgroup G} {a b : G} (ha : a ∈ H) (hb : b ∈ H) : a * b ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   a b : G
+--   ha : a ∈ H
+--   hb : b ∈ H
+--   ⊢ a * b ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_mul {G : Type*} [Group G] {H : Subgroup G} {a b : G} (ha : a ∈ H) (hb : b ∈ H) : a * b ∈ H := by
+  aesop
+
+-- stmt: theorem my_subgroup_inter {G : Type*} [Group G] {H K : Subgroup G} {a : G} (ha : a ∈ H) (hb : a ∈ K) : a ∈ H ⊓ K
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H K : Subgroup G
+--   a : G
+--   ha : a ∈ H
+--   hb : a ∈ K
+--   ⊢ a ∈ H ⊓ K
+-- added: 2026-06-07
+theorem my_subgroup_inter {G : Type*} [Group G] {H K : Subgroup G} {a : G} (ha : a ∈ H) (hb : a ∈ K) : a ∈ H ⊓ K := by
+  tauto
+
+-- stmt: theorem lagrange {G : Type*} [Group G] (H : Subgroup G) : Nat.card H ∣ Nat.card G
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ Nat.card ↥H ∣ Nat.card G
+-- added: 2026-06-07
+theorem lagrange {G : Type*} [Group G] (H : Subgroup G) : Nat.card H ∣ Nat.card G := by
+  exact Subgroup.card_subgroup_dvd_card H
+
+-- stmt: theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.index = Nat.card G
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ Nat.card ↥H * H.index = Nat.card G
+-- added: 2026-06-07
+theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.index = Nat.card G := by
+  simp
+
+-- stmt: theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a ^ orderOf a = 1
+-- added: 2026-06-07
+theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1 := by
+  norm_num
+
+-- stmt: theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   n : ℕ
+--   h : a ^ n = 1
+--   ⊢ orderOf a ∣ n
+-- added: 2026-06-07
+theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n := by
+  exact orderOf_dvd_of_pow_eq_one h
+
+-- stmt: theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf a ∣ Fintype.card G
+-- goal:
+--   G : Type u_1
+--   inst✝¹ : Group G
+--   inst✝ : Fintype G
+--   a : G
+--   ⊢ orderOf a ∣ Fintype.card G
+-- added: 2026-06-07
+theorem my_orderOf_dvd_card {G : Type*} [Group G] [Fintype G] (a : G) : orderOf a ∣ Fintype.card G := by
+  exact orderOf_dvd_card
+
+-- stmt: theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1
+-- goal:
+--   G : Type u_1
+--   inst✝¹ : Group G
+--   inst✝ : Fintype G
+--   a : G
+--   ⊢ a ^ Fintype.card G = 1
+-- added: 2026-06-07
+theorem my_pow_card_eq_one {G : Type*} [Group G] [Fintype G] (a : G) : a ^ Fintype.card G = 1 := by
+  norm_num
+
+-- stmt: theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a * b + a * c
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b c : R
+--   ⊢ a * (b + c) = a * b + a * c
+-- added: 2026-06-07
+theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a * b + a * c := by
+  ring
+
+-- stmt: theorem my_ring_add_mul {R : Type*} [CommRing R] (a b c : R) : (a + b) * c = a * c + b * c
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b c : R
+--   ⊢ (a + b) * c = a * c + b * c
+-- added: 2026-06-07
+theorem my_ring_add_mul {R : Type*} [CommRing R] (a b c : R) : (a + b) * c = a * c + b * c := by
+  ring
+
+-- stmt: theorem my_ring_mul_comm {R : Type*} [CommRing R] (a b : R) : a * b = b * a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b : R
+--   ⊢ a * b = b * a
+-- added: 2026-06-07
+theorem my_ring_mul_comm {R : Type*} [CommRing R] (a b : R) : a * b = b * a := by
+  ring
+
+-- stmt: theorem my_ring_mul_zero {R : Type*} [CommRing R] (a : R) : a * 0 = 0
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a * 0 = 0
+-- added: 2026-06-07
+theorem my_ring_mul_zero {R : Type*} [CommRing R] (a : R) : a * 0 = 0 := by
+  ring
+
+-- stmt: theorem my_ring_zero_mul {R : Type*} [CommRing R] (a : R) : 0 * a = 0
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ 0 * a = 0
+-- added: 2026-06-07
+theorem my_ring_zero_mul {R : Type*} [CommRing R] (a : R) : 0 * a = 0 := by
+  ring
+
+-- stmt: theorem my_ring_neg_one_mul {R : Type*} [CommRing R] (a : R) : -1 * a = -a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ -1 * a = -a
+-- added: 2026-06-07
+theorem my_ring_neg_one_mul {R : Type*} [CommRing R] (a : R) : -1 * a = -a := by
+  ring
+
+-- stmt: theorem my_ring_mul_one {R : Type*} [CommRing R] (a : R) : a * 1 = a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a * 1 = a
+-- added: 2026-06-07
+theorem my_ring_mul_one {R : Type*} [CommRing R] (a : R) : a * 1 = a := by
+  ring
+
+-- stmt: theorem my_ideal_add_mem {R : Type*} [CommRing R] (I : Ideal R) {a b : R} (ha : a ∈ I) (hb : b ∈ I) : a + b ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a b : R
+--   ha : a ∈ I
+--   hb : b ∈ I
+--   ⊢ a + b ∈ I
+-- added: 2026-06-07
+theorem my_ideal_add_mem {R : Type*} [CommRing R] (I : Ideal R) {a b : R} (ha : a ∈ I) (hb : b ∈ I) : a + b ∈ I := by
+  aesop
+
+-- stmt: theorem my_ideal_mul_mem_left {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : r * a ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   r a : R
+--   ha : a ∈ I
+--   ⊢ r * a ∈ I
+-- added: 2026-06-07
+theorem my_ideal_mul_mem_left {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : r * a ∈ I := by
+  exact Ideal.mul_mem_left I r ha
+
+-- stmt: theorem my_ideal_mul_mem_right {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : a * r ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   r a : R
+--   ha : a ∈ I
+--   ⊢ a * r ∈ I
+-- added: 2026-06-07
+theorem my_ideal_mul_mem_right {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : a * r ∈ I := by
+  exact Ideal.IsTwoSided.mul_mem_of_left r ha
+
+-- stmt: theorem my_mem_span_singleton_self {R : Type*} [CommRing R] (a : R) : a ∈ Ideal.span ({a} : Set R)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a ∈ Ideal.span {a}
+-- added: 2026-06-07
+theorem my_mem_span_singleton_self {R : Type*} [CommRing R] (a : R) : a ∈ Ideal.span ({a} : Set R) := by
+  exact Ideal.mem_span_singleton_self a
+
+-- stmt: theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   ⊢ Ideal.span {1} = ⊤
+-- added: 2026-06-07
+theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤ := by
+  simp
+
+-- stmt: theorem my_span_singleton_eq_top {R : Type*} [CommRing R] (a : R) : Ideal.span ({a} : Set R) = ⊤ ↔ IsUnit a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ Ideal.span {a} = ⊤ ↔ IsUnit a
+-- added: 2026-06-07
+theorem my_span_singleton_eq_top {R : Type*} [CommRing R] (a : R) : Ideal.span ({a} : Set R) = ⊤ ↔ IsUnit a := by
+  simp
+
+-- stmt: theorem my_quotient_eq_zero_iff {R : Type*} [CommRing R] (I : Ideal R) (a : R) : Ideal.Quotient.mk I a = 0 ↔ a ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a : R
+--   ⊢ (Ideal.Quotient.mk I) a = 0 ↔ a ∈ I
+-- added: 2026-06-07
+theorem my_quotient_eq_zero_iff {R : Type*} [CommRing R] (I : Ideal R) (a : R) : Ideal.Quotient.mk I a = 0 ↔ a ∈ I := by
+  exact Ideal.Quotient.eq_zero_iff_mem
+
+-- stmt: theorem my_quotient_mk_eq_iff {R : Type*} [CommRing R] (I : Ideal R) (a b : R) : Ideal.Quotient.mk I a = Ideal.Quotient.mk I b ↔ a - b ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a b : R
+--   ⊢ (Ideal.Quotient.mk I) a = (Ideal.Quotient.mk I) b ↔ a - b ∈ I
+-- added: 2026-06-07
+theorem my_quotient_mk_eq_iff {R : Type*} [CommRing R] (I : Ideal R) (a b : R) : Ideal.Quotient.mk I a = Ideal.Quotient.mk I b ↔ a - b ∈ I := by
+  exact Ideal.Quotient.mk_eq_mk_iff_sub_mem a b
+
+-- stmt: theorem my_isPrime_iff_isDomain {R : Type*} [CommRing R] (I : Ideal R) : I.IsPrime ↔ IsDomain (R ⧸ I)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   ⊢ I.IsPrime ↔ IsDomain (R ⧸ I)
+-- added: 2026-06-07
+theorem my_isPrime_iff_isDomain {R : Type*} [CommRing R] (I : Ideal R) : I.IsPrime ↔ IsDomain (R ⧸ I) := by
+  exact Iff.symm (Ideal.Quotient.isDomain_iff_prime I)
+
+-- stmt: theorem my_isMaximal_iff_isField {R : Type*} [CommRing R] (I : Ideal R) : I.IsMaximal ↔ IsField (R ⧸ I)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   ⊢ I.IsMaximal ↔ IsField (R ⧸ I)
+-- added: 2026-06-07
+theorem my_isMaximal_iff_isField {R : Type*} [CommRing R] (I : Ideal R) : I.IsMaximal ↔ IsField (R ⧸ I) := by
+  exact Ideal.Quotient.maximal_ideal_iff_isField_quotient I
+
+-- stmt: theorem my_isMaximal_isPrime {R : Type*} [CommRing R] (I : Ideal R) (hM : I.IsMaximal) : I.IsPrime
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   hM : I.IsMaximal
+--   ⊢ I.IsPrime
+-- added: 2026-06-07
+theorem my_isMaximal_isPrime {R : Type*} [CommRing R] (I : Ideal R) (hM : I.IsMaximal) : I.IsPrime := by
+  exact Ideal.IsMaximal.isPrime hM
+
+-- stmt: theorem my_isOpen_univ {X : Type*} [TopologicalSpace X] : IsOpen (Set.univ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ IsOpen Set.univ
+-- added: 2026-06-07
+theorem my_isOpen_univ {X : Type*} [TopologicalSpace X] : IsOpen (Set.univ : Set X) := by
+  simp
+
+-- stmt: theorem my_isOpen_empty {X : Type*} [TopologicalSpace X] : IsOpen (∅ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ IsOpen ∅
+-- added: 2026-06-07
+theorem my_isOpen_empty {X : Type*} [TopologicalSpace X] : IsOpen (∅ : Set X) := by
+  simp
+
+-- stmt: theorem my_isOpen_inter {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsOpen s) (ht : IsOpen t) : IsOpen (s ∩ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsOpen s
+--   ht : IsOpen t
+--   ⊢ IsOpen (s ∩ t)
+-- added: 2026-06-07
+theorem my_isOpen_inter {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsOpen s) (ht : IsOpen t) : IsOpen (s ∩ t) := by
+  exact IsOpen.inter hs ht
+
+-- stmt: theorem my_isClosed_compl_iff {X : Type*} [TopologicalSpace X] {s : Set X} : IsClosed sᶜ ↔ IsOpen s
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s : Set X
+--   ⊢ IsClosed sᶜ ↔ IsOpen s
+-- added: 2026-06-07
+theorem my_isClosed_compl_iff {X : Type*} [TopologicalSpace X] {s : Set X} : IsClosed sᶜ ↔ IsOpen s := by
+  simp
+
+-- stmt: theorem my_isClosed_union {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsClosed s) (ht : IsClosed t) : IsClosed (s ∪ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsClosed s
+--   ht : IsClosed t
+--   ⊢ IsClosed (s ∪ t)
+-- added: 2026-06-07
+theorem my_isClosed_union {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsClosed s) (ht : IsClosed t) : IsClosed (s ∪ t) := by
+  exact IsClosed.union hs ht
+
+-- stmt: theorem my_isOpen_iUnion {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsOpen (f i)) : IsOpen (⋃ i, f i)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ι : Type u_2
+--   f : ι → Set X
+--   h : ∀ (i : ι), IsOpen (f i)
+--   ⊢ IsOpen (⋃ i, f i)
+-- added: 2026-06-07
+theorem my_isOpen_iUnion {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsOpen (f i)) : IsOpen (⋃ i, f i) := by
+  exact isOpen_iUnion h
+
+-- stmt: theorem my_isClosed_iInter {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsClosed (f i)) : IsClosed (⋂ i, f i)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ι : Type u_2
+--   f : ι → Set X
+--   h : ∀ (i : ι), IsClosed (f i)
+--   ⊢ IsClosed (⋂ i, f i)
+-- added: 2026-06-07
+theorem my_isClosed_iInter {X : Type*} [TopologicalSpace X] {ι : Type*} {f : ι → Set X} (h : ∀ i, IsClosed (f i)) : IsClosed (⋂ i, f i) := by
+  exact isClosed_iInter h
+
+-- stmt: theorem my_isOpen_preimage {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {f : X → Y} (hf : Continuous f) {s : Set Y} (hs : IsOpen s) : IsOpen (f ⁻¹' s)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   f : X → Y
+--   hf : Continuous f
+--   s : Set Y
+--   hs : IsOpen s
+--   ⊢ IsOpen (f ⁻¹' s)
+-- added: 2026-06-07
+theorem my_isOpen_preimage {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {f : X → Y} (hf : Continuous f) {s : Set Y} (hs : IsOpen s) : IsOpen (f ⁻¹' s) := by
+  exact hf.isOpen_preimage s hs
+
+-- stmt: theorem my_continuous_comp {X Y Z : Type*} [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] {f : X → Y} {g : Y → Z} (hf : Continuous f) (hg : Continuous g) : Continuous (g ∘ f)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   Z : Type u_3
+--   inst✝² : TopologicalSpace X
+--   inst✝¹ : TopologicalSpace Y
+--   inst✝ : TopologicalSpace Z
+--   f : X → Y
+--   g : Y → Z
+--   hf : Continuous f
+--   hg : Continuous g
+--   ⊢ Continuous (g ∘ f)
+-- added: 2026-06-07
+theorem my_continuous_comp {X Y Z : Type*} [TopologicalSpace X] [TopologicalSpace Y] [TopologicalSpace Z] {f : X → Y} {g : Y → Z} (hf : Continuous f) (hg : Continuous g) : Continuous (g ∘ f) := by
+  fun_prop
+
+-- stmt: theorem my_continuous_id {X : Type*} [TopologicalSpace X] : Continuous (id : X → X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ Continuous id
+-- added: 2026-06-07
+theorem my_continuous_id {X : Type*} [TopologicalSpace X] : Continuous (id : X → X) := by
+  fun_prop
+
+-- stmt: theorem my_continuous_const {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {y : Y} : Continuous (fun _ : X => y)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   y : Y
+--   ⊢ Continuous fun x => y
+-- added: 2026-06-07
+theorem my_continuous_const {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {y : Y} : Continuous (fun _ : X => y) := by
+  fun_prop
+
+-- stmt: theorem my_isCompact_inter_right {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) : IsCompact (s ∩ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsCompact s
+--   ht : IsClosed t
+--   ⊢ IsCompact (s ∩ t)
+-- added: 2026-06-07
+theorem my_isCompact_inter_right {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) : IsCompact (s ∩ t) := by
+  exact IsCompact.inter_right hs ht
+
+-- stmt: theorem my_isCompact_of_isClosed_subset {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) (h : t ⊆ s) : IsCompact t
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsCompact s
+--   ht : IsClosed t
+--   h : t ⊆ s
+--   ⊢ IsCompact t
+-- added: 2026-06-07
+theorem my_isCompact_of_isClosed_subset {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsCompact s) (ht : IsClosed t) (h : t ⊆ s) : IsCompact t := by
+  exact IsCompact.of_isClosed_subset hs ht h
+
+-- stmt: theorem my_isCompact_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {s : Set X} {f : X → Y} (hs : IsCompact s) (hf : Continuous f) : IsCompact (f '' s)
+-- goal:
+--   X : Type u_1
+--   Y : Type u_2
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : TopologicalSpace Y
+--   s : Set X
+--   f : X → Y
+--   hs : IsCompact s
+--   hf : Continuous f
+--   ⊢ IsCompact (f '' s)
+-- added: 2026-06-07
+theorem my_isCompact_image {X Y : Type*} [TopologicalSpace X] [TopologicalSpace Y] {s : Set X} {f : X → Y} (hs : IsCompact s) (hf : Continuous f) : IsCompact (f '' s) := by
+  exact IsCompact.image hs hf
+
+-- stmt: theorem my_isConnected_singleton {X : Type*} [TopologicalSpace X] {x : X} : IsConnected ({x} : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   x : X
+--   ⊢ IsConnected {x}
+-- added: 2026-06-07
+theorem my_isConnected_singleton {X : Type*} [TopologicalSpace X] {x : X} : IsConnected ({x} : Set X) := by
+  exact isConnected_singleton
+
+-- stmt: theorem my_isConnected_union {X : Type*} [TopologicalSpace X] {s t : Set X} (H : (s ∩ t).Nonempty) (hs : IsConnected s) (ht : IsConnected t) : IsConnected (s ∪ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   H : (s ∩ t).Nonempty
+--   hs : IsConnected s
+--   ht : IsConnected t
+--   ⊢ IsConnected (s ∪ t)
+-- added: 2026-06-07
+theorem my_isConnected_union {X : Type*} [TopologicalSpace X] {s t : Set X} (H : (s ∩ t).Nonempty) (hs : IsConnected s) (ht : IsConnected t) : IsConnected (s ∪ t) := by
+  exact IsConnected.union H hs ht
+
+-- stmt: theorem my_isConnected_univ {X : Type*} [TopologicalSpace X] [ConnectedSpace X] : IsConnected (Set.univ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝¹ : TopologicalSpace X
+--   inst✝ : ConnectedSpace X
+--   ⊢ IsConnected Set.univ
+-- added: 2026-06-07
+theorem my_isConnected_univ {X : Type*} [TopologicalSpace X] [ConnectedSpace X] : IsConnected (Set.univ : Set X) := by
+  (expose_names; exact connectedSpace_iff_univ.mp inst_1)
+
+-- stmt: theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : Set X} (hs : IsCompact s) {ι : Type*} (U : ι → Set X) (hU : ∀ i, IsOpen (U i)) (hcover : s ⊆ ⋃ i, U i) : ∃ t : Finset ι, s ⊆ ⋃ i ∈ t, U i
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s : Set X
+--   hs : IsCompact s
+--   ι : Type u_2
+--   U : ι → Set X
+--   hU : ∀ (i : ι), IsOpen (U i)
+--   hcover : s ⊆ ⋃ i, U i
+--   ⊢ ∃ t, s ⊆ ⋃ i ∈ t, U i
+-- added: 2026-06-07
+theorem my_isCompact_elim_finite_subcover {X : Type*} [TopologicalSpace X] {s : Set X} (hs : IsCompact s) {ι : Type*} (U : ι → Set X) (hU : ∀ i, IsOpen (U i)) (hcover : s ⊆ ⋃ i, U i) : ∃ t : Finset ι, s ⊆ ⋃ i ∈ t, U i := by
+  exact IsCompact.elim_finite_subcover hs U hU hcover
+
+-- stmt: theorem pythagorean (x : ℝ) : Real.sin x ^ 2 + Real.cos x ^ 2 = 1
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin x ^ 2 + Real.cos x ^ 2 = 1
+-- added: 2026-06-07
+theorem pythagorean (x : ℝ) : Real.sin x ^ 2 + Real.cos x ^ 2 = 1 := by
+  norm_num
+
+-- stmt: theorem sin_double (x : ℝ) : Real.sin (2 * x) = 2 * Real.sin x * Real.cos x
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin (2 * x) = 2 * Real.sin x * Real.cos x
+-- added: 2026-06-07
+theorem sin_double (x : ℝ) : Real.sin (2 * x) = 2 * Real.sin x * Real.cos x := by
+  exact Real.sin_two_mul x
+
+-- stmt: theorem sin_zero : Real.sin 0 = 0
+-- goal:
+--   ⊢ Real.sin 0 = 0
+-- added: 2026-06-07
+theorem sin_zero : Real.sin 0 = 0 := by
+  simp
+
+-- stmt: theorem cos_zero : Real.cos 0 = 1
+-- goal:
+--   ⊢ Real.cos 0 = 1
+-- added: 2026-06-07
+theorem cos_zero : Real.cos 0 = 1 := by
+  simp
+
+-- stmt: theorem sin_pi_div_two : Real.sin (Real.pi / 2) = 1
+-- goal:
+--   ⊢ Real.sin (Real.pi / 2) = 1
+-- added: 2026-06-07
+theorem sin_pi_div_two : Real.sin (Real.pi / 2) = 1 := by
+  simp
+
+-- stmt: theorem cos_pi_div_two : Real.cos (Real.pi / 2) = 0
+-- goal:
+--   ⊢ Real.cos (Real.pi / 2) = 0
+-- added: 2026-06-07
+theorem cos_pi_div_two : Real.cos (Real.pi / 2) = 0 := by
+  simp
+
+-- stmt: theorem sin_pi : Real.sin Real.pi = 0
+-- goal:
+--   ⊢ Real.sin Real.pi = 0
+-- added: 2026-06-07
+theorem sin_pi : Real.sin Real.pi = 0 := by
+  simp
+
+-- stmt: theorem cos_pi : Real.cos Real.pi = -1
+-- goal:
+--   ⊢ Real.cos Real.pi = -1
+-- added: 2026-06-07
+theorem cos_pi : Real.cos Real.pi = -1 := by
+  simp
+
+-- stmt: theorem cos_sq_eq (x : ℝ) : Real.cos x ^ 2 = 1 - Real.sin x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos x ^ 2 = 1 - Real.sin x ^ 2
+-- added: 2026-06-07
+theorem cos_sq_eq (x : ℝ) : Real.cos x ^ 2 = 1 - Real.sin x ^ 2 := by
+  exact Real.cos_sq' x
+
+-- stmt: theorem sin_sq_eq (x : ℝ) : Real.sin x ^ 2 = 1 - Real.cos x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin x ^ 2 = 1 - Real.cos x ^ 2
+-- added: 2026-06-07
+theorem sin_sq_eq (x : ℝ) : Real.sin x ^ 2 = 1 - Real.cos x ^ 2 := by
+  exact Real.sin_sq x
+
+-- stmt: theorem tan_def (x : ℝ) : Real.tan x = Real.sin x / Real.cos x
+-- goal:
+--   x : ℝ
+--   ⊢ Real.tan x = Real.sin x / Real.cos x
+-- added: 2026-06-07
+theorem tan_def (x : ℝ) : Real.tan x = Real.sin x / Real.cos x := by
+  exact Real.tan_eq_sin_div_cos x
+
+-- stmt: theorem sin_add_formula (x y : ℝ) : Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y
+-- added: 2026-06-07
+theorem sin_add_formula (x y : ℝ) : Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y := by
+  exact Real.sin_add x y
+
+-- stmt: theorem cos_add_formula (x y : ℝ) : Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y
+-- added: 2026-06-07
+theorem cos_add_formula (x y : ℝ) : Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y := by
+  exact Real.cos_add x y
+
+-- stmt: theorem sin_sub_formula (x y : ℝ) : Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y
+-- added: 2026-06-07
+theorem sin_sub_formula (x y : ℝ) : Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y := by
+  exact Real.sin_sub x y
+
+-- stmt: theorem cos_sub_formula (x y : ℝ) : Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y
+-- added: 2026-06-07
+theorem cos_sub_formula (x y : ℝ) : Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y := by
+  exact Real.cos_sub x y
+
+-- stmt: theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2
+-- added: 2026-06-07
+theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2 := by
+  exact Real.cos_two_mul' x
+
+-- stmt: theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1
+-- added: 2026-06-07
+theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := by
+  exact Real.cos_two_mul x
+
+-- stmt: theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1
+-- goal:
+--   x : ℝ
+--   ⊢ sin x ^ 2 + cos x ^ 2 = 1
+-- added: 2026-06-07
+theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1 := by
+  norm_num
+
 end AutoProved
