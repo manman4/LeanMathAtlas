@@ -1100,4 +1100,87 @@ theorem my_quotient_eq_zero_iff {R : Type*} [CommRing R] (I : Ideal R) (a : R) :
 theorem my_quotient_mk_eq_iff {R : Type*} [CommRing R] (I : Ideal R) (a b : R) : Ideal.Quotient.mk I a = Ideal.Quotient.mk I b ↔ a - b ∈ I := by
   exact Ideal.Quotient.mk_eq_mk_iff_sub_mem a b
 
+-- stmt: theorem my_isPrime_iff_isDomain {R : Type*} [CommRing R] (I : Ideal R) : I.IsPrime ↔ IsDomain (R ⧸ I)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   ⊢ I.IsPrime ↔ IsDomain (R ⧸ I)
+-- added: 2026-06-07
+theorem my_isPrime_iff_isDomain {R : Type*} [CommRing R] (I : Ideal R) : I.IsPrime ↔ IsDomain (R ⧸ I) := by
+  exact Iff.symm (Ideal.Quotient.isDomain_iff_prime I)
+
+-- stmt: theorem my_isMaximal_iff_isField {R : Type*} [CommRing R] (I : Ideal R) : I.IsMaximal ↔ IsField (R ⧸ I)
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   ⊢ I.IsMaximal ↔ IsField (R ⧸ I)
+-- added: 2026-06-07
+theorem my_isMaximal_iff_isField {R : Type*} [CommRing R] (I : Ideal R) : I.IsMaximal ↔ IsField (R ⧸ I) := by
+  exact Ideal.Quotient.maximal_ideal_iff_isField_quotient I
+
+-- stmt: theorem my_isMaximal_isPrime {R : Type*} [CommRing R] (I : Ideal R) (hM : I.IsMaximal) : I.IsPrime
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   hM : I.IsMaximal
+--   ⊢ I.IsPrime
+-- added: 2026-06-07
+theorem my_isMaximal_isPrime {R : Type*} [CommRing R] (I : Ideal R) (hM : I.IsMaximal) : I.IsPrime := by
+  exact Ideal.IsMaximal.isPrime hM
+
+-- stmt: theorem my_isOpen_univ {X : Type*} [TopologicalSpace X] : IsOpen (Set.univ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ IsOpen Set.univ
+-- added: 2026-06-07
+theorem my_isOpen_univ {X : Type*} [TopologicalSpace X] : IsOpen (Set.univ : Set X) := by
+  simp
+
+-- stmt: theorem my_isOpen_empty {X : Type*} [TopologicalSpace X] : IsOpen (∅ : Set X)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   ⊢ IsOpen ∅
+-- added: 2026-06-07
+theorem my_isOpen_empty {X : Type*} [TopologicalSpace X] : IsOpen (∅ : Set X) := by
+  simp
+
+-- stmt: theorem my_isOpen_inter {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsOpen s) (ht : IsOpen t) : IsOpen (s ∩ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsOpen s
+--   ht : IsOpen t
+--   ⊢ IsOpen (s ∩ t)
+-- added: 2026-06-07
+theorem my_isOpen_inter {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsOpen s) (ht : IsOpen t) : IsOpen (s ∩ t) := by
+  exact IsOpen.inter hs ht
+
+-- stmt: theorem my_isClosed_compl_iff {X : Type*} [TopologicalSpace X] {s : Set X} : IsClosed sᶜ ↔ IsOpen s
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s : Set X
+--   ⊢ IsClosed sᶜ ↔ IsOpen s
+-- added: 2026-06-07
+theorem my_isClosed_compl_iff {X : Type*} [TopologicalSpace X] {s : Set X} : IsClosed sᶜ ↔ IsOpen s := by
+  simp
+
+-- stmt: theorem my_isClosed_union {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsClosed s) (ht : IsClosed t) : IsClosed (s ∪ t)
+-- goal:
+--   X : Type u_1
+--   inst✝ : TopologicalSpace X
+--   s t : Set X
+--   hs : IsClosed s
+--   ht : IsClosed t
+--   ⊢ IsClosed (s ∪ t)
+-- added: 2026-06-07
+theorem my_isClosed_union {X : Type*} [TopologicalSpace X] {s t : Set X} (hs : IsClosed s) (ht : IsClosed t) : IsClosed (s ∪ t) := by
+  exact IsClosed.union hs ht
+
 end AutoProved
