@@ -1486,4 +1486,15 @@ theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := 
 theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1 := by
   norm_num
 
+-- stmt: theorem my_exists_le_maximal (I : Ideal R) (hI : I ≠ ⊤) : ∃ M : Ideal R, M.IsMaximal ∧ I ≤ M
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   hI : I ≠ ⊤
+--   ⊢ ∃ M, M.IsMaximal ∧ I ≤ M
+-- added: 2026-06-07
+theorem my_exists_le_maximal (I : Ideal R) (hI : I ≠ ⊤) : ∃ M : Ideal R, M.IsMaximal ∧ I ≤ M := by
+  exact Ideal.ne_top_iff_exists_maximal.mp hI
+
 end AutoProved
