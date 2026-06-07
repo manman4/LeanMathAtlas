@@ -185,18 +185,6 @@ TRIG_DOUBLE_TACTICS = [
     "rw [Real.cos_two_mul]; nlinarith [Real.sin_sq_add_cos_sq _]",
     "simp [cos_two_mul, sin_sq_add_cos_sq]",
     "simp [Real.cos_two_mul, Real.sin_sq_add_cos_sq]",
-    # fallback: cos_double が Mathlib に存在する場合
-    "rw [cos_double]; linarith [sin_sq_add_cos_sq _]",
-    "rw [Real.cos_double]; linarith [Real.sin_sq_add_cos_sq _]",
-    "rw [cos_double]; ring_nf; linarith [sin_sq_add_cos_sq _]",
-]
-
-# Tangent identity templates (open Real context assumed)
-TAN_TACTICS = [
-    # one_add_tan_sq: 1 + tan x ^ 2 = 1 / cos x ^ 2
-    "simp only [Real.tan_eq_sin_div_cos, div_pow]\n  have hx2 : cos x ^ 2 ≠ 0 := pow_ne_zero 2 hx\n  field_simp [hx2]\n  linarith [sin_sq_add_cos_sq x]",
-    "simp only [tan_eq_sin_div_cos, div_pow]\n  have hx2 : cos x ^ 2 ≠ 0 := pow_ne_zero 2 hx\n  field_simp [hx2]\n  linarith [sin_sq_add_cos_sq x]",
-    "rw [Real.tan_eq_sin_div_cos, div_pow]\n  have hx2 : cos x ^ 2 ≠ 0 := pow_ne_zero 2 hx\n  field_simp [hx2]\n  linarith [sin_sq_add_cos_sq x]",
 ]
 
 # Complex number templates (open Complex context assumed)
@@ -336,9 +324,6 @@ def select_tactics(goal: str) -> list:
     # open Complex 環境では "Complex" がゴールに現れないため、exp + I の組み合わせでも検出
     if "exp" in goal and re.search(r'\^\s*\w+', goal) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', goal)):
         return COMPLEX_TACTICS + SEARCH_TACTICS
-    # tan identity goals (sin を含まない場合を先に捕捉)
-    if "tan" in goal and ("=" in goal or "≤" in goal):
-        return TAN_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     # Trig double-angle goals: cos_two_mul / sin_sq_add_cos_sq が必要なゴール
     # "cos" と "sin" が両方あり等式・不等式を含む場合のみ発火
     if "cos" in goal and "sin" in goal and ("=" in goal or "≤" in goal):
