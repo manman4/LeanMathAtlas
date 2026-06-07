@@ -649,4 +649,22 @@ theorem my_gcd_zero_left (a : ℕ) : Nat.gcd 0 a = a := by
 theorem my_gcd_self (a : ℕ) : Nat.gcd a a = a := by
   simp
 
+-- stmt: theorem coprime_succ (n : ℕ) : Nat.Coprime n (n + 1)
+-- goal:
+--   n : ℕ
+--   ⊢ n.Coprime (n + 1)
+-- added: 2026-06-07
+theorem coprime_succ (n : ℕ) : Nat.Coprime n (n + 1) := by
+  simp
+
+-- stmt: theorem prime_coprime_of_not_dvd {p n : ℕ} (hp : Nat.Prime p) (h : ¬ p ∣ n) : Nat.Coprime p n
+-- goal:
+--   p n : ℕ
+--   hp : Nat.Prime p
+--   h : ¬p ∣ n
+--   ⊢ p.Coprime n
+-- added: 2026-06-07
+theorem prime_coprime_of_not_dvd {p n : ℕ} (hp : Nat.Prime p) (h : ¬ p ∣ n) : Nat.Coprime p n := by
+  exact (Nat.Prime.coprime_iff_not_dvd hp).mpr h
+
 end AutoProved
