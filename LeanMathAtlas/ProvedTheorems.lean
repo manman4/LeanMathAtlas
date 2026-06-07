@@ -878,4 +878,24 @@ theorem my_subgroup_mul {G : Type*} [Group G] {H : Subgroup G} {a b : G} (ha : a
 theorem my_subgroup_inter {G : Type*} [Group G] {H K : Subgroup G} {a : G} (ha : a ∈ H) (hb : a ∈ K) : a ∈ H ⊓ K := by
   tauto
 
+-- stmt: theorem lagrange {G : Type*} [Group G] (H : Subgroup G) : Nat.card H ∣ Nat.card G
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ Nat.card ↥H ∣ Nat.card G
+-- added: 2026-06-07
+theorem lagrange {G : Type*} [Group G] (H : Subgroup G) : Nat.card H ∣ Nat.card G := by
+  exact Subgroup.card_subgroup_dvd_card H
+
+-- stmt: theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.index = Nat.card G
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ Nat.card ↥H * H.index = Nat.card G
+-- added: 2026-06-07
+theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.index = Nat.card G := by
+  simp
+
 end AutoProved
