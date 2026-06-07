@@ -1497,4 +1497,75 @@ theorem pythagorean_v2 (x : ℝ) : sin x ^ 2 + cos x ^ 2 = 1 := by
 theorem my_exists_le_maximal (I : Ideal R) (hI : I ≠ ⊤) : ∃ M : Ideal R, M.IsMaximal ∧ I ≤ M := by
   exact Ideal.ne_top_iff_exists_maximal.mp hI
 
+-- stmt: theorem I_sq : (I : ℂ) ^ 2 = -1
+-- goal:
+--   ⊢ I ^ 2 = -1
+-- added: 2026-06-07
+theorem I_sq : (I : ℂ) ^ 2 = -1 := by
+  norm_num
+
+-- stmt: theorem my_norm_mul (z w : ℂ) : ‖z * w‖ = ‖z‖ * ‖w‖
+-- goal:
+--   z w : ℂ
+--   ⊢ ‖z * w‖ = ‖z‖ * ‖w‖
+-- added: 2026-06-07
+theorem my_norm_mul (z w : ℂ) : ‖z * w‖ = ‖z‖ * ‖w‖ := by
+  simp
+
+-- stmt: theorem my_cx_norm_add_le (z w : ℂ) : ‖z + w‖ ≤ ‖z‖ + ‖w‖
+-- goal:
+--   z w : ℂ
+--   ⊢ ‖z + w‖ ≤ ‖z‖ + ‖w‖
+-- added: 2026-06-07
+theorem my_cx_norm_add_le (z w : ℂ) : ‖z + w‖ ≤ ‖z‖ + ‖w‖ := by
+  exact norm_add_le z w
+
+-- stmt: theorem my_conj_conj (z : ℂ) : conj (conj z : ℂ) = z
+-- goal:
+--   z : ℂ
+--   ⊢ (starRingEnd ℂ) ((starRingEnd ℂ) z) = z
+-- added: 2026-06-07
+theorem my_conj_conj (z : ℂ) : conj (conj z : ℂ) = z := by
+  simp
+
+-- stmt: theorem my_conj_add (z w : ℂ) : conj (z + w : ℂ) = conj z + conj w
+-- goal:
+--   z w : ℂ
+--   ⊢ (starRingEnd ℂ) (z + w) = (starRingEnd ℂ) z + (starRingEnd ℂ) w
+-- added: 2026-06-07
+theorem my_conj_add (z w : ℂ) : conj (z + w : ℂ) = conj z + conj w := by
+  simp
+
+-- stmt: theorem my_conj_mul (z w : ℂ) : conj (z * w : ℂ) = conj z * conj w
+-- goal:
+--   z w : ℂ
+--   ⊢ (starRingEnd ℂ) (z * w) = (starRingEnd ℂ) z * (starRingEnd ℂ) w
+-- added: 2026-06-07
+theorem my_conj_mul (z w : ℂ) : conj (z * w : ℂ) = conj z * conj w := by
+  simp
+
+-- stmt: theorem my_mul_conj (z : ℂ) : z * conj z = ‖z‖ ^ 2
+-- goal:
+--   z : ℂ
+--   ⊢ z * (starRingEnd ℂ) z = ↑‖z‖ ^ 2
+-- added: 2026-06-07
+theorem my_mul_conj (z : ℂ) : z * conj z = ‖z‖ ^ 2 := by
+  exact mul_conj' z
+
+-- stmt: theorem euler_formula (x : ℝ) : exp (↑x * I) = cos ↑x + sin ↑x * I
+-- goal:
+--   x : ℝ
+--   ⊢ cexp (↑x * I) = cos ↑x + sin ↑x * I
+-- added: 2026-06-07
+theorem euler_formula (x : ℝ) : exp (↑x * I) = cos ↑x + sin ↑x * I := by
+  exact exp_mul_I ↑x
+
+-- stmt: theorem norm_exp_I_eq_one (x : ℝ) : ‖exp (↑x * I)‖ = 1
+-- goal:
+--   x : ℝ
+--   ⊢ ‖cexp (↑x * I)‖ = 1
+-- added: 2026-06-07
+theorem norm_exp_I_eq_one (x : ℝ) : ‖exp (↑x * I)‖ = 1 := by
+  norm_num
+
 end AutoProved
