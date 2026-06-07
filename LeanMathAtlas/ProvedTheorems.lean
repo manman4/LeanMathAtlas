@@ -1842,16 +1842,16 @@ theorem my_ftc2 (F f : ℝ → ℝ) (a b : ℝ) (hderiv : ∀ x ∈ Set.uIcc a b
 theorem my_ftc1 (f : ℝ → ℝ) (hf : Continuous f) (a b : ℝ) : deriv (fun u => ∫ x in a..u, f x) b = f b := by
   exact Continuous.deriv_integral f hf a b
 
--- stmt: theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜
+-- stmt: theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜 := ℝ) x x
 -- goal:
 --   E : Type u_1
 --   inst✝¹ : NormedAddCommGroup E
 --   inst✝ : InnerProductSpace ℝ E
 --   x : E
---   ⊢ Type ?u.184
+--   ⊢ 0 ≤ inner (𝕜 := ℝ) x x
 -- added: 2026-06-07
-theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜 := by
-  assumption
+theorem my_inner_self_nonneg (x : E) : 0 ≤ inner (𝕜 := ℝ) x x := by
+  exact real_inner_self_nonneg
 
 -- stmt: theorem my_norm_nonneg (x : E) : 0 ≤ ‖x‖
 -- goal:
@@ -1897,16 +1897,16 @@ theorem my_norm_add_le (x y : E) : ‖x + y‖ ≤ ‖x‖ + ‖y‖ := by
 theorem my_norm_neg (x : E) : ‖-x‖ = ‖x‖ := by
   norm_num
 
--- stmt: theorem cauchy_schwarz (x y : E) : |inner (𝕜
+-- stmt: theorem cauchy_schwarz (x y : E) : |inner (𝕜 := ℝ) x y| ≤ ‖x‖ * ‖y‖
 -- goal:
 --   E : Type u_1
 --   inst✝¹ : NormedAddCommGroup E
 --   inst✝ : InnerProductSpace ℝ E
 --   x y : E
---   ⊢ Type ?u.297
+--   ⊢ |inner (𝕜 := ℝ) x y| ≤ ‖x‖ * ‖y‖
 -- added: 2026-06-07
-theorem cauchy_schwarz (x y : E) : |inner (𝕜 := by
-  assumption
+theorem cauchy_schwarz (x y : E) : |inner (𝕜 := ℝ) x y| ≤ ‖x‖ * ‖y‖ := by
+  exact abs_real_inner_le_norm x y
 
 -- stmt: theorem my_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
 -- goal:
