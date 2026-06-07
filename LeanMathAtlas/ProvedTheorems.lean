@@ -830,4 +830,26 @@ theorem my_one_unique {G : Type*} [Group G] {e : G} (h : ∀ a : G, e * a = a) :
 theorem my_eq_inv_mul_of_mul_eq {G : Type*} [Group G] {a b c : G} (h : a * b = c) : b = a⁻¹ * c := by
   aesop
 
+-- stmt: theorem my_subgroup_one {G : Type*} [Group G] (H : Subgroup G) : (1 : G) ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   ⊢ 1 ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_one {G : Type*} [Group G] (H : Subgroup G) : (1 : G) ∈ H := by
+  simp
+
+-- stmt: theorem my_subgroup_inv {G : Type*} [Group G] {H : Subgroup G} {a : G} (ha : a ∈ H) : a⁻¹ ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   a : G
+--   ha : a ∈ H
+--   ⊢ a⁻¹ ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_inv {G : Type*} [Group G] {H : Subgroup G} {a : G} (ha : a ∈ H) : a⁻¹ ∈ H := by
+  aesop
+
 end AutoProved
