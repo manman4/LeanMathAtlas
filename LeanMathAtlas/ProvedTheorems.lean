@@ -962,4 +962,24 @@ theorem my_ring_mul_add {R : Type*} [CommRing R] (a b c : R) : a * (b + c) = a *
 theorem my_ring_add_mul {R : Type*} [CommRing R] (a b c : R) : (a + b) * c = a * c + b * c := by
   ring
 
+-- stmt: theorem my_ring_mul_comm {R : Type*} [CommRing R] (a b : R) : a * b = b * a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a b : R
+--   ⊢ a * b = b * a
+-- added: 2026-06-07
+theorem my_ring_mul_comm {R : Type*} [CommRing R] (a b : R) : a * b = b * a := by
+  ring
+
+-- stmt: theorem my_ring_mul_zero {R : Type*} [CommRing R] (a : R) : a * 0 = 0
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a * 0 = 0
+-- added: 2026-06-07
+theorem my_ring_mul_zero {R : Type*} [CommRing R] (a : R) : a * 0 = 0 := by
+  ring
+
 end AutoProved
