@@ -462,4 +462,21 @@ theorem my_zero_le (n : Nat) : 0 ≤ n := by
 theorem even_add_even (a b : Nat) (ha : Even a) (hb : Even b) : Even (a + b) := by
   exact Even.add ha hb
 
+-- stmt: theorem zmod_self (n : ℕ) : (n : ZMod n) = 0
+-- goal:
+--   n : ℕ
+--   ⊢ ↑n = 0
+-- added: 2026-06-07
+theorem zmod_self (n : ℕ) : (n : ZMod n) = 0 := by
+  simp
+
+-- stmt: theorem cong_iff_dvd (a b : ℤ) (n : ℕ) : (a : ZMod n) = b ↔ (n : ℤ) ∣ b - a
+-- goal:
+--   a b : ℤ
+--   n : ℕ
+--   ⊢ ↑a = ↑b ↔ ↑n ∣ b - a
+-- added: 2026-06-07
+theorem cong_iff_dvd (a b : ℤ) (n : ℕ) : (a : ZMod n) = b ↔ (n : ℤ) ∣ b - a := by
+  exact ZMod.intCast_eq_intCast_iff_dvd_sub a b n
+
 end AutoProved
