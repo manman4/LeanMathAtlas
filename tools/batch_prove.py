@@ -10,6 +10,22 @@ from auto_prove import prove_all, extract_preamble, cache_key, load_index
 
 WORKDIR = Path(__file__).parent.parent
 
+def _assign_pos_depth0(text: str) -> int:
+    """Return index of first ':=' at parenthesis depth 0, or -1."""
+    depth = 0
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
+        elif text[i:i+2] == ':=' and depth == 0:
+            return i
+        i += 1
+    return -1
+
+
 def extract_theorems(lean_file: Path) -> list[str]:
     """Extract theorem signatures (without body) from a .lean file."""
     text = lean_file.read_text(encoding="utf-8")
@@ -19,29 +35,24 @@ def extract_theorems(lean_file: Path) -> list[str]:
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
-        # Start of a theorem
         if re.match(r'^theorem\s+', stripped):
-            # Collect the signature: grab lines until we see := or := by or a line with just 'by'
             sig_lines = [stripped]
             j = i + 1
             while j < len(lines):
                 next_stripped = lines[j].strip()
-                # Stop at := (term proof) or at a blank line
-                if ':=' in sig_lines[-1] or (sig_lines[-1].endswith(':=') or ':= by' in sig_lines[-1]):
+                full_so_far = ' '.join(sig_lines)
+                # Stop when := appears at parenthesis depth 0
+                if _assign_pos_depth0(full_so_far) != -1:
                     break
-                # Check if this continuation line is an indented type annotation
                 if lines[j].startswith('    ') and not re.match(r'^theorem|^def|^lemma', next_stripped):
                     sig_lines.append(next_stripped)
                     j += 1
                 else:
                     break
-            # Build the full signature, stripping body after :=
             full = ' '.join(sig_lines)
-            # Remove := ... (the body)
-            sig = re.sub(r'\s*:=.*$', '', full).strip()
-            # Also remove trailing `:= by`
-            sig = re.sub(r'\s*:=\s*by\s*$', '', sig).strip()
-            # Normalize internal whitespace so cache keys match regardless of formatting
+            # Strip proof body: remove from the first := at depth 0
+            pos = _assign_pos_depth0(full)
+            sig = full[:pos].rstrip() if pos != -1 else full
             sig = re.sub(r'\s+', ' ', sig)
             theorems.append(sig)
             i = j
