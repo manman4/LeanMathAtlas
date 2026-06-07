@@ -561,4 +561,23 @@ theorem five_prime : Nat.Prime 5 := by
 theorem seven_prime : Nat.Prime 7 := by
   norm_num
 
+-- stmt: theorem prime_ge_two (p : ℕ) (hp : Nat.Prime p) : 2 ≤ p
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   ⊢ 2 ≤ p
+-- added: 2026-06-07
+theorem prime_ge_two (p : ℕ) (hp : Nat.Prime p) : 2 ≤ p := by
+  exact Nat.Prime.two_le hp
+
+-- stmt: theorem prime_odd_or_two (p : ℕ) (hp : Nat.Prime p) (hne : p ≠ 2) : p % 2 = 1
+-- goal:
+--   p : ℕ
+--   hp : Nat.Prime p
+--   hne : p ≠ 2
+--   ⊢ p % 2 = 1
+-- added: 2026-06-07
+theorem prime_odd_or_two (p : ℕ) (hp : Nat.Prime p) (hne : p ≠ 2) : p % 2 = 1 := by
+  exact (Nat.Prime.mod_two_eq_one_iff_ne_two hp).mpr hne
+
 end AutoProved
