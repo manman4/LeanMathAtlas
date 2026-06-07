@@ -599,4 +599,22 @@ theorem prime_divisors (p : ℕ) (hp : Nat.Prime p) (k : ℕ) (hk : k ∣ p) : k
 theorem my_gcd_dvd_left (a b : ℕ) : Nat.gcd a b ∣ a := by
   exact Nat.gcd_dvd_left a b
 
+-- stmt: theorem my_gcd_dvd_right (a b : ℕ) : Nat.gcd a b ∣ b
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b ∣ b
+-- added: 2026-06-07
+theorem my_gcd_dvd_right (a b : ℕ) : Nat.gcd a b ∣ b := by
+  exact Nat.gcd_dvd_right a b
+
+-- stmt: theorem my_dvd_gcd {k a b : ℕ} (ha : k ∣ a) (hb : k ∣ b) : k ∣ Nat.gcd a b
+-- goal:
+--   k a b : ℕ
+--   ha : k ∣ a
+--   hb : k ∣ b
+--   ⊢ k ∣ a.gcd b
+-- added: 2026-06-07
+theorem my_dvd_gcd {k a b : ℕ} (ha : k ∣ a) (hb : k ∣ b) : k ∣ Nat.gcd a b := by
+  exact Nat.dvd_gcd ha hb
+
 end AutoProved
