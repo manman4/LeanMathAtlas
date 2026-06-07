@@ -28,44 +28,6 @@ theorem t2 (n : ℕ) : n + 0 = n := by
 theorem t3 (a b : ℤ) : a + b = b + a := by
   omega
 
--- stmt: theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2
--- goal:
---   a b : ℝ
---   ⊢ (a + b) ^ 2 = a ^ 2 + 2 * a * b + b ^ 2
--- added: 2026-06-05
-theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
-  ring
-
--- stmt: theorem t5 (a b c : ℕ) : (a + b) + c = a + (b + c)
--- goal:
---   a b c : ℕ
---   ⊢ a + b + c = a + (b + c)
--- added: 2026-06-05
-theorem t5 (a b c : ℕ) : (a + b) + c = a + (b + c) := by
-  omega
-
--- stmt: theorem t6 (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
--- goal:
---   n : ℕ
---   ⊢ 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
--- added: 2026-06-05
-theorem t6 (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1) := by
-  induction n with
-  | zero => simp
-  | succ m ih =>
-    rw [Finset.sum_range_succ]; nlinarith [ih]
-
--- stmt: theorem t7 (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
--- goal:
---   n : ℕ
---   ⊢ 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
--- added: 2026-06-05
-theorem t7 (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1) := by
-  induction n with
-  | zero => simp
-  | succ m ih =>
-    rw [Finset.sum_range_succ]; nlinarith [ih]
-
 -- stmt: theorem bench_imp_id (P : Prop) : P → P
 -- goal:
 --   P : Prop
@@ -201,38 +163,6 @@ theorem bench_iff_mp (P Q : Prop) (h : P ↔ Q) (hp : P) : Q := by
 theorem bench_demorgan (P Q : Prop) : ¬(P ∨ Q) → ¬P ∧ ¬Q := by
   simp
 
--- stmt: theorem bench_sq_sum (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2
--- goal:
---   a b : ℝ
---   ⊢ (a + b) ^ 2 = a ^ 2 + 2 * a * b + b ^ 2
--- added: 2026-06-05
-theorem bench_sq_sum (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
-  ring
-
--- stmt: theorem bench_sq_diff (a b : ℝ) : (a - b)^2 = a^2 - 2*a*b + b^2
--- goal:
---   a b : ℝ
---   ⊢ (a - b) ^ 2 = a ^ 2 - 2 * a * b + b ^ 2
--- added: 2026-06-05
-theorem bench_sq_diff (a b : ℝ) : (a - b)^2 = a^2 - 2*a*b + b^2 := by
-  ring
-
--- stmt: theorem bench_diff_sq (a b : ℝ) : (a + b) * (a - b) = a^2 - b^2
--- goal:
---   a b : ℝ
---   ⊢ (a + b) * (a - b) = a ^ 2 - b ^ 2
--- added: 2026-06-05
-theorem bench_diff_sq (a b : ℝ) : (a + b) * (a - b) = a^2 - b^2 := by
-  ring
-
--- stmt: theorem bench_cube_sum (a b : ℝ) : (a + b)^3 = a^3 + 3*a^2*b + 3*a*b^2 + b^3
--- goal:
---   a b : ℝ
---   ⊢ (a + b) ^ 3 = a ^ 3 + 3 * a ^ 2 * b + 3 * a * b ^ 2 + b ^ 3
--- added: 2026-06-05
-theorem bench_cube_sum (a b : ℝ) : (a + b)^3 = a^3 + 3*a^2*b + 3*a*b^2 + b^3 := by
-  ring
-
 -- stmt: theorem bench_nat_comm (a b : ℕ) : a + b = b + a
 -- goal:
 --   a b : ℕ
@@ -266,28 +196,6 @@ theorem bench_nat_le (n : ℕ) : n ≤ n + 1 := by
 -- added: 2026-06-05
 theorem bench_int_linarith (a b : ℤ) (h1 : a ≤ b) (h2 : b ≤ a) : a = b := by
   omega
-
--- stmt: theorem bench_sum_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
--- goal:
---   n : ℕ
---   ⊢ 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)
--- added: 2026-06-05
-theorem bench_sum_gauss (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1) := by
-  induction n with
-    | zero => simp
-    | succ m ih =>
-      rw [Finset.sum_range_succ]; nlinarith [ih]
-
--- stmt: theorem bench_sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
--- goal:
---   n : ℕ
---   ⊢ 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1)
--- added: 2026-06-05
-theorem bench_sum_sq (n : ℕ) : 6 * ∑ k ∈ Finset.range (n + 1), k ^ 2 = n * (n + 1) * (2 * n + 1) := by
-  induction n with
-    | zero => simp
-    | succ m ih =>
-      rw [Finset.sum_range_succ]; nlinarith [ih]
 
 -- stmt: theorem bench_hard_prime_inf : ∀ n : ℕ, ∃ p, n ≤ p ∧ Nat.Prime p
 -- goal:
