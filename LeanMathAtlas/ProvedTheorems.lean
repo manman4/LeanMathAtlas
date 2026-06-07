@@ -746,4 +746,24 @@ theorem my_mul_one {G : Type*} [Group G] (a : G) : a * 1 = a := by
 theorem my_one_mul {G : Type*} [Group G] (a : G) : 1 * a = a := by
   simp
 
+-- stmt: theorem my_mul_inv_cancel {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a * a⁻¹ = 1
+-- added: 2026-06-07
+theorem my_mul_inv_cancel {G : Type*} [Group G] (a : G) : a * a⁻¹ = 1 := by
+  simp
+
+-- stmt: theorem my_inv_mul_cancel {G : Type*} [Group G] (a : G) : a⁻¹ * a = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a⁻¹ * a = 1
+-- added: 2026-06-07
+theorem my_inv_mul_cancel {G : Type*} [Group G] (a : G) : a⁻¹ * a = 1 := by
+  simp
+
 end AutoProved
