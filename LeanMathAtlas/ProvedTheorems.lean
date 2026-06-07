@@ -1406,4 +1406,68 @@ theorem sin_pi : Real.sin Real.pi = 0 := by
 theorem cos_pi : Real.cos Real.pi = -1 := by
   simp
 
+-- stmt: theorem cos_sq_eq (x : ℝ) : Real.cos x ^ 2 = 1 - Real.sin x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos x ^ 2 = 1 - Real.sin x ^ 2
+-- added: 2026-06-07
+theorem cos_sq_eq (x : ℝ) : Real.cos x ^ 2 = 1 - Real.sin x ^ 2 := by
+  exact Real.cos_sq' x
+
+-- stmt: theorem sin_sq_eq (x : ℝ) : Real.sin x ^ 2 = 1 - Real.cos x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.sin x ^ 2 = 1 - Real.cos x ^ 2
+-- added: 2026-06-07
+theorem sin_sq_eq (x : ℝ) : Real.sin x ^ 2 = 1 - Real.cos x ^ 2 := by
+  exact Real.sin_sq x
+
+-- stmt: theorem tan_def (x : ℝ) : Real.tan x = Real.sin x / Real.cos x
+-- goal:
+--   x : ℝ
+--   ⊢ Real.tan x = Real.sin x / Real.cos x
+-- added: 2026-06-07
+theorem tan_def (x : ℝ) : Real.tan x = Real.sin x / Real.cos x := by
+  exact Real.tan_eq_sin_div_cos x
+
+-- stmt: theorem sin_add_formula (x y : ℝ) : Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y
+-- added: 2026-06-07
+theorem sin_add_formula (x y : ℝ) : Real.sin (x + y) = Real.sin x * Real.cos y + Real.cos x * Real.sin y := by
+  exact Real.sin_add x y
+
+-- stmt: theorem cos_add_formula (x y : ℝ) : Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y
+-- added: 2026-06-07
+theorem cos_add_formula (x y : ℝ) : Real.cos (x + y) = Real.cos x * Real.cos y - Real.sin x * Real.sin y := by
+  exact Real.cos_add x y
+
+-- stmt: theorem sin_sub_formula (x y : ℝ) : Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y
+-- added: 2026-06-07
+theorem sin_sub_formula (x y : ℝ) : Real.sin (x - y) = Real.sin x * Real.cos y - Real.cos x * Real.sin y := by
+  exact Real.sin_sub x y
+
+-- stmt: theorem cos_sub_formula (x y : ℝ) : Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y
+-- goal:
+--   x y : ℝ
+--   ⊢ Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y
+-- added: 2026-06-07
+theorem cos_sub_formula (x y : ℝ) : Real.cos (x - y) = Real.cos x * Real.cos y + Real.sin x * Real.sin y := by
+  exact Real.cos_sub x y
+
+-- stmt: theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2
+-- added: 2026-06-07
+theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2 := by
+  exact Real.cos_two_mul' x
+
 end AutoProved
