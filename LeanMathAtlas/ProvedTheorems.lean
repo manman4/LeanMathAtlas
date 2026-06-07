@@ -1002,4 +1002,27 @@ theorem my_ring_zero_mul {R : Type*} [CommRing R] (a : R) : 0 * a = 0 := by
 theorem my_ring_neg_one_mul {R : Type*} [CommRing R] (a : R) : -1 * a = -a := by
   ring
 
+-- stmt: theorem my_ring_mul_one {R : Type*} [CommRing R] (a : R) : a * 1 = a
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   a : R
+--   ⊢ a * 1 = a
+-- added: 2026-06-07
+theorem my_ring_mul_one {R : Type*} [CommRing R] (a : R) : a * 1 = a := by
+  ring
+
+-- stmt: theorem my_ideal_add_mem {R : Type*} [CommRing R] (I : Ideal R) {a b : R} (ha : a ∈ I) (hb : b ∈ I) : a + b ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a b : R
+--   ha : a ∈ I
+--   hb : b ∈ I
+--   ⊢ a + b ∈ I
+-- added: 2026-06-07
+theorem my_ideal_add_mem {R : Type*} [CommRing R] (I : Ideal R) {a b : R} (ha : a ∈ I) (hb : b ∈ I) : a + b ∈ I := by
+  aesop
+
 end AutoProved
