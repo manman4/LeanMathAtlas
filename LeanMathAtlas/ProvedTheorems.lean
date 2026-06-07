@@ -617,4 +617,20 @@ theorem my_gcd_dvd_right (a b : ℕ) : Nat.gcd a b ∣ b := by
 theorem my_dvd_gcd {k a b : ℕ} (ha : k ∣ a) (hb : k ∣ b) : k ∣ Nat.gcd a b := by
   exact Nat.dvd_gcd ha hb
 
+-- stmt: theorem my_gcd_comm (a b : ℕ) : Nat.gcd a b = Nat.gcd b a
+-- goal:
+--   a b : ℕ
+--   ⊢ a.gcd b = b.gcd a
+-- added: 2026-06-07
+theorem my_gcd_comm (a b : ℕ) : Nat.gcd a b = Nat.gcd b a := by
+  exact Nat.gcd_comm a b
+
+-- stmt: theorem my_gcd_zero_right (a : ℕ) : Nat.gcd a 0 = a
+-- goal:
+--   a : ℕ
+--   ⊢ a.gcd 0 = a
+-- added: 2026-06-07
+theorem my_gcd_zero_right (a : ℕ) : Nat.gcd a 0 = a := by
+  simp
+
 end AutoProved
