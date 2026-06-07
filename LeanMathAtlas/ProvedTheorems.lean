@@ -898,4 +898,26 @@ theorem lagrange {G : Type*} [Group G] (H : Subgroup G) : Nat.card H ∣ Nat.car
 theorem lagrange_index {G : Type*} [Group G] (H : Subgroup G) : Nat.card H * H.index = Nat.card G := by
   simp
 
+-- stmt: theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   ⊢ a ^ orderOf a = 1
+-- added: 2026-06-07
+theorem my_pow_orderOf_eq_one {G : Type*} [Group G] (a : G) : a ^ orderOf a = 1 := by
+  norm_num
+
+-- stmt: theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a : G
+--   n : ℕ
+--   h : a ^ n = 1
+--   ⊢ orderOf a ∣ n
+-- added: 2026-06-07
+theorem my_orderOf_dvd_of_pow_eq_one {G : Type*} [Group G] {a : G} {n : ℕ} (h : a ^ n = 1) : orderOf a ∣ n := by
+  exact orderOf_dvd_of_pow_eq_one h
+
 end AutoProved
