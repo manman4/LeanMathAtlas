@@ -718,4 +718,12 @@ theorem choose_one (n : ℕ) : n.choose 1 = n := by
 theorem choose_symm (n k : ℕ) (h : k ≤ n) : n.choose k = n.choose (n - k) := by
   exact Eq.symm (Nat.choose_symm h)
 
+-- stmt: theorem pascal (n k : ℕ) : n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1)
+-- goal:
+--   n k : ℕ
+--   ⊢ n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1)
+-- added: 2026-06-07
+theorem pascal (n k : ℕ) : n.choose k + n.choose (k + 1) = (n + 1).choose (k + 1) := by
+  rfl
+
 end AutoProved
