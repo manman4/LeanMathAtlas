@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.6 | 2026-06-07 | fix(batch_prove): depth-aware := parsing to prevent signature truncation at 𝕜 :=; repair corrupt my_inner_self_nonneg and cauchy_schwarz entries in ProvedTheorems.lean |
 | 0.3.5 | 2026-06-07 | feat(auto_prove): add INNER_PRODUCT_TACTICS / COMPLEX_TACTICS / TRIG_DOUBLE_TACTICS; prove de_moivre, normSq_sq, one_add_tan_sq; remove overfitted tactics (TAN_TACTICS, cos_double fallback) |
 | 0.3.4 | 2026-06-07 | feat: file-based benchmark (tools/bench/*.lean); prove: remainder_theorem |
 | 0.3.3 | 2026-06-07 | prove: 40 theorems (Derivatives/Limits/Integration/Vectors/Combinatorics/Sequences); 34 skipped (auto_prove未対応) |
