@@ -141,6 +141,62 @@ SIMPLE_TACTICS = [
     "fun_prop",
     "simp [*]", "simp_all", "push_cast; ring", "push_cast; omega",
     "norm_cast", "norm_cast; ring", "norm_cast; omega",
+    "linear_combination",
+]
+
+# Inner product space / normed space (InnerProductSpace ℝ E goals)
+INNER_PRODUCT_TACTICS = [
+    # Commutativity: ⟪x, y⟫ = ⟪y, x⟫
+    # real_inner_comm _ _ : inner ℝ ?b ?a = inner ℝ ?a ?b (Lean unifies ? from goal)
+    "exact real_inner_comm _ _",
+    "exact (real_inner_comm _ _).symm",
+    # inner_comm for real field: ⟪x,y⟫_ℝ = conj ⟪y,x⟫_ℝ = ⟪y,x⟫_ℝ
+    "exact inner_comm (𝕜 := ℝ) _ _",
+    "simp only [inner_comm (𝕜 := ℝ)]",
+    # Linearity
+    "exact inner_add_left _ _ _",
+    "exact inner_add_right _ _ _",
+    "exact inner_smul_left _ _ _",
+    "exact inner_smul_right _ _ _",
+    # Positivity / self inner product
+    "exact real_inner_self_nonneg",
+    "exact inner_self_eq_zero",
+    "exact real_inner_self_eq_norm_sq _",
+    # Norm
+    "exact norm_smul _ _",
+    # Broad simp: real_inner_comm は交換律ループを避けるため除外
+    "simp [inner_add_left, inner_add_right, inner_smul_left, inner_smul_right, inner_self_eq_zero, real_inner_self_eq_norm_sq, norm_smul]",
+    "simp [inner_smul_left]",
+    "simp [inner_smul_right]",
+    "simp [real_inner_self_eq_norm_sq]",
+    # EuclideanSpace concrete basis vectors
+    "simp [EuclideanSpace.inner_single_left, EuclideanSpace.inner_single_right]",
+    "simp [EuclideanSpace.norm_single]",
+    # Cauchy-Schwarz squared: ⟪x,y⟫² ≤ ⟪x,x⟫ * ⟪y,y⟫
+    "have h := abs_real_inner_le_norm _ _\n  have hx := real_inner_self_eq_norm_sq _\n  have hy := real_inner_self_eq_norm_sq _\n  nlinarith [sq_abs (inner (𝕜 := ℝ) _ _), abs_nonneg (inner (𝕜 := ℝ) _ _), mul_pow ‖_‖ ‖_‖ 2]",
+]
+
+# Trigonometric double/half-angle templates (open Real context assumed)
+TRIG_DOUBLE_TACTICS = [
+    "rw [cos_double]; linarith [sin_sq_add_cos_sq _]",
+    "rw [Real.cos_double]; linarith [Real.sin_sq_add_cos_sq _]",
+    "rw [cos_double]; ring_nf; linarith [sin_sq_add_cos_sq _]",
+    "simp [cos_double, sin_sq_add_cos_sq]",
+    "simp [Real.cos_double, Real.sin_sq_add_cos_sq]",
+]
+
+# Complex number templates (open Complex context assumed)
+COMPLEX_TACTICS = [
+    # normSq
+    "simp [normSq_apply, sq]",
+    "simp [Complex.normSq_apply, sq]",
+    "rw [normSq_apply]; ring",
+    # de Moivre: (exp(θ*I))^n = exp(n*θ*I)
+    "rw [← exp_nat_mul]; congr 1; ring",
+    "rw [← Complex.exp_nat_mul]; congr 1; ring",
+    "simp [← exp_nat_mul, mul_comm, mul_assoc]",
+    # exp of imaginary
+    "simp [exp_mul_I, exp_add]",
 ]
 
 INDUCTION_TACTICS = [
@@ -235,6 +291,13 @@ STEP_TACTICS = [
     "apply HasDerivAt.neg", "apply HasDerivAt.add",
     "exact Real.hasDerivAt_sin _", "exact Real.hasDerivAt_cos _",
     "exact hasDerivAt_id _",
+    # Inner product / norm lemmas
+    "exact real_inner_comm _ _", "exact inner_add_left _ _ _",
+    "exact inner_self_eq_zero", "exact norm_smul _ _",
+    "simp [inner_smul_left]", "simp [real_inner_self_eq_norm_sq]",
+    "simp [EuclideanSpace.inner_single_left]", "simp [EuclideanSpace.norm_single]",
+    # Complex
+    "simp [normSq_apply, sq]", "congr 1",
     # Fintype / Pigeonhole principle (standard Mathlib lemma for ∃-collision goals)
     "apply Fintype.exists_ne_map_eq_of_card_lt",
     # Fintype.card simp rules (reduces Fintype.card (Fin n) to n)
@@ -246,6 +309,23 @@ STEP_TIME_LIMIT = 10
 
 def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
+    # Inner product space goals: inner (𝕜 := ℝ), @inner ℝ, or ⟪x,y⟫_ℝ notation
+    if (re.search(r'\binner\b', goal) and ("ℝ" in goal or "𝕜" in goal)) or "⟪" in goal:
+        return INNER_PRODUCT_TACTICS + SEARCH_TACTICS
+    # Norm + smul: ‖c • x‖ type goals
+    if "‖" in goal and "•" in goal:
+        return ["exact norm_smul _ _", "simp [norm_smul]"] + INNER_PRODUCT_TACTICS + SEARCH_TACTICS
+    # Complex normSq goals
+    if "normSq" in goal:
+        return COMPLEX_TACTICS + SEARCH_TACTICS
+    # Complex exponential goals: exp(...)^n = exp(...) — de Moivre type
+    # "I" は変数名として誤爆するため除外。Complex/ℂ のみで検出
+    if "exp" in goal and re.search(r'\^\s*\w+', goal) and ("Complex" in goal or "ℂ" in goal):
+        return COMPLEX_TACTICS + SEARCH_TACTICS
+    # Trig double-angle goals: cos_double / sin_sq_add_cos_sq が必要なゴール
+    # "cos" と "sin" が両方あり等式・不等式を含む場合のみ発火
+    if "cos" in goal and "sin" in goal and ("=" in goal or "≤" in goal):
+        return TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if "∑" in goal or "Finset" in goal:
         # card goals: try bijection-based templates before induction
         if ".card" in goal:
