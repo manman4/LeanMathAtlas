@@ -444,4 +444,22 @@ theorem my_add_comm (a b : Nat) : a + b = b + a := by
 theorem double_eq_two_mul (n : Nat) : n + n = 2 * n := by
   omega
 
+-- stmt: theorem my_zero_le (n : Nat) : 0 ≤ n
+-- goal:
+--   n : ℕ
+--   ⊢ 0 ≤ n
+-- added: 2026-06-07
+theorem my_zero_le (n : Nat) : 0 ≤ n := by
+  omega
+
+-- stmt: theorem even_add_even (a b : Nat) (ha : Even a) (hb : Even b) : Even (a + b)
+-- goal:
+--   a b : ℕ
+--   ha : Even a
+--   hb : Even b
+--   ⊢ Even (a + b)
+-- added: 2026-06-07
+theorem even_add_even (a b : Nat) (ha : Even a) (hb : Even b) : Even (a + b) := by
+  exact Even.add ha hb
+
 end AutoProved
