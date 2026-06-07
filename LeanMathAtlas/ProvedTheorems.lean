@@ -1025,4 +1025,28 @@ theorem my_ring_mul_one {R : Type*} [CommRing R] (a : R) : a * 1 = a := by
 theorem my_ideal_add_mem {R : Type*} [CommRing R] (I : Ideal R) {a b : R} (ha : a ∈ I) (hb : b ∈ I) : a + b ∈ I := by
   aesop
 
+-- stmt: theorem my_ideal_mul_mem_left {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : r * a ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   r a : R
+--   ha : a ∈ I
+--   ⊢ r * a ∈ I
+-- added: 2026-06-07
+theorem my_ideal_mul_mem_left {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : r * a ∈ I := by
+  exact Ideal.mul_mem_left I r ha
+
+-- stmt: theorem my_ideal_mul_mem_right {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : a * r ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   r a : R
+--   ha : a ∈ I
+--   ⊢ a * r ∈ I
+-- added: 2026-06-07
+theorem my_ideal_mul_mem_right {R : Type*} [CommRing R] (I : Ideal R) (r : R) {a : R} (ha : a ∈ I) : a * r ∈ I := by
+  exact Ideal.IsTwoSided.mul_mem_of_left r ha
+
 end AutoProved
