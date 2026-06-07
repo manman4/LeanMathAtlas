@@ -852,4 +852,30 @@ theorem my_subgroup_one {G : Type*} [Group G] (H : Subgroup G) : (1 : G) ∈ H :
 theorem my_subgroup_inv {G : Type*} [Group G] {H : Subgroup G} {a : G} (ha : a ∈ H) : a⁻¹ ∈ H := by
   aesop
 
+-- stmt: theorem my_subgroup_mul {G : Type*} [Group G] {H : Subgroup G} {a b : G} (ha : a ∈ H) (hb : b ∈ H) : a * b ∈ H
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H : Subgroup G
+--   a b : G
+--   ha : a ∈ H
+--   hb : b ∈ H
+--   ⊢ a * b ∈ H
+-- added: 2026-06-07
+theorem my_subgroup_mul {G : Type*} [Group G] {H : Subgroup G} {a b : G} (ha : a ∈ H) (hb : b ∈ H) : a * b ∈ H := by
+  aesop
+
+-- stmt: theorem my_subgroup_inter {G : Type*} [Group G] {H K : Subgroup G} {a : G} (ha : a ∈ H) (hb : a ∈ K) : a ∈ H ⊓ K
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   H K : Subgroup G
+--   a : G
+--   ha : a ∈ H
+--   hb : a ∈ K
+--   ⊢ a ∈ H ⊓ K
+-- added: 2026-06-07
+theorem my_subgroup_inter {G : Type*} [Group G] {H K : Subgroup G} {a : G} (ha : a ∈ H) (hb : a ∈ K) : a ∈ H ⊓ K := by
+  tauto
+
 end AutoProved
