@@ -1078,4 +1078,26 @@ theorem my_span_one {R : Type*} [CommRing R] : (Ideal.span ({1} : Set R)) = ⊤ 
 theorem my_span_singleton_eq_top {R : Type*} [CommRing R] (a : R) : Ideal.span ({a} : Set R) = ⊤ ↔ IsUnit a := by
   simp
 
+-- stmt: theorem my_quotient_eq_zero_iff {R : Type*} [CommRing R] (I : Ideal R) (a : R) : Ideal.Quotient.mk I a = 0 ↔ a ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a : R
+--   ⊢ (Ideal.Quotient.mk I) a = 0 ↔ a ∈ I
+-- added: 2026-06-07
+theorem my_quotient_eq_zero_iff {R : Type*} [CommRing R] (I : Ideal R) (a : R) : Ideal.Quotient.mk I a = 0 ↔ a ∈ I := by
+  exact Ideal.Quotient.eq_zero_iff_mem
+
+-- stmt: theorem my_quotient_mk_eq_iff {R : Type*} [CommRing R] (I : Ideal R) (a b : R) : Ideal.Quotient.mk I a = Ideal.Quotient.mk I b ↔ a - b ∈ I
+-- goal:
+--   R : Type u_1
+--   inst✝ : CommRing R
+--   I : Ideal R
+--   a b : R
+--   ⊢ (Ideal.Quotient.mk I) a = (Ideal.Quotient.mk I) b ↔ a - b ∈ I
+-- added: 2026-06-07
+theorem my_quotient_mk_eq_iff {R : Type*} [CommRing R] (I : Ideal R) (a b : R) : Ideal.Quotient.mk I a = Ideal.Quotient.mk I b ↔ a - b ∈ I := by
+  exact Ideal.Quotient.mk_eq_mk_iff_sub_mem a b
+
 end AutoProved
