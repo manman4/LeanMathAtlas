@@ -808,4 +808,26 @@ theorem my_mul_left_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = a * c)
 theorem my_mul_right_cancel {G : Type*} [Group G] {a b c : G} (h : a * b = c * b) : a = c := by
   aesop
 
+-- stmt: theorem my_one_unique {G : Type*} [Group G] {e : G} (h : ∀ a : G, e * a = a) : e = 1
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   e : G
+--   h : ∀ (a : G), e * a = a
+--   ⊢ e = 1
+-- added: 2026-06-07
+theorem my_one_unique {G : Type*} [Group G] {e : G} (h : ∀ a : G, e * a = a) : e = 1 := by
+  aesop
+
+-- stmt: theorem my_eq_inv_mul_of_mul_eq {G : Type*} [Group G] {a b c : G} (h : a * b = c) : b = a⁻¹ * c
+-- goal:
+--   G : Type u_1
+--   inst✝ : Group G
+--   a b c : G
+--   h : a * b = c
+--   ⊢ b = a⁻¹ * c
+-- added: 2026-06-07
+theorem my_eq_inv_mul_of_mul_eq {G : Type*} [Group G] {a b c : G} (h : a * b = c) : b = a⁻¹ * c := by
+  aesop
+
 end AutoProved
