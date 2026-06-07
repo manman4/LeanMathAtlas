@@ -533,4 +533,18 @@ theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0)
 theorem fermat_little_all {p : ℕ} [hp : Fact (Nat.Prime p)] (a : ZMod p) : a ^ p = a := by
   simp
 
+-- stmt: theorem two_prime : Nat.Prime 2
+-- goal:
+--   ⊢ Nat.Prime 2
+-- added: 2026-06-07
+theorem two_prime : Nat.Prime 2 := by
+  norm_num
+
+-- stmt: theorem three_prime : Nat.Prime 3
+-- goal:
+--   ⊢ Nat.Prime 3
+-- added: 2026-06-07
+theorem three_prime : Nat.Prime 3 := by
+  norm_num
+
 end AutoProved
