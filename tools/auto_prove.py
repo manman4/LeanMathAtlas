@@ -549,6 +549,112 @@ def nlinarith_nonneg3_tactic(goal: str) -> str | None:
     ]
     return "nlinarith [" + ", ".join(witnesses) + "]"
 
+def have_candidates(goal: str) -> list[str]:
+    """Generate 'have h := ...' lines from proof-state goal structure.
+
+    Each returned string is a single have-tactic line that can be prepended
+    before a closing tactic.  Patterns covered:
+      - h : X ≠ 0  →  have h2 : X ^ 2 ≠ 0 := pow_ne_zero 2 h
+      - sin/cos present  →  have := sin_sq_add_cos_sq var
+      - ha : 0 < x  →  have ha' : 0 ≤ x := le_of_lt ha
+      - sq_nonneg witnesses for ℝ inequality goals
+    """
+    candidates = []
+
+    # 1. h : expr ≠ 0  →  expr ^ 2 ≠ 0  (enables field_simp [h2])
+    for m in re.finditer(r'(\w+)\s*:\s*(\w+(?:\s+\w+)?)\s*≠\s*0', goal):
+        hname = m.group(1)
+        expr = m.group(2).strip()
+        # Only single-token expressions (e.g. "cos x" → skip, "hx" → take expr=token before ≠)
+        # Actually goal format: "hx : cos x ≠ 0" → expr = "cos x"  (multi-token)
+        # We want the full expression; pow_ne_zero expects a proof of the base ≠ 0.
+        # Simple heuristic: wrap expr in parens if it contains a space.
+        expr_lean = f"({expr})" if " " in expr else expr
+        candidates.append(
+            f"have {hname}2 : {expr_lean} ^ 2 ≠ 0 := pow_ne_zero 2 {hname}"
+        )
+
+    # 2. sin/cos in goal  →  pythagorean identity
+    if "sin" in goal or "cos" in goal:
+        seen: set[str] = set()
+        for m in re.finditer(r'(?:sin|cos)\s+(\w+)', goal):
+            v = m.group(1)
+            if v not in seen:
+                seen.add(v)
+                candidates.append(f"have hsc_{v} := sin_sq_add_cos_sq {v}")
+                candidates.append(f"have hsc_{v} := Real.sin_sq_add_cos_sq {v}")
+
+    # 3. ha : 0 < x  →  have : 0 ≤ x
+    for m in re.finditer(r'(\w+)\s*:\s*0\s*<\s*(\w+)', goal):
+        hname, var = m.group(1), m.group(2)
+        candidates.append(f"have {hname}' : 0 ≤ {var} := le_of_lt {hname}")
+
+    # 4. sq_nonneg pairwise witnesses for ℝ inequality goals
+    if "≤" in goal or "≥" in goal or "<" in goal or ">" in goal:
+        vs = extract_real_vars(goal)
+        for i in range(min(len(vs), 3)):
+            for j in range(i + 1, min(len(vs), 3)):
+                candidates.append(f"have hnn_{i}{j} := sq_nonneg ({vs[i]} - {vs[j]})")
+
+    return candidates
+
+
+def have_closers(have_line: str, remaining_goal: str) -> list[str]:
+    """Build closer tactics to try after a have-prefix, ordered by likelihood."""
+    m = re.match(r'have\s+(\w+)\b', have_line)
+    name = m.group(1) if m else None
+
+    # Generic closers first
+    closers = ["ring", "linarith", "nlinarith", "simp", "omega",
+               "field_simp; ring", "field_simp; linarith",
+               "field_simp; nlinarith", "simp_all"]
+
+    # Name-aware closers: use the introduced hypothesis directly
+    if name:
+        closers = [
+            f"field_simp [{name}]; ring",
+            f"field_simp [{name}]; linarith",
+            f"field_simp [{name}]; nlinarith",
+            f"simp [{name}]",
+            f"linarith [{name}]",
+            f"nlinarith [{name}]",
+        ] + closers
+
+    # Append goal-selected closers for the remaining goal
+    closers += select_tactics(remaining_goal)[:8]
+    return closers
+
+
+def prove_with_have(session, example: str, base_env: int,
+                   have_line: str) -> str | None:
+    """Try to prove example by injecting have_line then closing the remainder.
+
+    1. Sends 'example := by  have_line  sorry' to obtain the remaining goal.
+    2. Generates closers from that remaining goal.
+    3. Tries each closer until one succeeds.
+    Returns the full tactic string on success, None otherwise.
+    """
+    # Step 1: validate the have and extract remaining goal
+    probe = session.send({"cmd": f"{example} := by\n  {have_line}\n  sorry",
+                          "env": base_env})
+    if has_error(probe):
+        return None
+    sorries = probe.get("sorries", [])
+    if not sorries:
+        # have alone closed the goal (unexpected but valid)
+        return have_line
+    remaining_goal = sorries[0].get("goal", "")
+
+    # Step 2: try each closer
+    for closer in have_closers(have_line, remaining_goal):
+        resp = session.send(
+            {"cmd": f"{example} := by\n  {have_line}\n  {closer}", "env": base_env}
+        )
+        if not has_error(resp):
+            return f"{have_line}\n  {closer}"
+    return None
+
+
 def fact_preamble(stmt: str) -> str:
     """Generate haveI lines for Nat.Prime hypotheses.
 
@@ -567,11 +673,13 @@ def fact_preamble(stmt: str) -> str:
 # Automated proving
 # ────────────────────────────────────────────────
 
-def prove_all(theorems: list, dry_run: bool = False, preamble: str = "") -> list:
+def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
+              skip_phase17: bool = False) -> list:
     """Attempt to prove each theorem.
 
     dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
     so that one run cannot contaminate the next).
+    skip_phase17=True: bypass Phase 1.7 (used by A/B coverage tests).
     """
     index = load_index()
     uncached = theorems if dry_run else [s for s in theorems if cache_key(s) not in index]
@@ -732,6 +840,21 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "") -> list
                             lean_name = lean_name_from(stmt)
                             append_to_lean_db(stmt, proof, goal, lean_name)
                             index[cache_key(stmt)] = lean_name
+
+                # Phase 3 (last resort): have-augmented proofs
+                # Tried after BFS because it costs O(candidates × closers) REPL calls.
+                # Covers theorems needing one intermediate fact that neither one-shot
+                # tactics nor BFS can construct (e.g. sin²+cos²=1 for single-trig goals).
+                if proof is None and not skip_phase17:
+                    for have_line in have_candidates(goal):
+                        p = prove_with_have(session, example, base_env, have_line)
+                        if p:
+                            proof = p
+                            if not dry_run:
+                                lean_name = lean_name_from(stmt)
+                                append_to_lean_db(stmt, proof, goal, lean_name)
+                                index[cache_key(stmt)] = lean_name
+                            break
 
                 new_results[stmt] = (proof, goal, time.monotonic() - t_stmt)
 
