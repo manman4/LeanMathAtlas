@@ -501,4 +501,26 @@ theorem cong_add {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a + c = b +
 theorem cong_mul {n : ℕ} {a b : ZMod n} (h : a = b) (c : ZMod n) : a * c = b * c := by
   exact ZMod.valMinAbs_inj.mp (congrArg ZMod.valMinAbs (congrFun (congrArg HMul.hMul h) c))
 
+-- stmt: theorem zmod_prime_inv {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a * a⁻¹ = 1
+-- goal:
+--   p : ℕ
+--   inst✝ : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ha : a ≠ 0
+--   ⊢ a * a⁻¹ = 1
+-- added: 2026-06-07
+theorem zmod_prime_inv {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a * a⁻¹ = 1 := by
+  exact CommGroupWithZero.mul_inv_cancel a ha
+
+-- stmt: theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a ^ (p - 1) = 1
+-- goal:
+--   p : ℕ
+--   inst✝ : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ha : a ≠ 0
+--   ⊢ a ^ (p - 1) = 1
+-- added: 2026-06-07
+theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a ^ (p - 1) = 1 := by
+  exact ZMod.pow_card_sub_one_eq_one ha
+
 end AutoProved
