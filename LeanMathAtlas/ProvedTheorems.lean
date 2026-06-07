@@ -523,4 +523,14 @@ theorem zmod_prime_inv {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0
 theorem fermat_little {p : ℕ} [Fact (Nat.Prime p)] (a : ZMod p) (ha : a ≠ 0) : a ^ (p - 1) = 1 := by
   exact ZMod.pow_card_sub_one_eq_one ha
 
+-- stmt: theorem fermat_little_all {p : ℕ} [hp : Fact (Nat.Prime p)] (a : ZMod p) : a ^ p = a
+-- goal:
+--   p : ℕ
+--   hp : Fact (Nat.Prime p)
+--   a : ZMod p
+--   ⊢ a ^ p = a
+-- added: 2026-06-07
+theorem fermat_little_all {p : ℕ} [hp : Fact (Nat.Prime p)] (a : ZMod p) : a ^ p = a := by
+  simp
+
 end AutoProved
