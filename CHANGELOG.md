@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.9 | 2026-06-07 | fix(auto_prove): HasDerivAt before trig in select_tactics (fun x => の => が誤マッチするバグ修正); id → id_eq (Lean 4 正しい simp 補題); Phase 3 have-augmented proof search (last resort); bench 51/51 (100%) |
 | 0.3.8 | 2026-06-07 | fix(ProvedTheorems): replace 12 incorrect norm_num proofs with correct Mathlib lemmas; docs: document norm_num usage policy in AUTO_PROVE.md |
 | 0.3.7 | 2026-06-07 | refactor: remove 7 duplicate entries in ProvedTheorems.lean (210→203); docs: document deduplication issue and policy in AUTO_PROVE.md |
 | 0.3.6 | 2026-06-07 | fix(batch_prove): depth-aware := parsing to prevent signature truncation at 𝕜 :=; repair corrupt my_inner_self_nonneg and cauchy_schwarz entries in ProvedTheorems.lean |
