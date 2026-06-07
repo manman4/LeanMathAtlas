@@ -547,4 +547,18 @@ theorem two_prime : Nat.Prime 2 := by
 theorem three_prime : Nat.Prime 3 := by
   norm_num
 
+-- stmt: theorem five_prime : Nat.Prime 5
+-- goal:
+--   ⊢ Nat.Prime 5
+-- added: 2026-06-07
+theorem five_prime : Nat.Prime 5 := by
+  norm_num
+
+-- stmt: theorem seven_prime : Nat.Prime 7
+-- goal:
+--   ⊢ Nat.Prime 7
+-- added: 2026-06-07
+theorem seven_prime : Nat.Prime 7 := by
+  norm_num
+
 end AutoProved
