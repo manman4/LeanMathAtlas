@@ -667,4 +667,22 @@ theorem coprime_succ (n : ℕ) : Nat.Coprime n (n + 1) := by
 theorem prime_coprime_of_not_dvd {p n : ℕ} (hp : Nat.Prime p) (h : ¬ p ∣ n) : Nat.Coprime p n := by
   exact (Nat.Prime.coprime_iff_not_dvd hp).mpr h
 
+-- stmt: theorem coprime_dvd_of_dvd_mul {k m n : ℕ} (hco : Nat.Coprime k n) (h : k ∣ m * n) : k ∣ m
+-- goal:
+--   k m n : ℕ
+--   hco : k.Coprime n
+--   h : k ∣ m * n
+--   ⊢ k ∣ m
+-- added: 2026-06-07
+theorem coprime_dvd_of_dvd_mul {k m n : ℕ} (hco : Nat.Coprime k n) (h : k ∣ m * n) : k ∣ m := by
+  exact Nat.Coprime.dvd_of_dvd_mul_right hco h
+
+-- stmt: theorem exists_prime_ge (n : ℕ) : ∃ p, n ≤ p ∧ Nat.Prime p
+-- goal:
+--   n : ℕ
+--   ⊢ ∃ p, n ≤ p ∧ Nat.Prime p
+-- added: 2026-06-07
+theorem exists_prime_ge (n : ℕ) : ∃ p, n ≤ p ∧ Nat.Prime p := by
+  exact Nat.exists_infinite_primes n
+
 end AutoProved
