@@ -1470,4 +1470,12 @@ theorem cos_sub_formula (x y : ℝ) : Real.cos (x - y) = Real.cos x * Real.cos y
 theorem cos_double (x : ℝ) : Real.cos (2 * x) = Real.cos x ^ 2 - Real.sin x ^ 2 := by
   exact Real.cos_two_mul' x
 
+-- stmt: theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1
+-- goal:
+--   x : ℝ
+--   ⊢ Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1
+-- added: 2026-06-07
+theorem cos_double_cos (x : ℝ) : Real.cos (2 * x) = 2 * Real.cos x ^ 2 - 1 := by
+  exact Real.cos_two_mul x
+
 end AutoProved
