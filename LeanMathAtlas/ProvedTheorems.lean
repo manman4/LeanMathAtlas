@@ -1980,4 +1980,13 @@ theorem alternating_sum_choose (n : ℕ) (hn : 0 < n) : ∑ k ∈ range (n + 1),
   refine Int.alternating_sum_range_choose_of_ne ?_
     all_goals omega
 
+-- stmt: theorem remainder_theorem (p : ℝ[X]) (a : ℝ) : p %ₘ (X - C a) = C (p.eval a)
+-- goal:
+--   p : ℝ[X]
+--   a : ℝ
+--   ⊢ p %ₘ (X - C a) = C (eval a p)
+-- added: 2026-06-07
+theorem remainder_theorem (p : ℝ[X]) (a : ℝ) : p %ₘ (X - C a) = C (p.eval a) := by
+  norm_num
+
 end AutoProved
