@@ -15,3 +15,5 @@ theorem bench_hard_irrational_sqrt2 : Irrational (Real.sqrt 2) := by sorry
 theorem bench_hard_emod (a b c : ℤ) (h : c ∣ b) : a % b % c = a % c := by sorry
 -- finset card of even numbers: needs Finset manipulation
 theorem bench_hard_card_filter (n : ℕ) : ((Finset.range (2 * n)).filter (fun k => k % 2 = 0)).card = n := by sorry
+-- single-trig inequality: needs sin_sq_add_cos_sq injected as have (Phase 3 target)
+theorem bench_hard_sin_sq_double (x : ℝ) : 2 * Real.sin x ^ 2 ≤ 2 := by sorry

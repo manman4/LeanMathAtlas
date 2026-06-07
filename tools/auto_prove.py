@@ -243,10 +243,10 @@ DERIV_TEMPLATES = [
     "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  convert h using 2\n  ring",
     # simp [Function.comp, id] unwraps ∘ notation; norm_num simplifies 2*1→2;
     # then convert + ring handles the remaining mul_comm mismatch.
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id] at h\n  norm_num at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
-    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq] at h\n  norm_num at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_sin _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
+    "have hf := (hasDerivAt_id _).const_mul _\n  have hg := Real.hasDerivAt_cos _\n  have h := hg.comp _ hf\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
     # identity and constant
     "exact hasDerivAt_id _",
     "exact hasDerivAt_const _ _",
@@ -324,20 +324,25 @@ def select_tactics(goal: str) -> list:
     # open Complex 環境では "Complex" がゴールに現れないため、exp + I の組み合わせでも検出
     if "exp" in goal and re.search(r'\^\s*\w+', goal) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', goal)):
         return COMPLEX_TACTICS + SEARCH_TACTICS
+    # HasDerivAt / HasFDerivAt: must come before trig check because HasDerivAt goals
+    # often contain "sin"/"cos" and "=>" (lambda), making "=" in goal True spuriously.
+    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
+        chain_tactics = chain_rule_deriv_tactics(goal)
+        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+    if "Continuous" in goal or "Differentiable" in goal:
+        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     # Trig double-angle goals: cos_two_mul / sin_sq_add_cos_sq が必要なゴール
     # "cos" と "sin" が両方あり等式・不等式を含む場合のみ発火
-    if "cos" in goal and "sin" in goal and ("=" in goal or "≤" in goal):
+    # "=" in goal は lambda "=>" も引っかかるため、⊢ 以降で "=>" 以外の "=" か "≤" を検索する
+    if "cos" in goal and "sin" in goal and (
+        "≤" in goal or re.search(r'⊢[^\n]*(?<!=)=(?![>=])', goal)
+    ):
         return TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if "∑" in goal or "Finset" in goal:
         # card goals: try bijection-based templates before induction
         if ".card" in goal:
             return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
         return INDUCTION_TACTICS + SEARCH_TACTICS
-    if "Continuous" in goal or "Differentiable" in goal:
-        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
-    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
-        chain_tactics = chain_rule_deriv_tactics(goal)
-        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Irrational" in goal:
         return SEARCH_TACTICS
     # ∃-collision goals over Fin types (e.g. Pigeonhole principle)
@@ -491,8 +496,12 @@ def chain_rule_deriv_tactics(goal: str) -> list[str]:
     inner = f"({coeff} * {pt})"
     base = f"(Real.hasDerivAt_{fn} {inner}).comp {pt} ((hasDerivAt_id {pt}).const_mul {coeff})"
     return [
+        # id_eq (not bare `id`) is the correct simp lemma for `id x = x` in Lean 4
+        f"have h := {base}\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
+        # ring_nf normalises both sides to the same form before exact
+        f"have h := {base}\n  simp only [Function.comp, id_eq, mul_one, mul_comm] at h\n  exact h",
+        # fallback: skip simp and rely on convert depth-1 + ring
         f"have h := {base}\n  convert h using 1\n  ring",
-        f"have h := {base}\n  simp only [Function.comp, id, mul_one] at h\n  convert h using 1\n  ring",
     ]
 
 def extract_real_vars(goal: str) -> list[str]:
@@ -549,6 +558,113 @@ def nlinarith_nonneg3_tactic(goal: str) -> str | None:
     ]
     return "nlinarith [" + ", ".join(witnesses) + "]"
 
+def have_candidates(goal: str) -> list[str]:
+    """Generate 'have h := ...' lines from proof-state goal structure.
+
+    Each returned string is a single have-tactic line that can be prepended
+    before a closing tactic.  Patterns covered:
+      - h : X ≠ 0  →  have h2 : X ^ 2 ≠ 0 := pow_ne_zero 2 h
+      - sin/cos present  →  have := sin_sq_add_cos_sq var
+      - ha : 0 < x  →  have ha' : 0 ≤ x := le_of_lt ha
+      - sq_nonneg witnesses for ℝ inequality goals
+    """
+    candidates = []
+
+    # 1. h : expr ≠ 0  →  expr ^ 2 ≠ 0  (enables field_simp [h2])
+    for m in re.finditer(r'(\w+)\s*:\s*(\w+(?:\s+\w+)?)\s*≠\s*0', goal):
+        hname = m.group(1)
+        expr = m.group(2).strip()
+        # Only single-token expressions (e.g. "cos x" → skip, "hx" → take expr=token before ≠)
+        # Actually goal format: "hx : cos x ≠ 0" → expr = "cos x"  (multi-token)
+        # We want the full expression; pow_ne_zero expects a proof of the base ≠ 0.
+        # Simple heuristic: wrap expr in parens if it contains a space.
+        expr_lean = f"({expr})" if " " in expr else expr
+        candidates.append(
+            f"have {hname}2 : {expr_lean} ^ 2 ≠ 0 := pow_ne_zero 2 {hname}"
+        )
+
+    # 2. sin/cos in goal  →  pythagorean identity
+    if "sin" in goal or "cos" in goal:
+        seen: set[str] = set()
+        for m in re.finditer(r'(?:sin|cos)\s+(\w+)', goal):
+            v = m.group(1)
+            if v not in seen:
+                seen.add(v)
+                candidates.append(f"have hsc_{v} := sin_sq_add_cos_sq {v}")
+                candidates.append(f"have hsc_{v} := Real.sin_sq_add_cos_sq {v}")
+
+    # 3. ha : 0 < x  →  have : 0 ≤ x
+    for m in re.finditer(r'(\w+)\s*:\s*0\s*<\s*(\w+)', goal):
+        hname, var = m.group(1), m.group(2)
+        candidates.append(f"have {hname}' : 0 ≤ {var} := le_of_lt {hname}")
+
+    # 4. sq_nonneg pairwise witnesses for ℝ inequality goals
+    if "≤" in goal or "≥" in goal or "<" in goal or ">" in goal:
+        vs = extract_real_vars(goal)
+        for i in range(min(len(vs), 3)):
+            for j in range(i + 1, min(len(vs), 3)):
+                candidates.append(f"have hnn_{i}{j} := sq_nonneg ({vs[i]} - {vs[j]})")
+
+    return candidates
+
+
+def have_closers(have_line: str, remaining_goal: str) -> list[str]:
+    """Build closer tactics to try after a have-prefix, ordered by likelihood."""
+    m = re.match(r'have\s+(\w+)\b', have_line)
+    name = m.group(1) if m else None
+
+    # Generic closers first
+    closers = ["ring", "linarith", "nlinarith", "simp", "omega",
+               "field_simp; ring", "field_simp; linarith",
+               "field_simp; nlinarith", "simp_all"]
+
+    # Name-aware closers: use the introduced hypothesis directly
+    if name:
+        closers = [
+            f"field_simp [{name}]; ring",
+            f"field_simp [{name}]; linarith",
+            f"field_simp [{name}]; nlinarith",
+            f"simp [{name}]",
+            f"linarith [{name}]",
+            f"nlinarith [{name}]",
+            f"nlinarith [{name}, sq_nonneg _]",
+        ] + closers
+
+    # Append goal-selected closers for the remaining goal
+    closers += select_tactics(remaining_goal)[:8]
+    return closers
+
+
+def prove_with_have(session, example: str, base_env: int,
+                   have_line: str) -> str | None:
+    """Try to prove example by injecting have_line then closing the remainder.
+
+    1. Sends 'example := by  have_line  sorry' to obtain the remaining goal.
+    2. Generates closers from that remaining goal.
+    3. Tries each closer until one succeeds.
+    Returns the full tactic string on success, None otherwise.
+    """
+    # Step 1: validate the have and extract remaining goal
+    probe = session.send({"cmd": f"{example} := by\n  {have_line}\n  sorry",
+                          "env": base_env})
+    if has_error(probe):
+        return None
+    sorries = probe.get("sorries", [])
+    if not sorries:
+        # have alone closed the goal (unexpected but valid)
+        return have_line
+    remaining_goal = sorries[0].get("goal", "")
+
+    # Step 2: try each closer
+    for closer in have_closers(have_line, remaining_goal):
+        resp = session.send(
+            {"cmd": f"{example} := by\n  {have_line}\n  {closer}", "env": base_env}
+        )
+        if not has_error(resp):
+            return f"{have_line}\n  {closer}"
+    return None
+
+
 def fact_preamble(stmt: str) -> str:
     """Generate haveI lines for Nat.Prime hypotheses.
 
@@ -567,11 +683,13 @@ def fact_preamble(stmt: str) -> str:
 # Automated proving
 # ────────────────────────────────────────────────
 
-def prove_all(theorems: list, dry_run: bool = False, preamble: str = "") -> list:
+def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
+              skip_phase17: bool = False) -> list:
     """Attempt to prove each theorem.
 
     dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
     so that one run cannot contaminate the next).
+    skip_phase17=True: bypass Phase 1.7 (used by A/B coverage tests).
     """
     index = load_index()
     uncached = theorems if dry_run else [s for s in theorems if cache_key(s) not in index]
@@ -732,6 +850,21 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "") -> list
                             lean_name = lean_name_from(stmt)
                             append_to_lean_db(stmt, proof, goal, lean_name)
                             index[cache_key(stmt)] = lean_name
+
+                # Phase 3 (last resort): have-augmented proofs
+                # Tried after BFS because it costs O(candidates × closers) REPL calls.
+                # Covers theorems needing one intermediate fact that neither one-shot
+                # tactics nor BFS can construct (e.g. sin²+cos²=1 for single-trig goals).
+                if proof is None and not skip_phase17:
+                    for have_line in have_candidates(goal):
+                        p = prove_with_have(session, example, base_env, have_line)
+                        if p:
+                            proof = p
+                            if not dry_run:
+                                lean_name = lean_name_from(stmt)
+                                append_to_lean_db(stmt, proof, goal, lean_name)
+                                index[cache_key(stmt)] = lean_name
+                            break
 
                 new_results[stmt] = (proof, goal, time.monotonic() - t_stmt)
 
