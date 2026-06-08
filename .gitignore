@@ -15,6 +15,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Codex local config
+.codex/
+
 # Secrets / Environment
 .env
 .env.*
