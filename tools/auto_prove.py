@@ -9,16 +9,31 @@ Lean 4 automated theorem prover.
 """
 
 from __future__ import annotations
-import subprocess, json, re, sys, time, os, hashlib
+import subprocess, json, re, sys, time, os, hashlib, shutil
 from collections import deque
 from datetime import date
 from pathlib import Path
 
 WORKDIR        = Path(os.environ.get("LEAN_WORKDIR", Path(__file__).parent.parent)).resolve()
-REPL_CMD       = ["lake", "exe", "repl"]
 SEP            = "\n\n"
 LEAN_DB_FILE   = WORKDIR / "LeanMathAtlas" / "ProvedTheorems.lean"
 INDEX_FILE     = WORKDIR / ".proof_index.json"
+
+
+def resolve_lake() -> str:
+    """Find lake even when the user's shell PATH is not inherited by Python."""
+    candidates = [
+        os.environ.get("LEAN_LAKE"),
+        shutil.which("lake"),
+        str(Path.home() / ".elan" / "bin" / "lake"),
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).exists():
+            return candidate
+    return "lake"
+
+
+REPL_CMD       = [resolve_lake(), "exe", "repl"]
 
 # ────────────────────────────────────────────────
 # Index (fast lookup)
@@ -495,7 +510,22 @@ def chain_rule_deriv_tactics(goal: str) -> list[str]:
     fn, coeff, pt = p
     inner = f"({coeff} * {pt})"
     base = f"(Real.hasDerivAt_{fn} {inner}).comp {pt} ((hasDerivAt_id {pt}).const_mul {coeff})"
+    deriv_map = {
+        "sin": f"Real.cos {inner}",
+        "cos": f"-Real.sin {inner}",
+        "exp": f"Real.exp {inner}",
+    }
+    deriv = deriv_map[fn]
     return [
+        (
+            f"have hf : HasDerivAt (fun x => {coeff} * x) {coeff} {pt} := by\n"
+            f"    simpa using (hasDerivAt_id {pt}).const_mul {coeff}\n"
+            f"  have hg : HasDerivAt Real.{fn} ({deriv}) {inner} :=\n"
+            f"    Real.hasDerivAt_{fn} {inner}\n"
+            f"  have h := hg.comp {pt} hf\n"
+            f"  convert h using 1\n"
+            f"  ring"
+        ),
         # id_eq (not bare `id`) is the correct simp lemma for `id x = x` in Lean 4
         f"have h := {base}\n  simp only [Function.comp, id_eq, mul_one] at h\n  convert h using 1\n  ring",
         # ring_nf normalises both sides to the same form before exact
@@ -699,7 +729,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
     if uncached:
         if not dry_run:
             subprocess.run(
-                ["lake", "build", "LeanMathAtlas.ProvedTheorems"],
+                [resolve_lake(), "build", "LeanMathAtlas.ProvedTheorems"],
                 cwd=WORKDIR, capture_output=True
             )
         session = ReplSession()
@@ -707,7 +737,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
             print("  [repl] Loading Mathlib (~80s)..." if dry_run else "  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
             # dry_run: import full Mathlib (no ProvedTheorems) so all lemmas are available
             # but our previously proved theorems don't contaminate the results
-            imports = "import Mathlib" if dry_run else "import Mathlib.Tactic\nimport LeanMathAtlas.ProvedTheorems"
+            imports = "import Mathlib" if dry_run else "import Mathlib\nimport LeanMathAtlas.ProvedTheorems"
             resp = session.send({"cmd": imports})
             env0 = resp.get("env", 0)
             resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})

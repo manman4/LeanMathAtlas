@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """
 Coverage benchmark: measure how many theorems auto_prove.py can solve.
 
