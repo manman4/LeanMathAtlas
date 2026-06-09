@@ -4,6 +4,13 @@
 
 cmd=$(python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_input',{}).get('command',''))" 2>/dev/null)
 
+# --no-verify (pre-commit フックのスキップ禁止)
+if echo "$cmd" | grep -qE 'git\s+(commit|push)' && \
+   echo "$cmd" | grep -qE '(--no-verify|-n\b)'; then
+  echo "BLOCKED: --no-verify によるフックのスキップは禁止です" >&2
+  exit 1
+fi
+
 # Force push (フラグ位置・スペルに依存しない)
 if echo "$cmd" | grep -qE 'git\s+push' && \
    echo "$cmd" | grep -qE '(--force|--force-with-lease|-[a-zA-Z]*f|\+[^[:space:]]+:)'; then
