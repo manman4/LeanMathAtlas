@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.12 | 2026-06-09 | fix(tools): remove AutoProved chain imports (each file now imports only Mathlib, eliminating cascading failures); add use_proved=False flag to prove_all / batch_prove / auto_prove CLI so previously proved theorems are opt-in; fix RuntimeError handling in batch_prove and benchmark; feat(algebra): auto-prove 11 BasicIdentities theorems; chore: untrack .claude/settings.json to prevent personal paths leaking into history |
 | 0.3.11 | 2026-06-09 | fix(auto_prove): fail fast when `LeanMathAtlas.ProvedTheorems` build/import fails; refactor(proved): store auto-proved theorems as one-file-per-theorem under `LeanMathAtlas/AutoProved/` and reduce `ProvedTheorems.lean` to an import aggregator to avoid cross-theorem breakage |
 | 0.3.10 | 2026-06-09 | fix(auto_prove): stabilize 51/51 benchmark reproducibility by resolving `lake` outside shell PATH, aligning normal-run imports with dry-run `Mathlib`, strengthening chain-rule tactic generation; fix(benchmark): restore Python 3.9 compatibility |
 | 0.3.9 | 2026-06-07 | fix(auto_prove): HasDerivAt before trig in select_tactics (fun x => の => が誤マッチするバグ修正); id → id_eq (Lean 4 正しい simp 補題); Phase 3 have-augmented proof search (last resort); bench 51/51 (100%) |

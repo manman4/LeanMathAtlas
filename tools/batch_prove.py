@@ -6,7 +6,7 @@ from pathlib import Path
 
 # Add tools dir to path
 sys.path.insert(0, str(Path(__file__).parent))
-from auto_prove import prove_all, extract_preamble, cache_key, load_index
+from auto_prove import prove_all, extract_preamble, cache_key, load_index, ensured_proof_entry
 
 WORKDIR = Path(__file__).parent.parent
 
@@ -61,7 +61,7 @@ def extract_theorems(lean_file: Path) -> list[str]:
     return theorems
 
 
-def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False) -> dict:
+def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False, use_proved: bool = False) -> dict:
     """Prove all unproven theorems in a .lean file. Returns {'passed': n, 'failed': n}."""
     preamble = extract_preamble(lean_file)
     print(f"\n{'='*60}")
@@ -75,7 +75,7 @@ def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False) -> di
 
     theorems = extract_theorems(lean_file)
     index = load_index()
-    unproven = [t for t in theorems if cache_key(t) not in index]
+    unproven = [t for t in theorems if ensured_proof_entry(index.get(cache_key(t))) is None]
     print(f"Theorems: {len(theorems)} total, {len(unproven)} unproven")
 
     if not unproven:
@@ -86,7 +86,12 @@ def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False) -> di
     for batch_start in range(0, len(unproven), batch_size):
         batch = unproven[batch_start:batch_start + batch_size]
         print(f"\n  Batch {batch_start//batch_size + 1}: proving {len(batch)} theorems...")
-        results = prove_all(batch, dry_run=dry_run, preamble=preamble)
+        try:
+            results = prove_all(batch, dry_run=dry_run, preamble=preamble, use_proved=use_proved)
+        except RuntimeError as err:
+            print(f"  [error] {err}")
+            total_failed += len(batch)
+            continue
         passed = sum(1 for _, proof, _, _ in results if proof)
         failed = len(batch) - passed
         total_passed += passed
@@ -108,6 +113,8 @@ if __name__ == "__main__":
     parser.add_argument("files", nargs="*", type=Path, help=".lean files to process")
     parser.add_argument("--batch", type=int, default=10)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--use-proved", action="store_true",
+                        help="import previously proved theorems into the REPL during proof search")
     args = parser.parse_args()
 
     if not args.files:
@@ -118,7 +125,7 @@ if __name__ == "__main__":
 
     grand_passed = grand_failed = 0
     for f in args.files:
-        result = run_file(f, batch_size=args.batch, dry_run=args.dry_run)
+        result = run_file(f, batch_size=args.batch, dry_run=args.dry_run, use_proved=args.use_proved)
         grand_passed += result['passed']
         grand_failed += result['failed']
 

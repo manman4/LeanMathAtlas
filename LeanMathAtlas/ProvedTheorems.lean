@@ -7,6 +7,17 @@ import LeanMathAtlas.AutoProved.t4
 import LeanMathAtlas.AutoProved.t5
 import LeanMathAtlas.AutoProved.t6
 import LeanMathAtlas.AutoProved.t7
+import LeanMathAtlas.AutoProved.sq_sum
+import LeanMathAtlas.AutoProved.sq_diff
+import LeanMathAtlas.AutoProved.mul_sum_diff
+import LeanMathAtlas.AutoProved.cube_sum
+import LeanMathAtlas.AutoProved.cube_diff
+import LeanMathAtlas.AutoProved.factor_diff_sq
+import LeanMathAtlas.AutoProved.factor_sum_cubes
+import LeanMathAtlas.AutoProved.factor_diff_cubes
+import LeanMathAtlas.AutoProved.sq_nonneg_form
+import LeanMathAtlas.AutoProved.vertex_form_nonneg
+import LeanMathAtlas.AutoProved.remainder_theorem
 
 namespace AutoProved
 

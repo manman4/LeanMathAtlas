@@ -108,7 +108,11 @@ def run_benchmark(save_label: str | None = None, suite: str = "core", clear_cach
         to_prove = [s for s in stmts if cache_key(s) not in bench_cache]
         if not to_prove:
             continue
-        raw = prove_all(to_prove, dry_run=True, preamble=preamble)
+        try:
+            raw = prove_all(to_prove, dry_run=True, preamble=preamble)
+        except RuntimeError as err:
+            print(f"[error] {key}: {err}")
+            continue
         for stmt, proof, goal, t in raw:
             solve_times[stmt] = t
             if proof:

@@ -15,6 +15,7 @@ Thumbs.db
 *.swp
 *.swo
 .codex/
+AGENTS.md
 
 # Secrets / Environment
 .env
@@ -32,6 +33,10 @@ __pycache__/
 # auto_prove.py / benchmark cache
 .proof_index.json
 tools/.bench_cache.json
+
+# Claude Code local settings (may contain machine-specific paths)
+.claude/settings.json
+.claude/settings.local.json
 
 # Logs
 *.log

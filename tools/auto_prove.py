@@ -142,7 +142,7 @@ def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str, preambl
         print(f"  [skip-dup] {theorem_path.name} already exists")
         return
     goal_commented = "\n".join(f"--   {line}" for line in goal.split("\n"))
-    theorem_imports = ["import Mathlib"] + current_db_imports()
+    theorem_imports = ["import Mathlib"]
     theorem_parts = ["\n".join(theorem_imports)]
     if preamble:
         theorem_parts.append(preamble)
@@ -785,12 +785,14 @@ def fact_preamble(stmt: str) -> str:
 # ────────────────────────────────────────────────
 
 def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
-              skip_phase17: bool = False) -> list:
+              skip_phase17: bool = False, use_proved: bool = False) -> list:
     """Attempt to prove each theorem.
 
     dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
     so that one run cannot contaminate the next).
     skip_phase17=True: bypass Phase 1.7 (used by A/B coverage tests).
+    use_proved=True: import LeanMathAtlas.ProvedTheorems into the REPL so previously
+    proved theorems are available as lemmas during proof search.
     """
     index = load_index()
     uncached = theorems if dry_run else [
@@ -816,10 +818,9 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                 )
         session = ReplSession()
         try:
-            print("  [repl] Loading Mathlib (~80s)..." if dry_run else "  [repl] Loading Mathlib + ProvedTheorems (~80s)...")
-            # dry_run: import full Mathlib (no ProvedTheorems) so all lemmas are available
-            # but our previously proved theorems don't contaminate the results
-            imports = "import Mathlib" if dry_run else "import Mathlib\nimport LeanMathAtlas.ProvedTheorems"
+            _load_proved = use_proved and not dry_run
+            print("  [repl] Loading Mathlib + ProvedTheorems (~80s)..." if _load_proved else "  [repl] Loading Mathlib (~80s)...")
+            imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if _load_proved else "import Mathlib"
             resp = session.send({"cmd": imports})
             if has_error(resp):
                 raise RuntimeError(
@@ -1036,6 +1037,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", type=Path, help="source .lean file to extract preamble from")
+    parser.add_argument("--use-proved", action="store_true",
+                        help="import previously proved theorems into the REPL during proof search")
     parser.add_argument("theorems", nargs="*")
     args = parser.parse_args()
 
@@ -1050,7 +1053,7 @@ def main():
 
     t0 = time.time()
     try:
-        results = prove_all(targets, preamble=preamble)
+        results = prove_all(targets, preamble=preamble, use_proved=args.use_proved)
     except RuntimeError as err:
         print(f"[error] {err}")
         sys.exit(1)
