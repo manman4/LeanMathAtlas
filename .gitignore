@@ -34,5 +34,9 @@ __pycache__/
 .proof_index.json
 tools/.bench_cache.json
 
+# Claude Code local settings (may contain machine-specific paths)
+.claude/settings.json
+.claude/settings.local.json
+
 # Logs
 *.log
