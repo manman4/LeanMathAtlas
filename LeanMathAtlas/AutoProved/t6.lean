@@ -1,9 +1,4 @@
 import Mathlib
-import LeanMathAtlas.AutoProved.t1
-import LeanMathAtlas.AutoProved.t2
-import LeanMathAtlas.AutoProved.t3
-import LeanMathAtlas.AutoProved.t4
-import LeanMathAtlas.AutoProved.t5
 
 namespace AutoProved
 -- stmt: theorem t6 (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 1)

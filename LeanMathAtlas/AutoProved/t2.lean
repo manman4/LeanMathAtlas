@@ -1,5 +1,4 @@
 import Mathlib
-import LeanMathAtlas.AutoProved.t1
 
 namespace AutoProved
 -- stmt: theorem t2 (n : ℕ) : n + 0 = n
