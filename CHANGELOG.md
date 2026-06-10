@@ -2,7 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.3.14 | 2026-06-10 | perf: reuse one REPL per file in `batch_prove`, add optional 60s theorem timeout for normal `auto_prove` / `batch_prove`, skip `ProvedTheorems` build unless `--use-proved`; benchmark keeps old no-total-timeout condition; prove: +72 theorems (162/186 total) |
+| 0.3.14 | 2026-06-10 | perf: reuse one REPL per file in `batch_prove`, add optional 60s theorem timeout for normal `auto_prove` / `batch_prove`, skip `ProvedTheorems` build unless `--use-proved`; safety: in `--use-proved` mode, rollback a newly saved theorem if it would break `LeanMathAtlas.ProvedTheorems`; benchmark keeps old no-total-timeout condition; prove: +72 theorems (162/186 total) |
 | 0.3.13 | 2026-06-10 | fix(hooks): block --no-verify in Claude Code PreToolUse hook to prevent bypassing personal-info pre-commit guard |
 | 0.3.12 | 2026-06-09 | fix(tools): remove AutoProved chain imports (each file now imports only Mathlib, eliminating cascading failures); add use_proved=False flag to prove_all / batch_prove / auto_prove CLI so previously proved theorems are opt-in; fix RuntimeError handling in batch_prove and benchmark; feat(algebra): auto-prove 11 BasicIdentities theorems; chore: untrack .claude/settings.json to prevent personal paths leaking into history |
 | 0.3.11 | 2026-06-09 | fix(auto_prove): fail fast when `LeanMathAtlas.ProvedTheorems` build/import fails; refactor(proved): store auto-proved theorems as one-file-per-theorem under `LeanMathAtlas/AutoProved/` and reduce `ProvedTheorems.lean` to an import aggregator to avoid cross-theorem breakage |

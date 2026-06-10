@@ -123,6 +123,17 @@ def ensure_lean_db():
         )
 
 
+def build_proved_theorems() -> tuple[bool, str]:
+    build = subprocess.run(
+        [resolve_lake(), "build", "LeanMathAtlas.ProvedTheorems"],
+        cwd=WORKDIR, capture_output=True, text=True
+    )
+    details = (build.stdout or "").strip()
+    if build.stderr:
+        details = f"{details}\n{build.stderr.strip()}".strip()
+    return build.returncode == 0, details
+
+
 def current_db_imports() -> list[str]:
     if not LEAN_DB_FILE.exists():
         return []
@@ -134,13 +145,14 @@ def current_db_imports() -> list[str]:
     return imports
 
 
-def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str, preamble: str = ""):
+def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str,
+                      preamble: str = "") -> tuple[Path, str, bool]:
     ensure_lean_db()
     theorem_path = theorem_file_path(lean_name)
     import_stmt = f"import {theorem_module_name(lean_name)}"
     if theorem_path.exists():
         print(f"  [skip-dup] {theorem_path.name} already exists")
-        return
+        return theorem_path, import_stmt, False
     goal_commented = "\n".join(f"--   {line}" for line in goal.split("\n"))
     theorem_imports = ["import Mathlib"]
     theorem_parts = ["\n".join(theorem_imports)]
@@ -166,6 +178,33 @@ def append_to_lean_db(stmt: str, tactic: str, goal: str, lean_name: str, preambl
                 insert_at = i + 1
         lines.insert(insert_at, import_stmt)
         LEAN_DB_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return theorem_path, import_stmt, True
+
+
+def rollback_lean_db_append(theorem_path: Path, import_stmt: str):
+    if theorem_path.exists():
+        theorem_path.unlink()
+    if LEAN_DB_FILE.exists():
+        lines = [line for line in LEAN_DB_FILE.read_text(encoding="utf-8").splitlines()
+                 if line.strip() != import_stmt]
+        LEAN_DB_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def persist_proof(stmt: str, proof: str, goal: str, lean_name: str, preamble: str,
+                  index: dict, use_proved: bool):
+    theorem_path, import_stmt, created = append_to_lean_db(
+        stmt, proof, goal, lean_name, preamble=preamble
+    )
+    if created and use_proved:
+        ok, details = build_proved_theorems()
+        if not ok:
+            rollback_lean_db_append(theorem_path, import_stmt)
+            raise RuntimeError(
+                "Saved proof would break LeanMathAtlas.ProvedTheorems in --use-proved mode.\n"
+                f"Rolled back {theorem_path.relative_to(WORKDIR)}.\n"
+                f"{details}"
+            )
+    index[cache_key(stmt)] = {"lean_name": lean_name}
 
 # ────────────────────────────────────────────────
 # Interactive REPL session
@@ -211,14 +250,8 @@ class ReplSession:
 def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False) -> tuple[ReplSession, int]:
     """Create a REPL session and return (session, base_env) for theorem proving."""
     if use_proved and not dry_run:
-        build = subprocess.run(
-            [resolve_lake(), "build", "LeanMathAtlas.ProvedTheorems"],
-            cwd=WORKDIR, capture_output=True, text=True
-        )
-        if build.returncode != 0:
-            details = (build.stdout or "").strip()
-            if build.stderr:
-                details = f"{details}\n{build.stderr.strip()}".strip()
+        ok, details = build_proved_theorems()
+        if not ok:
             raise RuntimeError(
                 "LeanMathAtlas.ProvedTheorems failed to build before proof search.\n"
                 f"{details}"
@@ -906,8 +939,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             proof = t
                         if not dry_run:
                             lean_name = lean_name_from(stmt)
-                            append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                            index[cache_key(stmt)] = {"lean_name": lean_name}
+                            persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                         break
 
                 # Phase 1.5: Fact typeclass preamble + tactics
@@ -949,15 +981,13 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                             proof = f"{fact_block}\n  {_cast}{extracted}"
                                             if not dry_run:
                                                 lean_name = lean_name_from(stmt)
-                                                append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                                                index[cache_key(stmt)] = {"lean_name": lean_name}
+                                                persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                                             break
                                 elif not has_error(resp):
                                     proof = f"{fact_block}\n  {_cast}{t}"
                                     if not dry_run:
                                         lean_name = lean_name_from(stmt)
-                                        append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                                        index[cache_key(stmt)] = {"lean_name": lean_name}
+                                        persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                                     break
 
                 # Phase 1.6: apply? + all_goals closer
@@ -1005,8 +1035,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                 )
                                 if not dry_run:
                                     lean_name = lean_name_from(stmt)
-                                    append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                                    index[cache_key(stmt)] = {"lean_name": lean_name}
+                                    persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                                 break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
@@ -1020,8 +1049,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                         proof = step_proof
                         if not dry_run:
                             lean_name = lean_name_from(stmt)
-                            append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                            index[cache_key(stmt)] = {"lean_name": lean_name}
+                            persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
 
                 # Phase 3 (last resort): have-augmented proofs
                 # Tried after BFS because it costs O(candidates × closers) REPL calls.
@@ -1036,8 +1064,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             proof = p
                             if not dry_run:
                                 lean_name = lean_name_from(stmt)
-                                append_to_lean_db(stmt, proof, goal, lean_name, preamble=preamble)
-                                index[cache_key(stmt)] = {"lean_name": lean_name}
+                                persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                             break
 
                 if proof is None and timed_out():

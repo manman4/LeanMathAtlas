@@ -335,6 +335,9 @@ theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
 > `--use-proved` を付けない限り `LeanMathAtlas.ProvedTheorems` の事前ビルドは行いません。
 > `benchmark.py` は `dry_run=True` かつ `theorem_timeout=None` で `prove_all` を呼ぶので、
 > 総タイムアウト導入前と同じ条件で精度測定を続けます。
+> さらに `--use-proved` 実行中に新しい自動証明結果を保存して
+> その結果が `LeanMathAtlas.ProvedTheorems` を壊す場合は、
+> その定理ファイルと import 追加を自動で巻き戻して停止します。
 
 ---
 
