@@ -207,6 +207,62 @@ class ReplSession:
             pass
         self.proc.wait()
 
+
+def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False) -> tuple[ReplSession, int]:
+    """Create a REPL session and return (session, base_env) for theorem proving."""
+    if use_proved and not dry_run:
+        build = subprocess.run(
+            [resolve_lake(), "build", "LeanMathAtlas.ProvedTheorems"],
+            cwd=WORKDIR, capture_output=True, text=True
+        )
+        if build.returncode != 0:
+            details = (build.stdout or "").strip()
+            if build.stderr:
+                details = f"{details}\n{build.stderr.strip()}".strip()
+            raise RuntimeError(
+                "LeanMathAtlas.ProvedTheorems failed to build before proof search.\n"
+                f"{details}"
+            )
+
+    session = ReplSession()
+    _load_proved = use_proved and not dry_run
+    print("  [repl] Loading Mathlib + ProvedTheorems (~80s)..." if _load_proved else "  [repl] Loading Mathlib (~80s)...")
+    imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if _load_proved else "import Mathlib"
+    resp = session.send({"cmd": imports})
+    if has_error(resp):
+        session.close()
+        raise RuntimeError(
+            "Failed to import the Lean environment for proof search.\n"
+            f"{format_repl_errors(resp)}"
+        )
+    env0 = resp.get("env", 0)
+    open_cmd = "open BigOperators AutoProved" if _load_proved else "open BigOperators"
+    resp = session.send({"cmd": open_cmd, "env": env0})
+    if has_error(resp):
+        session.close()
+        raise RuntimeError(
+            "Failed to open the Lean proof environment.\n"
+            f"{format_repl_errors(resp)}"
+        )
+    env1 = resp.get("env", env0)
+    resp = session.send({"cmd": "open scoped Nat", "env": env1})
+    if has_error(resp):
+        session.close()
+        raise RuntimeError(
+            "Failed to enable scoped Nat notations.\n"
+            f"{format_repl_errors(resp)}"
+        )
+    env2 = resp.get("env", env0)
+    if preamble:
+        resp = session.send({"cmd": preamble, "env": env2})
+        if has_error(resp):
+            session.close()
+            raise RuntimeError(
+                "Failed to load the theorem preamble into the REPL.\n"
+                f"{format_repl_errors(resp)}"
+            )
+    return session, resp.get("env", env2)
+
 # ────────────────────────────────────────────────
 # Tactic candidates
 # ────────────────────────────────────────────────
@@ -384,6 +440,7 @@ STEP_TACTICS = [
 
 # Max seconds per theorem for iterative proof search
 STEP_TIME_LIMIT = 10
+DEFAULT_THEOREM_TIMEOUT = 60
 
 def select_tactics(goal: str) -> list:
     """Narrow the tactic list based on symbols in the goal string."""
@@ -477,7 +534,8 @@ def format_repl_errors(resp: dict) -> str:
                 parts.append(data)
     return "\n".join(parts)
 
-def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP_TIME_LIMIT) -> str | None:
+def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP_TIME_LIMIT,
+                    deadline: float | None = None) -> str | None:
     """BFS proof search: apply one tactic at a time via REPL tactic mode.
 
     Sends {"tactic": t, "proofState": N} to step through a proof incrementally.
@@ -492,19 +550,21 @@ def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP
     if init_state is None:
         return None
 
-    deadline = time.time() + time_limit
+    phase_deadline = time.time() + time_limit
+    if deadline is not None:
+        phase_deadline = min(phase_deadline, deadline)
     # BFS: each entry is (proof_state_id, tactics_applied_so_far)
     queue: deque[tuple[int, list[str]]] = deque([(init_state, [])])
     visited: set[int] = set()
 
-    while queue and time.time() < deadline:
+    while queue and time.time() < phase_deadline:
         state, applied = queue.popleft()
         if len(applied) >= 6 or state in visited:
             continue
         visited.add(state)
 
         for t in STEP_TACTICS:
-            if time.time() > deadline:
+            if time.time() > phase_deadline:
                 return None
             resp = session.send({"tactic": t, "proofState": state})
             if has_error(resp):
@@ -737,7 +797,7 @@ def have_closers(have_line: str, remaining_goal: str) -> list[str]:
 
 
 def prove_with_have(session, example: str, base_env: int,
-                   have_line: str) -> str | None:
+                   have_line: str, deadline: float | None = None) -> str | None:
     """Try to prove example by injecting have_line then closing the remainder.
 
     1. Sends 'example := by  have_line  sorry' to obtain the remaining goal.
@@ -746,6 +806,8 @@ def prove_with_have(session, example: str, base_env: int,
     Returns the full tactic string on success, None otherwise.
     """
     # Step 1: validate the have and extract remaining goal
+    if deadline is not None and time.monotonic() >= deadline:
+        return None
     probe = session.send({"cmd": f"{example} := by\n  {have_line}\n  sorry",
                           "env": base_env})
     if has_error(probe):
@@ -758,6 +820,8 @@ def prove_with_have(session, example: str, base_env: int,
 
     # Step 2: try each closer
     for closer in have_closers(have_line, remaining_goal):
+        if deadline is not None and time.monotonic() >= deadline:
+            return None
         resp = session.send(
             {"cmd": f"{example} := by\n  {have_line}\n  {closer}", "env": base_env}
         )
@@ -785,7 +849,9 @@ def fact_preamble(stmt: str) -> str:
 # ────────────────────────────────────────────────
 
 def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
-              skip_phase17: bool = False, use_proved: bool = False) -> list:
+              skip_phase17: bool = False, use_proved: bool = False,
+              theorem_timeout: int | None = DEFAULT_THEOREM_TIMEOUT,
+              session: ReplSession | None = None, base_env: int | None = None) -> list:
     """Attempt to prove each theorem.
 
     dry_run=True: skip ProvedTheorems.lean writes and cache updates (used by benchmark.py
@@ -793,6 +859,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
     skip_phase17=True: bypass Phase 1.7 (used by A/B coverage tests).
     use_proved=True: import LeanMathAtlas.ProvedTheorems into the REPL so previously
     proved theorems are available as lemmas during proof search.
+    theorem_timeout: total per-theorem time budget in seconds across all phases.
+    session/base_env: optional preloaded proof environment to reuse across calls.
     """
     index = load_index()
     uncached = theorems if dry_run else [
@@ -803,59 +871,17 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
     new_results: dict[str, tuple] = {}
 
     if uncached:
-        if not dry_run:
-            build = subprocess.run(
-                [resolve_lake(), "build", "LeanMathAtlas.ProvedTheorems"],
-                cwd=WORKDIR, capture_output=True, text=True
-            )
-            if build.returncode != 0:
-                details = (build.stdout or "").strip()
-                if build.stderr:
-                    details = f"{details}\n{build.stderr.strip()}".strip()
-                raise RuntimeError(
-                    "LeanMathAtlas.ProvedTheorems failed to build before proof search.\n"
-                    f"{details}"
-                )
-        session = ReplSession()
+        owns_session = session is None or base_env is None
+        if owns_session:
+            session, base_env = prepare_proof_env(dry_run=dry_run, preamble=preamble, use_proved=use_proved)
         try:
-            _load_proved = use_proved and not dry_run
-            print("  [repl] Loading Mathlib + ProvedTheorems (~80s)..." if _load_proved else "  [repl] Loading Mathlib (~80s)...")
-            imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if _load_proved else "import Mathlib"
-            resp = session.send({"cmd": imports})
-            if has_error(resp):
-                raise RuntimeError(
-                    "Failed to import the Lean environment for proof search.\n"
-                    f"{format_repl_errors(resp)}"
-                )
-            env0 = resp.get("env", 0)
-            resp = session.send({"cmd": "open BigOperators AutoProved", "env": env0})
-            if has_error(resp):
-                raise RuntimeError(
-                    "Failed to open the Lean proof environment.\n"
-                    f"{format_repl_errors(resp)}"
-                )
-            env1 = resp.get("env", env0)
-            # open scoped Nat enables n! factorial notation (wilsons_lemma uses it)
-            # Regular `open Nat` does NOT activate scoped notations like n!
-            resp = session.send({"cmd": "open scoped Nat", "env": env1})
-            if has_error(resp):
-                raise RuntimeError(
-                    "Failed to enable scoped Nat notations.\n"
-                    f"{format_repl_errors(resp)}"
-                )
-            env2 = resp.get("env", env0)
-            if preamble:
-                resp = session.send({"cmd": preamble, "env": env2})
-                if has_error(resp):
-                    raise RuntimeError(
-                        "Failed to load the theorem preamble into the REPL.\n"
-                        f"{format_repl_errors(resp)}"
-                    )
-            base_env = resp.get("env", env2)
-
             for stmt in uncached:
                 example = to_example(stmt)
                 t_stmt = time.monotonic()
+                theorem_deadline = None if theorem_timeout is None else t_stmt + theorem_timeout
+
+                def timed_out() -> bool:
+                    return theorem_deadline is not None and time.monotonic() >= theorem_deadline
 
                 # Fetch the goal
                 goal = ""
@@ -867,6 +893,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                 # Phase 1: try each filtered tactic in one shot
                 proof = None
                 for t in select_tactics(goal):
+                    if timed_out():
+                        break
                     resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
                     if not has_error(resp):
                         if t in SEARCH_TACTICS:
@@ -901,6 +929,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             if proof is not None:
                                 break
                             for t in _phase15_tactics:
+                                if timed_out():
+                                    break
                                 resp = session.send({
                                     "cmd": f"{example} := by\n  {fact_block}\n  {_cast}{t}",
                                     "env": base_env
@@ -909,6 +939,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                     # Extract suggestion regardless of errors, then verify separately
                                     extracted = extract_try_this(resp)
                                     if extracted:
+                                        if timed_out():
+                                            break
                                         resp2 = session.send({
                                             "cmd": f"{example} := by\n  {fact_block}\n  {_cast}{extracted}",
                                             "env": base_env
@@ -946,6 +978,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                     for _pre in _prefixes:
                         if proof is not None:
                             break
+                        if timed_out():
+                            break
                         _pre_block = f"  {_pre}\n  " if _pre else "  "
                         _resp = session.send({
                             "cmd": f"{example} := by\n{_pre_block}apply?",
@@ -955,6 +989,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                         if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
                             continue
                         for _closer in _closers:
+                            if timed_out():
+                                break
                             _cmd = (
                                 f"{example} := by\n  {_pre}\n  {_sug}\n  all_goals {_closer}"
                                 if _pre else
@@ -974,9 +1010,12 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                 break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
-                if proof is None:
-                    print(f"  [step] iterative search (up to {STEP_TIME_LIMIT}s)...")
-                    step_proof = prove_iterative(session, example, base_env)
+                if proof is None and not timed_out():
+                    remaining = None if theorem_deadline is None else max(0.0, theorem_deadline - time.monotonic())
+                    phase_limit = STEP_TIME_LIMIT if remaining is None else min(STEP_TIME_LIMIT, remaining)
+                    print(f"  [step] iterative search (up to {phase_limit:.0f}s)...")
+                    step_proof = prove_iterative(session, example, base_env, time_limit=max(1, int(phase_limit)),
+                                                 deadline=theorem_deadline)
                     if step_proof:
                         proof = step_proof
                         if not dry_run:
@@ -988,9 +1027,11 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                 # Tried after BFS because it costs O(candidates × closers) REPL calls.
                 # Covers theorems needing one intermediate fact that neither one-shot
                 # tactics nor BFS can construct (e.g. sin²+cos²=1 for single-trig goals).
-                if proof is None and not skip_phase17:
+                if proof is None and not skip_phase17 and not timed_out():
                     for have_line in have_candidates(goal):
-                        p = prove_with_have(session, example, base_env, have_line)
+                        if timed_out():
+                            break
+                        p = prove_with_have(session, example, base_env, have_line, theorem_deadline)
                         if p:
                             proof = p
                             if not dry_run:
@@ -999,10 +1040,14 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                 index[cache_key(stmt)] = {"lean_name": lean_name}
                             break
 
+                if proof is None and timed_out():
+                    print(f"  [timeout] theorem budget exceeded ({theorem_timeout}s)")
+
                 new_results[stmt] = (proof, goal, time.monotonic() - t_stmt)
 
         finally:
-            session.close()
+            if owns_session:
+                session.close()
             if not dry_run:
                 save_index(index)
 
@@ -1039,6 +1084,8 @@ def main():
     parser.add_argument("--file", type=Path, help="source .lean file to extract preamble from")
     parser.add_argument("--use-proved", action="store_true",
                         help="import previously proved theorems into the REPL during proof search")
+    parser.add_argument("--theorem-timeout", type=int, default=DEFAULT_THEOREM_TIMEOUT,
+                        help="total per-theorem timeout in seconds across all proof phases")
     parser.add_argument("theorems", nargs="*")
     args = parser.parse_args()
 
@@ -1053,7 +1100,12 @@ def main():
 
     t0 = time.time()
     try:
-        results = prove_all(targets, preamble=preamble, use_proved=args.use_proved)
+        results = prove_all(
+            targets,
+            preamble=preamble,
+            use_proved=args.use_proved,
+            theorem_timeout=args.theorem_timeout,
+        )
     except RuntimeError as err:
         print(f"[error] {err}")
         sys.exit(1)

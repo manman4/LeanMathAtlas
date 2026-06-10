@@ -6,7 +6,10 @@ from pathlib import Path
 
 # Add tools dir to path
 sys.path.insert(0, str(Path(__file__).parent))
-from auto_prove import prove_all, extract_preamble, cache_key, load_index, ensured_proof_entry
+from auto_prove import (
+    prove_all, extract_preamble, cache_key, load_index, ensured_proof_entry,
+    prepare_proof_env,
+)
 
 WORKDIR = Path(__file__).parent.parent
 
@@ -61,7 +64,8 @@ def extract_theorems(lean_file: Path) -> list[str]:
     return theorems
 
 
-def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False, use_proved: bool = False) -> dict:
+def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False,
+             use_proved: bool = False, theorem_timeout: int | None = 60) -> dict:
     """Prove all unproven theorems in a .lean file. Returns {'passed': n, 'failed': n}."""
     preamble = extract_preamble(lean_file)
     print(f"\n{'='*60}")
@@ -83,25 +87,39 @@ def run_file(lean_file: Path, batch_size: int = 10, dry_run: bool = False, use_p
         return {'passed': 0, 'failed': 0}
 
     total_passed = total_failed = 0
-    for batch_start in range(0, len(unproven), batch_size):
-        batch = unproven[batch_start:batch_start + batch_size]
-        print(f"\n  Batch {batch_start//batch_size + 1}: proving {len(batch)} theorems...")
-        try:
-            results = prove_all(batch, dry_run=dry_run, preamble=preamble, use_proved=use_proved)
-        except RuntimeError as err:
-            print(f"  [error] {err}")
-            total_failed += len(batch)
-            continue
-        passed = sum(1 for _, proof, _, _ in results if proof)
-        failed = len(batch) - passed
-        total_passed += passed
-        total_failed += failed
-        for stmt, proof, goal, t in results:
-            name = stmt.split()[1] if len(stmt.split()) > 1 else stmt[:40]
-            if proof:
-                print(f"    ✓ {name}")
-            else:
-                print(f"    ✗ {name}")
+    session = base_env = None
+    try:
+        session, base_env = prepare_proof_env(dry_run=dry_run, preamble=preamble, use_proved=use_proved)
+        for batch_start in range(0, len(unproven), batch_size):
+            batch = unproven[batch_start:batch_start + batch_size]
+            print(f"\n  Batch {batch_start//batch_size + 1}: proving {len(batch)} theorems...")
+            try:
+                results = prove_all(
+                    batch,
+                    dry_run=dry_run,
+                    preamble=preamble,
+                    use_proved=use_proved,
+                    theorem_timeout=theorem_timeout,
+                    session=session,
+                    base_env=base_env,
+                )
+            except RuntimeError as err:
+                print(f"  [error] {err}")
+                total_failed += len(batch)
+                continue
+            passed = sum(1 for _, proof, _, _ in results if proof)
+            failed = len(batch) - passed
+            total_passed += passed
+            total_failed += failed
+            for stmt, proof, goal, t in results:
+                name = stmt.split()[1] if len(stmt.split()) > 1 else stmt[:40]
+                if proof:
+                    print(f"    ✓ {name}")
+                else:
+                    print(f"    ✗ {name}")
+    finally:
+        if session is not None:
+            session.close()
 
     print(f"\n  Result: {total_passed}/{total_passed+total_failed} proved")
     return {'passed': total_passed, 'failed': total_failed}
@@ -115,6 +133,8 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--use-proved", action="store_true",
                         help="import previously proved theorems into the REPL during proof search")
+    parser.add_argument("--theorem-timeout", type=int, default=60,
+                        help="total per-theorem timeout in seconds across all proof phases")
     args = parser.parse_args()
 
     if not args.files:
@@ -125,7 +145,13 @@ if __name__ == "__main__":
 
     grand_passed = grand_failed = 0
     for f in args.files:
-        result = run_file(f, batch_size=args.batch, dry_run=args.dry_run, use_proved=args.use_proved)
+        result = run_file(
+            f,
+            batch_size=args.batch,
+            dry_run=args.dry_run,
+            use_proved=args.use_proved,
+            theorem_timeout=args.theorem_timeout,
+        )
         grand_passed += result['passed']
         grand_failed += result['failed']
 
