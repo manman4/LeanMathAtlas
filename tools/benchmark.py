@@ -109,7 +109,7 @@ def run_benchmark(save_label: str | None = None, suite: str = "core", clear_cach
         if not to_prove:
             continue
         try:
-            raw = prove_all(to_prove, dry_run=True, preamble=preamble)
+            raw = prove_all(to_prove, dry_run=True, preamble=preamble, theorem_timeout=None)
         except RuntimeError as err:
             print(f"[error] {key}: {err}")
             continue

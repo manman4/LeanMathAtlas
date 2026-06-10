@@ -1,7 +1,8 @@
 # auto_prove.py 使い方ガイド
 
 `auto_prove.py` は、定理の文を渡すと Lean 4 の REPL を使って自動で証明を探し、
-成功した証明を `LeanMathAtlas/ProvedTheorems.lean` に保存してくれるスクリプトです。
+成功した証明を `LeanMathAtlas/AutoProved/*.lean` に保存し、
+`LeanMathAtlas/ProvedTheorems.lean` に import を追加してくれるスクリプトです。
 
 ---
 
@@ -48,7 +49,7 @@
 ## 1. 何をしてくれるのか
 
 ```
-定理の文を入力  →  タクティクスを自動で試す  →  証明を ProvedTheorems.lean に保存
+定理の文を入力  →  タクティクスを自動で試す  →  証明を AutoProved/*.lean + ProvedTheorems.lean に保存
 ```
 
 内部では次の流れで動いています。
@@ -80,7 +81,12 @@ auto_prove.py
   │    intro h → exact h / constructor → left → ... など
   │    (最大 10 秒 / 深さ 6 ステップ)
   │
-  └─ 成功したら ProvedTheorems.lean に追記して終了
+  ├─【全体タイムアウト】各定理は全フェーズ合計で既定 60 秒まで
+  │    `--theorem-timeout N` で変更可能
+  │    ※ `benchmark.py` は以前どおり `theorem_timeout=None` で呼ぶため、
+  │      この総タイムアウトは benchmark では使わない
+  │
+  └─ 成功したら AutoProved/*.lean を作成し、ProvedTheorems.lean に import を追加して終了
 ```
 
 ---
@@ -123,7 +129,7 @@ python3 auto_prove.py
 
 ```
 [run] 7 theorems (0 cached / 7 uncached)
-  [repl] Loading Mathlib + ProvedTheorems (~80s)...
+  [repl] Loading Mathlib (~80s)...
 
 ────────────────────────────────────────────────────────────
 target: theorem t1 : (1:ℕ) + 1 = 2
@@ -141,11 +147,13 @@ target: theorem t6 (n : ℕ) : 2 * ∑ k ∈ Finset.range (n + 1), k = n * (n + 
 
 ────────────────────────────────────────────────────────────
 total: 7 passed / 0 failed / 62.6s
-  → saved to LeanMathAtlas/ProvedTheorems.lean
+  → saved to LeanMathAtlas/AutoProved/ + LeanMathAtlas/ProvedTheorems.lean
 ```
 
 > **メモ**: 初回は Lean REPL の起動と Mathlib のロードに **約 80 秒** かかります。
 > 2 回目以降はキャッシュのおかげで既証明の定理をスキップするので速くなります。
+> `batch_prove.py` は 1 ファイル中で同じ REPL を使い回すので、
+> 同じファイルのバッチ 2 回目以降は Mathlib を読み直しません。
 
 ---
 
@@ -170,6 +178,11 @@ total: 7 passed / 0 failed / 62.6s
 
 ```bash
 python3 auto_prove.py "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
+```
+
+```bash
+# 1 定理あたりの総探索時間を 30 秒にする
+python3 auto_prove.py --theorem-timeout 30 "theorem my_thm (a b : ℝ) : (a - b)^2 ≥ 0"
 ```
 
 - ダブルクォートで囲んで渡してください。
@@ -299,7 +312,12 @@ rm .proof_index.json
 
 ## 8. 証明の保存先
 
-証明に成功した定理は `LeanMathAtlas/ProvedTheorems.lean` に自動で追記されます。
+証明に成功した定理は次の 2 箇所に保存されます。
+
+- `LeanMathAtlas/AutoProved/<theorem_name>.lean`
+- `LeanMathAtlas/ProvedTheorems.lean` の import 行
+
+`ProvedTheorems.lean` 自体は import 集約ファイルで、証明本体は各 `AutoProved/*.lean` に入ります。
 
 ```lean
 -- stmt: theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2
@@ -313,6 +331,13 @@ theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
 このファイルは Lean コンパイラが型検査しているので、保存された証明の**正しさは Lean が保証**しています。
 
 > `lake build` を実行すると `ProvedTheorems.lean` もコンパイルされ、エラーがあれば検出されます。
+> ただし通常の `auto_prove.py` / `batch_prove.py` 実行では、
+> `--use-proved` を付けない限り `LeanMathAtlas.ProvedTheorems` の事前ビルドは行いません。
+> `benchmark.py` は `dry_run=True` かつ `theorem_timeout=None` で `prove_all` を呼ぶので、
+> 総タイムアウト導入前と同じ条件で精度測定を続けます。
+> さらに `--use-proved` 実行中に新しい自動証明結果を保存して
+> その結果が `LeanMathAtlas.ProvedTheorems` を壊す場合は、
+> その定理ファイルと import 追加を自動で巻き戻して停止します。
 
 ---
 
@@ -336,7 +361,12 @@ theorem t4 (a b : ℝ) : (a + b)^2 = a^2 + 2*a*b + b^2 := by
 
 ### Q. 実行したら `lake build` が始まって時間がかかる
 
-**A.** 初回は `LeanMathAtlas.ProvedTheorems` のビルドが必要です。以降はキャッシュされます。
+**A.** 現在は `--use-proved` を付けたときだけ `LeanMathAtlas.ProvedTheorems` を事前ビルドします。
+
+通常モード（`--use-proved` なし）では `import Mathlib` だけで探索するため、
+`LeanMathAtlas.ProvedTheorems` の事前ビルドは不要です。
+`--use-proved` を付けて既存の自動証明結果を補題として使うときだけ、
+その import が通るように事前ビルドを行います。
 
 ### Q. `✗ proof not found` になった
 
