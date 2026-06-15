@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.16 | 2026-06-15 | refactor(auto_prove): split storage / REPL / tactic-selection helpers into `auto_prove_store.py`, `auto_prove_repl.py`, and `auto_prove_tactics.py` while keeping the `auto_prove.py` CLI and the Python API used by `batch_prove.py` / `benchmark.py` stable; docs: update README and AUTO_PROVE guide; smoke: re-check single-theorem `auto_prove` and `batch_prove --dry-run` paths with low-memory sequential runs |
 | 0.3.15 | 2026-06-15 | fix(auto_prove): verify `exact?` / `simp?` suggestions through `simpa using` and symmetric variants before giving up; prove: add `arith_diff`, `arith_zero`, `deriv_sq`, `deriv_cube`; fix(proved): restore missing `sin_pi` / `cos_pi` imports in `ProvedTheorems` (26 unresolved → 20) |
 | 0.3.14 | 2026-06-10 | perf: reuse one REPL per file in `batch_prove`, add configurable 60s theorem timeout (default for normal `auto_prove` / `batch_prove` runs), skip `ProvedTheorems` build unless `--use-proved`; safety: in `--use-proved` mode, rollback a newly saved theorem if it would break `LeanMathAtlas.ProvedTheorems`; benchmark keeps old no-total-timeout condition; prove: +72 theorems (162/186 total) |
 | 0.3.13 | 2026-06-10 | fix(hooks): block --no-verify in Claude Code PreToolUse hook to prevent bypassing personal-info pre-commit guard |
