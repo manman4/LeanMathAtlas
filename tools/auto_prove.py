@@ -630,6 +630,54 @@ def extract_try_this(resp: dict) -> str | None:
             return m.group(1).strip()
     return None
 
+
+def goal_has_symmetric_target(goal: str) -> bool:
+    """Whether the goal target looks like an equality/iff where `.symm` may help."""
+    target_lines = [line for line in goal.splitlines() if "⊢" in line]
+    if not target_lines:
+        return False
+    target = target_lines[-1]
+    return " = " in target or " ↔ " in target
+
+
+def search_suggestion_variants(suggestion: str, goal: str) -> list[str]:
+    """Expand `Try this:` suggestions into a few proof variants to verify.
+
+    `exact?` often finds the right lemma body, but not always in the exact
+    orientation or simplification form needed by the goal.  We keep the raw
+    suggestion first, then try light wrappers such as `simpa using ...` and
+    `.symm` for equality / iff goals.
+    """
+    variants: list[str] = []
+
+    def add_variant(tactic: str):
+        if tactic not in variants:
+            variants.append(tactic)
+
+    add_variant(suggestion)
+
+    if suggestion.startswith("exact "):
+        expr = suggestion[len("exact "):].strip()
+        if expr:
+            add_variant(f"simpa using {expr}")
+            if goal_has_symmetric_target(goal):
+                symm_expr = f"({expr}).symm"
+                add_variant(f"exact {symm_expr}")
+                add_variant(f"simpa using {symm_expr}")
+
+    return variants
+
+
+def verify_tactic_variants(session, example: str, base_env: int,
+                           tactics: list[str], prefix: str = "") -> str | None:
+    """Return the first tactic variant that fully proves the example."""
+    for tactic in tactics:
+        body = f"{prefix}{tactic}" if prefix else tactic
+        resp = session.send({"cmd": f"{example} := by\n  {body}", "env": base_env})
+        if not has_error(resp):
+            return body
+    return None
+
 def to_example(stmt: str) -> str:
     return re.sub(r"^theorem\s+\S+", "example", stmt)
 
@@ -941,6 +989,21 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             lean_name = lean_name_from(stmt)
                             persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
                         break
+                    if t in SEARCH_TACTICS:
+                        extracted = extract_try_this(resp)
+                        if extracted is None:
+                            continue
+                        verified = verify_tactic_variants(
+                            session, example, base_env,
+                            search_suggestion_variants(extracted, goal),
+                        )
+                        if verified is None:
+                            continue
+                        proof = verified
+                        if not dry_run:
+                            lean_name = lean_name_from(stmt)
+                            persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                        break
 
                 # Phase 1.5: Fact typeclass preamble + tactics
                 # Handles lemmas that require [Fact (Nat.Prime p)] typeclass.
@@ -973,12 +1036,13 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                     if extracted:
                                         if timed_out():
                                             break
-                                        resp2 = session.send({
-                                            "cmd": f"{example} := by\n  {fact_block}\n  {_cast}{extracted}",
-                                            "env": base_env
-                                        })
-                                        if not has_error(resp2):
-                                            proof = f"{fact_block}\n  {_cast}{extracted}"
+                                        verified = verify_tactic_variants(
+                                            session, example, base_env,
+                                            search_suggestion_variants(extracted, goal),
+                                            prefix=f"{fact_block}\n  {_cast}",
+                                        )
+                                        if verified is not None:
+                                            proof = verified
                                             if not dry_run:
                                                 lean_name = lean_name_from(stmt)
                                                 persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
