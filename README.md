@@ -41,7 +41,10 @@ LeanMathAtlas/
 
 docs/ja/                    # Japanese explanations (one Markdown file per module)
 tools/
-  auto_prove.py             # Automated theorem prover via Lean REPL
+  auto_prove.py             # CLI entrypoint + proof search driver
+  auto_prove_store.py       # Proof index / AutoProved / ProvedTheorems updates
+  auto_prove_repl.py        # Lean REPL session management
+  auto_prove_tactics.py     # Tactic selection and search helpers
   benchmark.py              # Accuracy benchmark
 ```
 
@@ -118,6 +121,10 @@ Japanese notes explaining each theorem in terms of standard curricula are in
 
 `tools/auto_prove.py` takes a theorem statement, tries a set of tactics via the Lean
 REPL, and saves any successful proof to `ProvedTheorems.lean`.
+
+Internally, the prover is split across `auto_prove.py`, `auto_prove_store.py`,
+`auto_prove_repl.py`, and `auto_prove_tactics.py`, but the public CLI and the
+Python API used by `batch_prove.py` / `benchmark.py` stay the same.
 
 ```bash
 # Run the built-in test suite (7 theorems)

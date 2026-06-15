@@ -4,6 +4,15 @@
 成功した証明を `LeanMathAtlas/AutoProved/*.lean` に保存し、
 `LeanMathAtlas/ProvedTheorems.lean` に import を追加してくれるスクリプトです。
 
+> [!NOTE]
+> 現在の実装は責務ごとに分割されています。
+> エントリポイントは引き続き `auto_prove.py` ですが、内部では
+> `auto_prove_store.py`（保存と index）、
+> `auto_prove_repl.py`（Lean REPL セッション）、
+> `auto_prove_tactics.py`（タクティク選択と探索補助）
+> に処理を分けています。
+> `batch_prove.py` と `benchmark.py` から見える使い方は変えていません。
+
 ---
 
 > [!WARNING]
@@ -56,6 +65,15 @@
 
 ```
 auto_prove.py
+  │
+  ├─ auto_prove_store.py
+  │    index / AutoProved / ProvedTheorems への保存を担当
+  │
+  ├─ auto_prove_repl.py
+  │    lake exe repl の起動と REPL セッション管理を担当
+  │
+  ├─ auto_prove_tactics.py
+  │    tactic 候補・テンプレート・補助探索を担当
   │
   ├─ lake exe repl を起動（Lean 4 の対話シェル）
   │
