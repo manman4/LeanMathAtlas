@@ -34,6 +34,7 @@ from auto_prove_tactics import (
     prove_iterative,
     prove_with_have,
     search_suggestion_variants,
+    search_normalization_prefixes,
     select_tactics,
     to_example,
     verify_tactic_variants,
@@ -87,29 +88,39 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
 
                 # Phase 1: try each filtered tactic in one shot
                 proof = None
+                search_prefixes = search_normalization_prefixes(goal)
                 for t in select_tactics(goal):
                     if timed_out():
                         break
-                    resp = session.send({"cmd": f"{example} := by\n  {t}", "env": base_env})
-                    if not has_error(resp):
-                        if t in SEARCH_TACTICS:
-                            extracted = extract_try_this(resp)
-                            if extracted is None:
-                                continue
-                            proof = extracted
-                        else:
-                            proof = t
-                        if not dry_run:
-                            lean_name = lean_name_from(stmt)
-                            persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
-                        break
                     if t in SEARCH_TACTICS:
+                        search_attempts = search_prefixes
+                    else:
+                        search_attempts = [""]
+                    for norm_prefix in search_attempts:
+                        if timed_out():
+                            break
+                        resp = session.send({"cmd": f"{example} := by\n  {norm_prefix}{t}", "env": base_env})
+                        if not has_error(resp):
+                            if t in SEARCH_TACTICS:
+                                extracted = extract_try_this(resp)
+                                if extracted is None:
+                                    continue
+                                proof = f"{norm_prefix}{extracted}" if norm_prefix else extracted
+                            else:
+                                proof = f"{norm_prefix}{t}" if norm_prefix else t
+                            if not dry_run:
+                                lean_name = lean_name_from(stmt)
+                                persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                            break
+                        if t not in SEARCH_TACTICS:
+                            continue
                         extracted = extract_try_this(resp)
                         if extracted is None:
                             continue
                         verified = verify_tactic_variants(
                             session, example, base_env,
                             search_suggestion_variants(extracted, goal),
+                            normalization_prefixes=search_prefixes,
                         )
                         if verified is None:
                             continue
@@ -117,6 +128,8 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                         if not dry_run:
                             lean_name = lean_name_from(stmt)
                             persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                        break
+                    if not has_error(resp):
                         break
 
                 # Phase 1.5: Fact typeclass preamble + tactics
@@ -188,33 +201,36 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             break
                         if timed_out():
                             break
-                        _pre_block = f"  {_pre}\n  " if _pre else "  "
-                        _resp = session.send({
-                            "cmd": f"{example} := by\n{_pre_block}apply?",
-                            "env": base_env
-                        })
-                        _sug = extract_try_this(_resp)
-                        if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
-                            continue
-                        for _closer in _closers:
+                        for _norm in search_prefixes:
                             if timed_out():
                                 break
-                            _cmd = (
-                                f"{example} := by\n  {_pre}\n  {_sug}\n  all_goals {_closer}"
-                                if _pre else
-                                f"{example} := by\n  {_sug}\n  all_goals {_closer}"
-                            )
-                            _resp2 = session.send({"cmd": _cmd, "env": base_env})
-                            if not has_error(_resp2):
-                                proof = (
-                                    f"{_pre}\n  {_sug}\n  all_goals {_closer}"
+                            _pre_block = f"  {_pre}\n  {_norm}" if _pre else f"  {_norm}"
+                            _resp = session.send({
+                                "cmd": f"{example} := by\n{_pre_block}apply?",
+                                "env": base_env
+                            })
+                            _sug = extract_try_this(_resp)
+                            if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
+                                continue
+                            for _closer in _closers:
+                                if timed_out():
+                                    break
+                                _cmd = (
+                                    f"{example} := by\n  {_pre}\n  {_norm}{_sug}\n  all_goals {_closer}"
                                     if _pre else
-                                    f"{_sug}\n  all_goals {_closer}"
+                                    f"{example} := by\n  {_norm}{_sug}\n  all_goals {_closer}"
                                 )
-                                if not dry_run:
-                                    lean_name = lean_name_from(stmt)
-                                    persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
-                                break
+                                _resp2 = session.send({"cmd": _cmd, "env": base_env})
+                                if not has_error(_resp2):
+                                    proof = (
+                                        f"{_pre}\n  {_norm}{_sug}\n  all_goals {_closer}"
+                                        if _pre else
+                                        f"{_norm}{_sug}\n  all_goals {_closer}"
+                                    )
+                                    if not dry_run:
+                                        lean_name = lean_name_from(stmt)
+                                        persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                                    break
 
                 # Phase 2: if one-shot failed, try iterative BFS (time-limited)
                 if proof is None and not timed_out():
