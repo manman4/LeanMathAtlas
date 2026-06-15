@@ -171,13 +171,44 @@ def search_suggestion_variants(suggestion: str, goal: str) -> list[str]:
     return variants
 
 
+def search_normalization_prefixes(goal: str) -> list[str]:
+    """Lightweight normalisation passes to run around search tactics.
+
+    Keep this list short: these prefixes are reused around `exact?`, `simp?`,
+    and `apply?`, so every extra branch has a real runtime cost.
+    """
+    prefixes = [""]
+
+    def add_prefix(prefix: str):
+        if prefix not in prefixes:
+            prefixes.append(prefix)
+
+    if "↑" in goal or "ZMod" in goal or "Nat.cast" in goal or "Int.cast" in goal:
+        add_prefix("norm_cast\n  ")
+        add_prefix("push_cast\n  ")
+
+    if any(token in goal for token in [" + ", " - ", " * ", "^", " / "]):
+        add_prefix("ring_nf\n  ")
+
+    if re.search(r'\b\d+\b', goal):
+        add_prefix("norm_num\n  ")
+
+    if " = " in goal or " ≤ " in goal or " ≥ " in goal or " ↔ " in goal:
+        add_prefix("simp\n  ")
+
+    return prefixes
+
+
 def verify_tactic_variants(session, example: str, base_env: int,
-                           tactics: list[str], prefix: str = "") -> str | None:
-    for tactic in tactics:
-        body = f"{prefix}{tactic}" if prefix else tactic
-        resp = session.send({"cmd": f"{example} := by\n  {body}", "env": base_env})
-        if not has_error(resp):
-            return body
+                           tactics: list[str], prefix: str = "",
+                           normalization_prefixes: list[str] | None = None) -> str | None:
+    prefixes = normalization_prefixes or [""]
+    for norm_prefix in prefixes:
+        for tactic in tactics:
+            body = f"{prefix}{norm_prefix}{tactic}" if prefix or norm_prefix else tactic
+            resp = session.send({"cmd": f"{example} := by\n  {body}", "env": base_env})
+            if not has_error(resp):
+                return body
     return None
 
 
