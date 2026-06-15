@@ -81,9 +81,13 @@ import LeanMathAtlas.AutoProved.my_gauss
 import LeanMathAtlas.AutoProved.sum_sq
 import LeanMathAtlas.AutoProved.sum_geom
 import LeanMathAtlas.AutoProved.sum_cubes
+import LeanMathAtlas.AutoProved.arith_diff
+import LeanMathAtlas.AutoProved.arith_zero
 import LeanMathAtlas.AutoProved.my_hasDerivAt_const
 import LeanMathAtlas.AutoProved.my_hasDerivAt_id
 import LeanMathAtlas.AutoProved.my_hasDerivAt_pow
+import LeanMathAtlas.AutoProved.deriv_sq
+import LeanMathAtlas.AutoProved.deriv_cube
 import LeanMathAtlas.AutoProved.my_deriv_add
 import LeanMathAtlas.AutoProved.my_deriv_const_mul
 import LeanMathAtlas.AutoProved.my_deriv_mul
@@ -126,6 +130,8 @@ import LeanMathAtlas.AutoProved.sin_zero
 import LeanMathAtlas.AutoProved.cos_zero
 import LeanMathAtlas.AutoProved.sin_pi_div_two
 import LeanMathAtlas.AutoProved.cos_pi_div_two
+import LeanMathAtlas.AutoProved.sin_pi
+import LeanMathAtlas.AutoProved.cos_pi
 import LeanMathAtlas.AutoProved.my_inner_comm
 import LeanMathAtlas.AutoProved.my_inner_add_left
 import LeanMathAtlas.AutoProved.my_inner_smul_left
