@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.15 | 2026-06-15 | fix(auto_prove): verify `exact?` / `simp?` suggestions through `simpa using` and symmetric variants before giving up; prove: add `arith_diff`, `arith_zero`, `deriv_sq`, `deriv_cube`; fix(proved): restore missing `sin_pi` / `cos_pi` imports in `ProvedTheorems` (26 unresolved → 20) |
 | 0.3.14 | 2026-06-10 | perf: reuse one REPL per file in `batch_prove`, add configurable 60s theorem timeout (default for normal `auto_prove` / `batch_prove` runs), skip `ProvedTheorems` build unless `--use-proved`; safety: in `--use-proved` mode, rollback a newly saved theorem if it would break `LeanMathAtlas.ProvedTheorems`; benchmark keeps old no-total-timeout condition; prove: +72 theorems (162/186 total) |
 | 0.3.13 | 2026-06-10 | fix(hooks): block --no-verify in Claude Code PreToolUse hook to prevent bypassing personal-info pre-commit guard |
 | 0.3.12 | 2026-06-09 | fix(tools): remove AutoProved chain imports (each file now imports only Mathlib, eliminating cascading failures); add use_proved=False flag to prove_all / batch_prove / auto_prove CLI so previously proved theorems are opt-in; fix RuntimeError handling in batch_prove and benchmark; feat(algebra): auto-prove 11 BasicIdentities theorems; chore: untrack .claude/settings.json to prevent personal paths leaking into history |
