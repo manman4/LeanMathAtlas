@@ -82,7 +82,8 @@ auto_prove.py
   │
   ├─【フェーズ 1】ゴールに合うタクティクスを一発で試す
   │    rfl → ring → omega → FINTYPE_TEMPLATES → exact? / simp? など
-  │    ゴール文字列でタクティクセットを絞り込む（select_tactics）
+  │    主に `⊢` の右側の target 形でタクティクセットを絞り込む（select_tactics）
+  │    例: `∑` / `Finset` なら induction を許すが、一般の冪等式には induction をばら撒かない
   │
   ├─【フェーズ 1.5】Nat.Prime 仮定がある場合のみ
   │    haveI : Fact (Nat.Prime p) := ⟨hp⟩ を前置して simp/norm_num/exact? などを試す
@@ -103,6 +104,10 @@ auto_prove.py
   │    `--theorem-timeout N` で変更可能
   │    ※ `benchmark.py` は以前どおり `theorem_timeout=None` で呼ぶため、
   │      この総タイムアウトは benchmark では使わない
+  │
+  ├─【失敗ログ】失敗時は `.auto_prove_failures.jsonl` に
+  │    goal / timeout / selected_tactics / search_prefixes などを追記
+  │    このファイルは `.gitignore` 済みで、公開リポジトリには載らない想定
   │
   └─ 成功したら AutoProved/*.lean を作成し、ProvedTheorems.lean に import を追加して終了
 ```

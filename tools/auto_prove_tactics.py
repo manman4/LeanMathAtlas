@@ -133,6 +133,18 @@ STEP_TIME_LIMIT = 10
 DEFAULT_THEOREM_TIMEOUT = 60
 
 
+def goal_target(goal: str) -> str:
+    """Extract the target line (without the leading turnstile) when present."""
+    for line in reversed(goal.splitlines()):
+        if "⊢" in line:
+            return line.split("⊢", 1)[1].strip()
+    return goal.strip()
+
+
+def target_has_order_relation(target: str) -> bool:
+    return any(token in target for token in [" ≤ ", " ≥ ", " < ", " > "])
+
+
 def extract_try_this(resp: dict) -> str | None:
     for msg in resp.get("messages", []):
         data = msg.get("data", "")
@@ -143,10 +155,7 @@ def extract_try_this(resp: dict) -> str | None:
 
 
 def goal_has_symmetric_target(goal: str) -> bool:
-    target_lines = [line for line in goal.splitlines() if "⊢" in line]
-    if not target_lines:
-        return False
-    target = target_lines[-1]
+    target = goal_target(goal)
     return " = " in target or " ↔ " in target
 
 
@@ -305,28 +314,30 @@ def nlinarith_nonneg3_tactic(goal: str) -> str | None:
 
 
 def select_tactics(goal: str) -> list[str]:
-    if (re.search(r'\binner\b', goal) and ("ℝ" in goal or "𝕜" in goal)) or "⟪" in goal:
+    target = goal_target(goal)
+
+    if (re.search(r'\binner\b', target) and ("ℝ" in goal or "𝕜" in goal)) or "⟪" in target:
         return INNER_PRODUCT_TACTICS + SEARCH_TACTICS
-    if "‖" in goal and "•" in goal:
+    if "‖" in target and "•" in target:
         return ["exact norm_smul _ _", "simp [norm_smul]"] + INNER_PRODUCT_TACTICS + SEARCH_TACTICS
-    if "normSq" in goal:
+    if "normSq" in target:
         return COMPLEX_TACTICS + SEARCH_TACTICS
-    if "exp" in goal and re.search(r'\^\s*\w+', goal) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', goal)):
+    if "exp" in target and re.search(r'\^\s*\w+', target) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', target)):
         return COMPLEX_TACTICS + SEARCH_TACTICS
-    if "HasDerivAt" in goal or "HasFDerivAt" in goal:
+    if "HasDerivAt" in target or "HasFDerivAt" in target:
         chain_tactics = chain_rule_deriv_tactics(goal)
         return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
-    if "Continuous" in goal or "Differentiable" in goal:
+    if "Continuous" in target or "Differentiable" in target:
         return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
-    if "cos" in goal and "sin" in goal and ("≤" in goal or re.search(r'⊢[^\n]*(?<!=)=(?![>=])', goal)):
+    if "cos" in target and "sin" in target and ("≤" in target or re.search(r'(?<![<>=!])=(?![>=])', target)):
         return TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
-    if "∑" in goal or "Finset" in goal:
-        if ".card" in goal:
+    if "∑" in target or "Finset" in target:
+        if ".card" in target:
             return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
         return INDUCTION_TACTICS + SEARCH_TACTICS
-    if "Irrational" in goal:
+    if "Irrational" in target:
         return SEARCH_TACTICS
-    if "∃" in goal and "Fin" in goal:
+    if "∃" in target and "Fin" in goal:
         return FINTYPE_TEMPLATES + SEARCH_TACTICS
     if "!" in goal and "Nat.Prime" in goal:
         match = re.search(r'(\w+)\s*:\s*Nat\.Prime\s+(\w+)', goal)
@@ -336,9 +347,9 @@ def select_tactics(goal: str) -> list[str]:
                 f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  exact ZMod.wilsons_lemma {pvar}",
                 f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  simp [ZMod.wilsons_lemma]",
             ] + SEARCH_TACTICS
-    if "ZMod" in goal:
+    if "ZMod" in goal or "ZMod" in target:
         return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
-    if ("≤" in goal or "≥" in goal) and "^" in goal:
+    if target_has_order_relation(target) and "^" in target:
         tactics: list[str] = []
         nonneg_tac = nlinarith_nonneg3_tactic(goal)
         pairwise_tac = nlinarith_pairwise_sq_tactic(goal)
@@ -348,8 +359,8 @@ def select_tactics(goal: str) -> list[str]:
             tactics.append(pairwise_tac)
         if tactics:
             return tactics + ["ring", "nlinarith", "linarith"] + SEARCH_TACTICS
-    if "^" in goal:
-        return ["ring", "nlinarith", "norm_num"] + INDUCTION_TACTICS + SEARCH_TACTICS
+    if "^" in target:
+        return ["ring", "nlinarith", "norm_num"] + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
         return ["ring", "linarith", "norm_num", "nlinarith", "fun_prop"] + SEARCH_TACTICS
     if "ℕ" in goal or "ℤ" in goal:

@@ -14,6 +14,7 @@ import sys
 import time
 
 from auto_prove_repl import ReplSession, has_error, prepare_proof_env
+from auto_prove_failure_log import log_failure
 from auto_prove_store import (
     AUTO_PROVED_DIR,
     cache_key,
@@ -263,6 +264,16 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
 
                 if proof is None and timed_out():
                     print(f"  [timeout] theorem budget exceeded ({theorem_timeout}s)")
+                if proof is None:
+                    log_failure({
+                        "stmt": stmt,
+                        "goal": goal,
+                        "timed_out": timed_out(),
+                        "theorem_timeout_sec": theorem_timeout,
+                        "search_prefixes": search_prefixes,
+                        "selected_tactics": select_tactics(goal),
+                        "solve_time_sec": time.monotonic() - t_stmt,
+                    })
 
                 new_results[stmt] = (proof, goal, time.monotonic() - t_stmt)
 
