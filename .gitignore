@@ -40,3 +40,4 @@ tools/.bench_cache.json
 
 # Logs
 *.log
+.auto_prove_failures.jsonl

@@ -2,6 +2,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.18 | 2026-06-16 | feat(auto_prove): record failed proof attempts to local-only `.auto_prove_failures.jsonl` with goal / timeout / selected-tactic metadata (ignored by git); refine tactic routing by target shape instead of whole context, extend generic real-power inequality handling to `<` / `>`, and stop spraying induction templates onto generic exponent goals |
 | 0.3.17 | 2026-06-15 | feat(auto_prove): add lightweight search-time normalisation prefixes (`simp`, `norm_num`, `ring_nf`, `norm_cast`, `push_cast`) around `exact?` / `simp?` / `apply?` exploration; prove: this general normalisation now recovers at least `factor_theorem` and `sum_range_eq` from the unresolved set in dry-run checks |
 | 0.3.16 | 2026-06-15 | refactor(auto_prove): split storage / REPL / tactic-selection helpers into `auto_prove_store.py`, `auto_prove_repl.py`, and `auto_prove_tactics.py` while keeping the `auto_prove.py` CLI and the Python API used by `batch_prove.py` / `benchmark.py` stable; docs: update README and AUTO_PROVE guide; smoke: re-check single-theorem `auto_prove` and `batch_prove --dry-run` paths with low-memory sequential runs |
 | 0.3.15 | 2026-06-15 | fix(auto_prove): verify `exact?` / `simp?` suggestions through `simpa using` and symmetric variants before giving up; prove: add `arith_diff`, `arith_zero`, `deriv_sq`, `deriv_cube`; fix(proved): restore missing `sin_pi` / `cos_pi` imports in `ProvedTheorems` (26 unresolved → 20) |
