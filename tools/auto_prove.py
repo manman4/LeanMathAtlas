@@ -27,13 +27,15 @@ from auto_prove_store import (
 )
 from auto_prove_tactics import (
     DEFAULT_THEOREM_TIMEOUT,
+    HAVE_STAGE1_LIMIT,
     SEARCH_TACTICS,
     STEP_TIME_LIMIT,
     extract_try_this,
     fact_preamble,
-    have_candidates,
+    limited_have_candidates,
     prove_iterative,
     prove_with_have,
+    prove_with_two_haves,
     search_suggestion_variants,
     search_normalization_prefixes,
     select_tactics,
@@ -247,14 +249,22 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
 
                 # Phase 3 (last resort): have-augmented proofs
-                # Tried after BFS because it costs O(candidates × closers) REPL calls.
-                # Covers theorems needing one intermediate fact that neither one-shot
-                # tactics nor BFS can construct (e.g. sin²+cos²=1 for single-trig goals).
+                # Tried after BFS because it costs extra REPL calls.
+                # First try one intermediate fact, then a tightly bounded two-stage
+                # have search where the second candidate is generated from the
+                # remaining goal after the first have.
                 if proof is None and not skip_phase17 and not timed_out():
-                    for have_line in have_candidates(goal):
+                    for have_line in limited_have_candidates(goal, HAVE_STAGE1_LIMIT):
                         if timed_out():
                             break
                         p = prove_with_have(session, example, base_env, have_line, theorem_deadline)
+                        if p:
+                            proof = p
+                            if not dry_run:
+                                lean_name = lean_name_from(stmt)
+                                persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                            break
+                        p = prove_with_two_haves(session, example, base_env, have_line, theorem_deadline)
                         if p:
                             proof = p
                             if not dry_run:

@@ -131,6 +131,9 @@ STEP_TACTICS = [
 
 STEP_TIME_LIMIT = 10
 DEFAULT_THEOREM_TIMEOUT = 60
+HAVE_STAGE1_LIMIT = 6
+HAVE_STAGE2_LIMIT = 4
+BFS_TACTIC_LIMIT = 12
 
 
 def goal_target(goal: str) -> str:
@@ -368,6 +371,60 @@ def select_tactics(goal: str) -> list[str]:
     return ALL_TACTICS + SEARCH_TACTICS
 
 
+def extract_goal_text(goal_entry) -> str:
+    if isinstance(goal_entry, str):
+        return goal_entry
+    if isinstance(goal_entry, dict):
+        for key in ["goal", "type", "target"]:
+            value = goal_entry.get(key)
+            if isinstance(value, str):
+                return value
+    return ""
+
+
+def step_tactics_for_goal(goal: str) -> list[str]:
+    target = goal_target(goal)
+    tactics: list[str] = []
+
+    def add_many(items: list[str]):
+        for item in items:
+            if item not in tactics:
+                tactics.append(item)
+
+    add_many(["assumption", "constructor", "left", "right", "simp", "aesop"])
+
+    if "→" in target or "∀" in target:
+        add_many(["intro h", "intro hp hq", "intro hp hq hr"])
+    if "∧" in target or "∃" in target:
+        add_many(["constructor", "obtain ⟨a, b⟩ := h"])
+    if "∨" in target:
+        add_many(["left", "right", "rcases h with ha | hb"])
+    if "HasDerivAt" in target or "HasFDerivAt" in target:
+        add_many([
+            "apply HasDerivAt.comp", "apply HasDerivAt.add",
+            "apply HasDerivAt.const_mul", "apply HasDerivAt.neg",
+            "exact Real.hasDerivAt_sin _", "exact Real.hasDerivAt_cos _",
+            "exact hasDerivAt_id _", "fun_prop",
+        ])
+    if "∑" in target or "Finset" in target:
+        add_many(["ring", "omega", "linarith"])
+    if "inner" in target or "⟪" in target or "‖" in target:
+        add_many([
+            "exact real_inner_comm _ _", "exact inner_add_left _ _ _",
+            "exact inner_self_eq_zero", "exact norm_smul _ _",
+            "simp [inner_smul_left]", "simp [real_inner_self_eq_norm_sq]",
+        ])
+    if "normSq" in target or ("exp" in target and "ℂ" in goal):
+        add_many(["simp [normSq_apply, sq]", "congr 1", "ring"])
+    if "^" in target or any(tok in target for tok in [" + ", " - ", " * ", " / "]):
+        add_many(["ring", "nlinarith", "linarith", "norm_num"])
+    if "ℕ" in goal or "ℤ" in goal:
+        add_many(["omega", "rfl", "decide", "norm_cast"])
+
+    add_many(["tauto", "norm_num", "ring", "omega"])
+    return tactics[:BFS_TACTIC_LIMIT]
+
+
 def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP_TIME_LIMIT,
                     deadline: float | None = None) -> str | None:
     resp = session.send({"cmd": f"{example} := by sorry", "env": base_env})
@@ -377,20 +434,21 @@ def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP
     init_state = sorries[0].get("proofState")
     if init_state is None:
         return None
+    init_goal = sorries[0].get("goal", "")
 
     phase_deadline = time.time() + time_limit
     if deadline is not None:
         phase_deadline = min(phase_deadline, deadline)
-    queue: deque[tuple[int, list[str]]] = deque([(init_state, [])])
+    queue: deque[tuple[int, list[str], str]] = deque([(init_state, [], init_goal)])
     visited: set[int] = set()
 
     while queue and time.time() < phase_deadline:
-        state, applied = queue.popleft()
+        state, applied, current_goal = queue.popleft()
         if len(applied) >= 6 or state in visited:
             continue
         visited.add(state)
 
-        for tactic in STEP_TACTICS:
+        for tactic in step_tactics_for_goal(current_goal):
             if time.time() > phase_deadline:
                 return None
             resp = session.send({"tactic": tactic, "proofState": state})
@@ -404,7 +462,8 @@ def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP
             if goals == []:
                 return "\n".join(new_applied)
             if new_state is not None and goals is not None and len(goals) <= 4:
-                queue.append((new_state, new_applied))
+                next_goal = extract_goal_text(goals[0]) if goals else current_goal
+                queue.append((new_state, new_applied, next_goal))
 
     return None
 
@@ -440,6 +499,19 @@ def have_candidates(goal: str) -> list[str]:
     return candidates
 
 
+def limited_have_candidates(goal: str, limit: int, exclude: set[str] | None = None) -> list[str]:
+    seen = set(exclude or set())
+    result = []
+    for candidate in have_candidates(goal):
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        result.append(candidate)
+        if len(result) >= limit:
+            break
+    return result
+
+
 def have_closers(have_line: str, remaining_goal: str) -> list[str]:
     match = re.match(r'have\s+(\w+)\b', have_line)
     name = match.group(1) if match else None
@@ -462,23 +534,61 @@ def have_closers(have_line: str, remaining_goal: str) -> list[str]:
     return closers
 
 
-def prove_with_have(session, example: str, base_env: int,
-                    have_line: str, deadline: float | None = None) -> str | None:
+def probe_have_prefix(session, example: str, base_env: int,
+                      have_lines: list[str], deadline: float | None = None) -> str | None:
     if deadline is not None and time.monotonic() >= deadline:
         return None
-    probe = session.send({"cmd": f"{example} := by\n  {have_line}\n  sorry", "env": base_env})
+    prefix = "\n  ".join(have_lines)
+    probe = session.send({"cmd": f"{example} := by\n  {prefix}\n  sorry", "env": base_env})
     if has_error(probe):
         return None
     sorries = probe.get("sorries", [])
     if not sorries:
-        return have_line
-    remaining_goal = sorries[0].get("goal", "")
-    for closer in have_closers(have_line, remaining_goal):
+        return ""
+    return sorries[0].get("goal", "")
+
+
+def prove_with_have_chain(session, example: str, base_env: int,
+                          have_lines: list[str], deadline: float | None = None) -> str | None:
+    remaining_goal = probe_have_prefix(session, example, base_env, have_lines, deadline)
+    if remaining_goal is None:
+        return None
+    prefix = "\n  ".join(have_lines)
+    if remaining_goal == "":
+        return prefix
+    lead_have = have_lines[-1]
+    for closer in have_closers(lead_have, remaining_goal):
         if deadline is not None and time.monotonic() >= deadline:
             return None
-        resp = session.send({"cmd": f"{example} := by\n  {have_line}\n  {closer}", "env": base_env})
+        resp = session.send({"cmd": f"{example} := by\n  {prefix}\n  {closer}", "env": base_env})
         if not has_error(resp):
-            return f"{have_line}\n  {closer}"
+            return f"{prefix}\n  {closer}"
+    return None
+
+
+def prove_with_have(session, example: str, base_env: int,
+                    have_line: str, deadline: float | None = None) -> str | None:
+    return prove_with_have_chain(session, example, base_env, [have_line], deadline)
+
+
+def prove_with_two_haves(session, example: str, base_env: int,
+                         first_have: str, deadline: float | None = None) -> str | None:
+    remaining_goal = probe_have_prefix(session, example, base_env, [first_have], deadline)
+    if remaining_goal is None or remaining_goal == "":
+        return None
+    second_haves = limited_have_candidates(
+        remaining_goal,
+        HAVE_STAGE2_LIMIT,
+        exclude={first_have},
+    )
+    for second_have in second_haves:
+        if deadline is not None and time.monotonic() >= deadline:
+            return None
+        proof = prove_with_have_chain(
+            session, example, base_env, [first_have, second_have], deadline
+        )
+        if proof is not None:
+            return proof
     return None
 
 
