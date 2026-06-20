@@ -261,6 +261,28 @@ python3 tools/check_targets.py \
 タイムアウトした場合も、現在は REPL プロセスを強制終了してから
 次のターゲットに進むので、`wait()` でぶら下がって止まり続けにくくなっています。
 
+> [!NOTE]
+> `2026-06-21` の切り分けでは、「REPL が極端に遅い」ように見えた原因が
+> 2 段あることが分かりました。
+>
+> 1. 以前の `auto_prove_repl.py` は、REPL の 1 行 JSON 応答に対して
+>    「空行終端」を待っていたため、`import Lean` のような軽い応答でも
+>    偽のタイムアウトになり得ました。これは修正済みです。
+> 2. その上で、`lake exe repl` による import 自体も本当に重く、
+>    `import LeanMathAtlas.Analysis.Limits` の準備に約 96 秒かかることがありました。
+>
+> つまり、当時の「全然返ってこない」は純粋に環境が遅いだけではなく、
+> 応答読み取りバグと、REPL import 自体の重さが重なっていました。
+> 通常の `lake build LeanMathAtlas.Analysis.Limits` は同日の確認で 56 秒で通っているので、
+> 少なくとも build 経路と REPL import 経路は分けて考える必要があります。
+
+> [!WARNING]
+> `--theorem-timeout` は theorem 全体の予算ですが、各 `session.send(...)` に
+> 残り時間を必ず渡しているわけではありません。
+> そのため、個々の REPL 呼び出しが長くブロックすると、
+> theorem timeout を指定していても体感では「止まったまま」に見えることがあります。
+> 起動遅延と探索遅延は別のボトルネックです。
+
 ### failure log を goal class ごとに見る
 
 `AUTO_PROVE_LOG_FAILURES=1` で集めた `.auto_prove_failures.jsonl` は、
@@ -298,6 +320,21 @@ python3 tools/analyze_failures.py
 検索系 (`exact?` / `simp?` / `apply?`) で見つけた候補も、
 そのまま打つだけでなく `simpa [Function.comp]` / `simpa [sub_eq_add_neg]`
 のような goal 依存の軽い書き換えを付けた検証まで行います。
+
+さらに、その候補だけでは閉じない場合に限って
+`ring` / `ring_nf` / `field_simp` / `linarith` / `nlinarith` /
+`norm_cast` / `norm_num` のような軽い 1 手 follow-up を後ろに足して再検証します。
+探索幅を大きく増やさずに、search suggestion の取りこぼしを減らすためです。
+
+`have` 候補は件数を増やすのではなく、goal class と target に近いもの
+（`ContinuousAt` goal での `.continuousAt`、`tan` goal での `pow_ne_zero`、
+`HasDerivAt` goal での微分補助など）を先に試す順序にしています。
+
+`Continuous` 系では、文脈に `hf : Continuous f`、`hg : Continuous g` があるとき
+`Continuous (f ∘ g)` に対して `hf.comp hg` を先に試します。
+また、三角関数を含む不等式では `sin_sq_add_cos_sq` と `sq_nonneg` を組み合わせた
+`nlinarith` テンプレートを先頭に出し、`2 * sin^2 x ≤ 2` のような
+「恒等式 + 非負性」で閉じる型を狙います。
 
 ### 複数の定理をまとめて渡す
 

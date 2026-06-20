@@ -38,8 +38,8 @@ from auto_prove_tactics import (
     prove_with_have,
     prove_with_two_haves,
     normalize_goal_shape,
-    search_suggestion_variants,
     search_normalization_prefixes,
+    verify_search_suggestion,
     select_tactics,
     single_line_closers,
     to_example,
@@ -123,9 +123,9 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                         extracted = extract_try_this(resp)
                         if extracted is None:
                             continue
-                        verified = verify_tactic_variants(
+                        verified = verify_search_suggestion(
                             session, example, base_env,
-                            search_suggestion_variants(extracted, goal),
+                            extracted, goal,
                             normalization_prefixes=search_prefixes,
                         )
                         if verified is None:
@@ -169,9 +169,9 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                                     if extracted:
                                         if timed_out():
                                             break
-                                        verified = verify_tactic_variants(
+                                        verified = verify_search_suggestion(
                                             session, example, base_env,
-                                            search_suggestion_variants(extracted, goal),
+                                            extracted, goal,
                                             prefix=f"{fact_block}\n  {_cast}",
                                         )
                                         if verified is not None:

@@ -65,17 +65,19 @@ class ReplSession:
                 if not events:
                     raise TimeoutError("Timed out waiting for Lean REPL response")
                 line = self.proc.stdout.readline().decode()
-                if line in ("\n", ""):
+                if line == "":
                     if lines:
                         block = "".join(lines).strip()
-                        try:
+                        if block:
                             return json.loads(block)
-                        except json.JSONDecodeError:
-                            lines = []
-                    if line == "":
-                        return {}
-                else:
+                    return {}
+                if line.strip():
                     lines.append(line)
+                    block = "".join(lines).strip()
+                    try:
+                        return json.loads(block)
+                    except json.JSONDecodeError:
+                        continue
         finally:
             selector.close()
 
@@ -107,7 +109,8 @@ class ReplSession:
 
 
 def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False,
-                      startup_timeout: float | None = DEFAULT_REPL_STARTUP_TIMEOUT) -> tuple[ReplSession, int]:
+                      startup_timeout: float | None = DEFAULT_REPL_STARTUP_TIMEOUT,
+                      import_cmd: str | None = None) -> tuple[ReplSession, int]:
     """Create a REPL session and return (session, base_env) for theorem proving."""
     if use_proved and not dry_run:
         ok, details = build_proved_theorems()
@@ -119,12 +122,12 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
 
     session = ReplSession()
     load_proved = use_proved and not dry_run
+    imports = import_cmd
+    if imports is None:
+        imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if load_proved else "import Mathlib"
     print(
-        "  [repl] Loading Mathlib + ProvedTheorems (~80s)..."
-        if load_proved else
-        "  [repl] Loading Mathlib (~80s)..."
+        f"  [repl] Loading {'custom imports' if import_cmd else ('Mathlib + ProvedTheorems' if load_proved else 'Mathlib')} (~80s)..."
     )
-    imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if load_proved else "import Mathlib"
     t0 = time.monotonic()
     try:
         resp = session.send({"cmd": imports}, timeout_sec=startup_timeout)

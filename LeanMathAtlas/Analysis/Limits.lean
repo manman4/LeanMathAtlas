@@ -95,6 +95,11 @@ theorem continuous_poly (a : ℝ) :
   ((continuous_pow 2).add (continuous_const.mul continuous_id')).add
     continuous_const |>.continuousAt
 
+-- 連続関数の合成は連続（具体形）
+theorem continuous_comp {f g : ℝ → ℝ} (hf : Continuous f) (hg : Continuous g) :
+    Continuous (fun x => f (g x)) := by
+  simpa [Function.comp] using hf.comp hg
+
 -- ============================================================
 -- 5. はさみうちの定理 (Squeeze theorem)
 -- ============================================================
