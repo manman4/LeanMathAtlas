@@ -88,9 +88,13 @@ def run_targets(target_specs: list[str], theorem_timeout: int = 20,
                     base_env=base_env,
                 )
                 results.extend(result)
+        except RuntimeError as exc:
+            total_failed += len(selected)
+            print(f"  ! REPL setup failed: {exc}", flush=True)
+            continue
         finally:
             if session is not None:
-                session.close()
+                session.close(force=True)
 
         for stmt, proof, goal, solve_time in results:
             theorem_name = stmt.split()[1] if len(stmt.split()) >= 2 else stmt

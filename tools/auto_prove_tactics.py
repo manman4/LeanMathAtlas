@@ -162,8 +162,30 @@ def goal_has_symmetric_target(goal: str) -> bool:
     return " = " in target or " ↔ " in target
 
 
+def goal_rewrite_hints(goal: str) -> list[str]:
+    hints: list[str] = []
+
+    def add_hint(hint: str):
+        if hint not in hints:
+            hints.append(hint)
+
+    if "∘" in goal or "Function.comp" in goal:
+        add_hint("Function.comp")
+    if "id " in goal or " id" in goal or "id)" in goal:
+        add_hint("id_eq")
+    if " - " in goal:
+        add_hint("sub_eq_add_neg")
+    if "^ 2" in goal:
+        add_hint("pow_two")
+    if "normSq" in goal:
+        add_hint("sq")
+    return hints
+
+
 def search_suggestion_variants(suggestion: str, goal: str) -> list[str]:
     variants: list[str] = []
+    rewrite_hints = goal_rewrite_hints(goal)
+    rewrite_suffix = f" [{', '.join(rewrite_hints)}]" if rewrite_hints else ""
 
     def add_variant(tactic: str):
         if tactic not in variants:
@@ -175,12 +197,40 @@ def search_suggestion_variants(suggestion: str, goal: str) -> list[str]:
         expr = suggestion[len("exact "):].strip()
         if expr:
             add_variant(f"simpa using {expr}")
+            if rewrite_hints:
+                add_variant(f"simpa{rewrite_suffix} using {expr}")
             if goal_has_symmetric_target(goal):
                 symm_expr = f"({expr}).symm"
                 add_variant(f"exact {symm_expr}")
                 add_variant(f"simpa using {symm_expr}")
+                if rewrite_hints:
+                    add_variant(f"simpa{rewrite_suffix} using {symm_expr}")
 
     return variants
+
+
+def normalization_tactics(goal: str) -> list[str]:
+    target = goal_target(goal)
+    tactics: list[str] = []
+    rewrite_hints = goal_rewrite_hints(goal)
+    if rewrite_hints:
+        tactics.append(f"simpa [{', '.join(rewrite_hints)}]")
+    tactics.extend(["simpa", "simp", "simp [*]"])
+
+    if any(token in target for token in [" + ", " - ", " * ", "^"]) or " / " in target:
+        tactics.extend(["ring_nf", "ring"])
+    if any(token in target for token in [" / ", "⁻¹"]) or "≠ 0" in goal:
+        tactics.extend(["field_simp", "field_simp; ring", "field_simp; nlinarith"])
+    if "↑" in goal or "ZMod" in goal or "Nat.cast" in goal or "Int.cast" in goal:
+        tactics.extend(["norm_cast", "push_cast", "push_cast; ring"])
+    if re.search(r'\b\d+\b', goal):
+        tactics.extend(["norm_num", "norm_num [*]"])
+
+    deduped: list[str] = []
+    for tactic in tactics:
+        if tactic not in deduped:
+            deduped.append(tactic)
+    return deduped
 
 
 def search_normalization_prefixes(goal: str) -> list[str]:
@@ -268,6 +318,25 @@ def extract_tendsto_lambda(goal: str) -> tuple[str, str, str] | None:
     return var, expr, point
 
 
+def extract_tendsto_hypotheses(goal: str) -> list[tuple[str, str, str, str]]:
+    hypotheses: list[tuple[str, str, str, str]] = []
+    for name, fn, src, dst in re.findall(
+        r'(\w+)\s*:\s*Tendsto\s+([\w\.]+)\s+\(𝓝\s+(.+?)\)\s+\(𝓝\s+(.+?)\)',
+        goal,
+    ):
+        hypotheses.append((name.strip(), fn.strip(), src.strip(), dst.strip()))
+    return hypotheses
+
+
+def extract_has_deriv_hypotheses(goal: str) -> list[tuple[str, str, str]]:
+    hypotheses: list[tuple[str, str, str]] = []
+    for line in goal.splitlines():
+        m = re.match(r'(\w+)\s*:\s*HasDerivAt\s+([\w\.]+)\s+.+\s+(.+)$', line.strip())
+        if m:
+            hypotheses.append((m.group(1).strip(), m.group(2).strip(), m.group(3).strip()))
+    return hypotheses
+
+
 def extract_cos_ne_zero(goal: str) -> tuple[str, str] | None:
     m = re.search(r'(\w+)\s*:\s*cos\s+(.+?)\s*≠\s*0', goal)
     if not m:
@@ -284,18 +353,87 @@ def extract_double_angle_arg(target: str) -> str | None:
 
 def tendsto_templates(goal: str) -> list[str]:
     params = extract_tendsto_lambda(goal)
-    if not params:
-        return []
-    var, expr, point = params
-    fn = f"(fun {var} => {expr})"
-    return [
+    templates: list[str] = []
+    if params:
+        var, expr, point = params
+        fn = f"(fun {var} => {expr})"
+        templates.extend([
         (
             f"have hcont : ContinuousAt {fn} {point} := by\n"
             f"    fun_prop\n"
             f"  simpa using hcont"
         ),
         f"simpa using (show ContinuousAt {fn} {point} from by fun_prop)",
-    ]
+        ])
+
+        hypotheses = extract_tendsto_hypotheses(goal)
+        by_fn = {fn_name: (hname, src, dst) for hname, fn_name, src, dst in hypotheses}
+
+        add_match = re.fullmatch(r'([\w\.]+)\s+' + re.escape(var) + r'\s*\+\s*([\w\.]+)\s+' + re.escape(var), expr)
+        if add_match:
+            left, right = add_match.groups()
+            if left in by_fn and right in by_fn:
+                hleft, src_left, dst_left = by_fn[left]
+                hright, src_right, dst_right = by_fn[right]
+                if src_left == point and src_right == point:
+                    templates.extend([
+                        f"simpa using {hleft}.add {hright}",
+                        f"exact {hleft}.add {hright}",
+                    ])
+
+        mul_match = re.fullmatch(r'([\w\.]+)\s+' + re.escape(var) + r'\s*\*\s*([\w\.]+)\s+' + re.escape(var), expr)
+        if mul_match:
+            left, right = mul_match.groups()
+            if left in by_fn and right in by_fn:
+                hleft, src_left, dst_left = by_fn[left]
+                hright, src_right, dst_right = by_fn[right]
+                if src_left == point and src_right == point:
+                    templates.extend([
+                        f"simpa using {hleft}.mul {hright}",
+                        f"exact {hleft}.mul {hright}",
+                    ])
+
+        const_mul_match = re.fullmatch(r'(.+?)\s*\*\s*([\w\.]+)\s+' + re.escape(var), expr)
+        if const_mul_match:
+            coeff, fn_name = const_mul_match.groups()
+            if fn_name in by_fn:
+                hname, src, _ = by_fn[fn_name]
+                if src == point:
+                    templates.extend([
+                        f"simpa using ({hname}.const_mul ({coeff}))",
+                        f"exact ({hname}.const_mul ({coeff}))",
+                    ])
+
+        comp_match = re.fullmatch(r'([\w\.]+)\s+\(([\w\.]+)\s+' + re.escape(var) + r'\)', expr)
+        if comp_match:
+            outer_fn, inner_fn = comp_match.groups()
+            if outer_fn in by_fn and inner_fn in by_fn:
+                hg, src_g, dst_g = by_fn[outer_fn]
+                hf, src_f, dst_f = by_fn[inner_fn]
+                if src_f == point and src_g == dst_f:
+                    templates.extend([
+                        f"simpa [Function.comp] using {hg}.comp {hf}",
+                        f"exact {hg}.comp {hf}",
+                    ])
+
+    return templates
+
+
+def continuity_templates(goal: str) -> list[str]:
+    target = goal_target(goal)
+    templates: list[str] = []
+    for hname, fn_name, point in extract_has_deriv_hypotheses(goal):
+        if f"ContinuousAt {fn_name} {point}" in target:
+            templates.extend([
+                f"simpa using {hname}.continuousAt",
+                f"exact {hname}.continuousAt",
+            ])
+        if f"DifferentiableAt ℝ {fn_name} {point}" in target or f"DifferentiableAt {fn_name} {point}" in target:
+            templates.extend([
+                f"simpa using {hname}.differentiableAt",
+                f"exact {hname}.differentiableAt",
+            ])
+    return templates
 
 
 def polynomial_deriv_templates(goal: str) -> list[str]:
@@ -467,37 +605,38 @@ def nlinarith_nonneg3_tactic(goal: str) -> str | None:
 
 def select_tactics(goal: str) -> list[str]:
     target = goal_target(goal)
+    normalize = normalization_tactics(goal)
 
     if any(token in target for token in ["tan", "cos (2 *", "sin (2 *", "Real.tan", "Real.cos", "Real.sin"]):
         trig_tactics = trig_identity_templates(goal)
         if trig_tactics:
-            return trig_tactics + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
+            return trig_tactics + normalize + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if (re.search(r'\binner\b', target) and ("ℝ" in goal or "𝕜" in goal)) or "⟪" in target:
-        return INNER_PRODUCT_TACTICS + SEARCH_TACTICS
+        return normalize + INNER_PRODUCT_TACTICS + SEARCH_TACTICS
     if "‖" in target and "•" in target:
-        return ["exact norm_smul _ _", "simp [norm_smul]"] + INNER_PRODUCT_TACTICS + SEARCH_TACTICS
+        return normalize + ["exact norm_smul _ _", "simp [norm_smul]"] + INNER_PRODUCT_TACTICS + SEARCH_TACTICS
     if "normSq" in target:
-        return COMPLEX_TACTICS + SEARCH_TACTICS
+        return normalize + COMPLEX_TACTICS + SEARCH_TACTICS
     if "exp" in target and re.search(r'\^\s*\w+', target) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', target)):
-        return COMPLEX_TACTICS + SEARCH_TACTICS
+        return normalize + COMPLEX_TACTICS + SEARCH_TACTICS
     if "Tendsto" in target:
-        return tendsto_templates(goal) + ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
+        return tendsto_templates(goal) + normalize + ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "HasDerivAt" in target or "HasFDerivAt" in target:
         chain_tactics = chain_rule_deriv_tactics(goal)
         structural_tactics = polynomial_deriv_templates(goal) + product_deriv_templates(goal)
-        return structural_tactics + chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+        return structural_tactics + normalize + chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Continuous" in target or "Differentiable" in target:
-        return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
+        return continuity_templates(goal) + normalize + ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "cos" in target and "sin" in target and ("≤" in target or re.search(r'(?<![<>=!])=(?![>=])', target)):
-        return trig_identity_templates(goal) + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
+        return trig_identity_templates(goal) + normalize + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if "∑" in target or "Finset" in target:
         if ".card" in target:
-            return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
-        return INDUCTION_TACTICS + SEARCH_TACTICS
+            return normalize + FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
+        return normalize + INDUCTION_TACTICS + SEARCH_TACTICS
     if "Irrational" in target:
-        return SEARCH_TACTICS
+        return normalize + SEARCH_TACTICS
     if "∃" in target and "Fin" in goal:
-        return FINTYPE_TEMPLATES + SEARCH_TACTICS
+        return normalize + FINTYPE_TEMPLATES + SEARCH_TACTICS
     if "!" in goal and "Nat.Prime" in goal:
         match = re.search(r'(\w+)\s*:\s*Nat\.Prime\s+(\w+)', goal)
         if match:
@@ -505,9 +644,9 @@ def select_tactics(goal: str) -> list[str]:
             return [
                 f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  exact ZMod.wilsons_lemma {pvar}",
                 f"haveI : Fact (Nat.Prime {pvar}) := ⟨{hname}⟩\n  simp [ZMod.wilsons_lemma]",
-            ] + SEARCH_TACTICS
+            ] + normalize + SEARCH_TACTICS
     if "ZMod" in goal or "ZMod" in target:
-        return ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
+        return normalize + ["norm_cast", "push_cast; ring", "simp"] + SEARCH_TACTICS
     if target_has_order_relation(target) and "^" in target:
         tactics: list[str] = []
         nonneg_tac = nlinarith_nonneg3_tactic(goal)
@@ -517,14 +656,14 @@ def select_tactics(goal: str) -> list[str]:
         if pairwise_tac:
             tactics.append(pairwise_tac)
         if tactics:
-            return tactics + ["ring", "nlinarith", "linarith"] + SEARCH_TACTICS
+            return normalize + tactics + ["ring", "nlinarith", "linarith"] + SEARCH_TACTICS
     if "^" in target:
-        return ["ring", "nlinarith", "norm_num"] + SEARCH_TACTICS
+        return normalize + ["ring", "nlinarith", "norm_num"] + SEARCH_TACTICS
     if "ℝ" in goal or "ℚ" in goal:
-        return ["ring", "linarith", "norm_num", "nlinarith", "fun_prop"] + SEARCH_TACTICS
+        return normalize + ["ring", "linarith", "norm_num", "nlinarith", "fun_prop"] + SEARCH_TACTICS
     if "ℕ" in goal or "ℤ" in goal:
-        return ["omega", "simp", "rfl", "decide", "ring", "norm_num", "norm_cast"] + SEARCH_TACTICS
-    return ALL_TACTICS + SEARCH_TACTICS
+        return normalize + ["omega", "simp", "rfl", "decide", "ring", "norm_num", "norm_cast"] + SEARCH_TACTICS
+    return normalize + ALL_TACTICS + SEARCH_TACTICS
 
 
 def extract_goal_text(goal_entry) -> str:
@@ -594,6 +733,7 @@ def single_line_closers(goal: str) -> list[str]:
             if item not in closers:
                 closers.append(item)
 
+    add_many(normalization_tactics(goal))
     add_many(["simp", "simp [*]", "simp_all", "aesop"])
 
     if "HasDerivAt" in target or "HasFDerivAt" in target:
@@ -709,6 +849,13 @@ def have_candidates(goal: str) -> list[str]:
     if tendsto_params:
         var, expr, point = tendsto_params
         candidates.append(f"have hcont : ContinuousAt (fun {var} => {expr}) {point} := by\n    fun_prop")
+    for hname, fn_name, point in extract_has_deriv_hypotheses(goal):
+        if f"ContinuousAt {fn_name} {point}" in target:
+            candidates.append(f"have hcont_{fn_name.replace('.', '_')} : ContinuousAt {fn_name} {point} := {hname}.continuousAt")
+        if f"DifferentiableAt ℝ {fn_name} {point}" in target or f"DifferentiableAt {fn_name} {point}" in target:
+            candidates.append(
+                f"have hdiff_{fn_name.replace('.', '_')} : DifferentiableAt ℝ {fn_name} {point} := {hname}.differentiableAt"
+            )
 
     deriv_params = extract_has_deriv_expr(goal)
     if deriv_params:
@@ -724,6 +871,9 @@ def have_candidates(goal: str) -> list[str]:
 
     if "inner" in target or "⟪" in target or "‖" in target:
         candidates.append("have hcs := abs_real_inner_le_norm _ _")
+    for hname, fn_name, src, dst in extract_tendsto_hypotheses(goal):
+        if f"Tendsto {fn_name} (𝓝 {src}) (𝓝 {dst})" in target:
+            candidates.append(f"have hkeep_{hname} := {hname}")
 
     if "≤" in goal or "≥" in goal or "<" in goal or ">" in goal:
         vars_ = extract_real_vars(goal)
@@ -736,6 +886,15 @@ def have_candidates(goal: str) -> list[str]:
 
 def cache_key_fragment(text: str) -> str:
     return re.sub(r'[^A-Za-z0-9_]+', '_', text).strip('_') or "arg"
+
+
+def normalize_goal_shape(goal: str) -> str:
+    target = goal_target(goal)
+    target = re.sub(r'\s+', ' ', target)
+    target = re.sub(r'\b[a-zA-Z_][A-Za-z0-9_]*\b', '?', target)
+    target = re.sub(r'\?\s*\^\s*\d+', '?^n', target)
+    target = re.sub(r'\b\d+\b', 'n', target)
+    return target.strip()
 
 
 def limited_have_candidates(goal: str, limit: int, exclude: set[str] | None = None) -> list[str]:

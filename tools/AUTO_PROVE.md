@@ -258,6 +258,9 @@ python3 tools/check_targets.py \
   --theorem-timeout 20
 ```
 
+タイムアウトした場合も、現在は REPL プロセスを強制終了してから
+次のターゲットに進むので、`wait()` でぶら下がって止まり続けにくくなっています。
+
 ### failure log を goal class ごとに見る
 
 `AUTO_PROVE_LOG_FAILURES=1` で集めた `.auto_prove_failures.jsonl` は、
@@ -270,20 +273,31 @@ python3 tools/analyze_failures.py
 これで、`derivative` / `limit` / `trig` / `inner_norm` / `power_inequality`
 のようなクラス単位で件数、timeout 比率、よく試されている tactic family を見られます。
 
+さらに、`normalized_goal_shape` も出すので、変数名や定数の違いだけを落とした
+「同型の未解決」をまとめて把握しやすくしています。
+
 `limit` 系では、`Tendsto (fun x => ...) (𝓝 a) ...` を見つけたときに、
 まず `ContinuousAt` を `fun_prop` で作ってから `simpa using` する
-汎用テンプレートも使います。
+汎用テンプレートを使います。加えて、文脈に `hf : Tendsto f ...`,
+`hg : Tendsto g ...` のような仮定があれば、target の形に応じて
+`hf.add hg` / `hf.mul hg` / `hf.const_mul c` / `hg.comp hf` も試します。
 
 `derivative` 系では、`HasDerivAt` のうち
 `x^n + c*x + k`、`x * (x + c)`、`Real.sin x * Real.cos x`
 のような広い式クラスに対して、`pow` / `add` / `mul` / `const` を組み合わせる
-構造テンプレートも使います。
+構造テンプレートを使います。`ContinuousAt` / `DifferentiableAt` の goal でも、
+文脈にある `HasDerivAt` から `continuousAt` / `differentiableAt` を引く
+テンプレートを先に試します。
 
 また、`select_tactics` は goal class ごとの template が
 一般的な `ring` / `nlinarith` / `norm_num` に埋もれないよう、
 `trig` や `limit` などでは class 専用テンプレートを先に出します。
 `have` 候補も `Tendsto` / `HasDerivAt` / `trig` / `inner_norm` ごとに
 少しずつ専用化しています。
+
+検索系 (`exact?` / `simp?` / `apply?`) で見つけた候補も、
+そのまま打つだけでなく `simpa [Function.comp]` / `simpa [sub_eq_add_neg]`
+のような goal 依存の軽い書き換えを付けた検証まで行います。
 
 ### 複数の定理をまとめて渡す
 

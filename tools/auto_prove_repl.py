@@ -38,9 +38,14 @@ class ReplSession:
         )
 
     def send(self, cmd: dict, timeout_sec: float | None = None) -> dict:
+        if self.proc.poll() is not None:
+            raise RuntimeError("Lean REPL process is no longer running")
         payload = json.dumps(cmd) + SEP
-        self.proc.stdin.write(payload.encode())
-        self.proc.stdin.flush()
+        try:
+            self.proc.stdin.write(payload.encode())
+            self.proc.stdin.flush()
+        except (BrokenPipeError, OSError) as exc:
+            raise RuntimeError("Failed to send command to Lean REPL") from exc
         return self._read_response(timeout_sec=timeout_sec)
 
     def _read_response(self, timeout_sec: float | None = None) -> dict:
@@ -74,12 +79,31 @@ class ReplSession:
         finally:
             selector.close()
 
-    def close(self):
+    def close(self, wait_timeout_sec: float = 2.0, force: bool = False):
         try:
-            self.proc.stdin.close()
-        except BrokenPipeError:
+            if self.proc.stdin is not None and not self.proc.stdin.closed:
+                self.proc.stdin.close()
+        except (BrokenPipeError, OSError):
             pass
-        self.proc.wait()
+        if self.proc.poll() is not None:
+            return
+        if force:
+            self.proc.terminate()
+        try:
+            self.proc.wait(timeout=wait_timeout_sec)
+            return
+        except subprocess.TimeoutExpired:
+            pass
+        self.proc.terminate()
+        try:
+            self.proc.wait(timeout=wait_timeout_sec)
+            return
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+            try:
+                self.proc.wait(timeout=wait_timeout_sec)
+            except subprocess.TimeoutExpired:
+                pass
 
 
 def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False,
@@ -105,13 +129,13 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
     try:
         resp = session.send({"cmd": imports}, timeout_sec=startup_timeout)
     except TimeoutError:
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Timed out while importing the Lean environment for proof search.\n"
             f"stage=import timeout_sec={startup_timeout}"
         )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to import the Lean environment for proof search.\n"
             f"{format_repl_errors(resp)}"
@@ -123,13 +147,13 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
     try:
         resp = session.send({"cmd": open_cmd, "env": env0}, timeout_sec=startup_timeout)
     except TimeoutError:
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Timed out while opening the Lean proof environment.\n"
             f"stage=open timeout_sec={startup_timeout}"
         )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to open the Lean proof environment.\n"
             f"{format_repl_errors(resp)}"
@@ -140,13 +164,13 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
     try:
         resp = session.send({"cmd": "open scoped Nat", "env": env1}, timeout_sec=startup_timeout)
     except TimeoutError:
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Timed out while enabling scoped Nat notations.\n"
             f"stage=open_scoped_nat timeout_sec={startup_timeout}"
         )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to enable scoped Nat notations.\n"
             f"{format_repl_errors(resp)}"
@@ -158,13 +182,13 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
         try:
             resp = session.send({"cmd": preamble, "env": env2}, timeout_sec=startup_timeout)
         except TimeoutError:
-            session.close()
+            session.close(force=True)
             raise RuntimeError(
                 "Timed out while loading the theorem preamble into the REPL.\n"
                 f"stage=preamble timeout_sec={startup_timeout}"
             )
         if has_error(resp):
-            session.close()
+            session.close(force=True)
             raise RuntimeError(
                 "Failed to load the theorem preamble into the REPL.\n"
                 f"{format_repl_errors(resp)}"

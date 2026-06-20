@@ -7,7 +7,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from auto_prove_failure_log import FAILURE_LOG_FILE
-from auto_prove_tactics import goal_target
+from auto_prove_tactics import goal_target, normalize_goal_shape
 
 
 def load_failures(path: Path) -> list[dict]:
@@ -106,7 +106,15 @@ def summarize(rows: list[dict]) -> list[str]:
     for goal_class, group in sorted(by_class.items(), key=lambda item: (-len(item[1]), item[0])):
         timeouts = sum(1 for row in group if row.get("timed_out"))
         family_counts = Counter()
+        shape_counts = Counter()
+        prefix_counts = Counter()
         for row in group:
+            shape = row.get("normalized_goal_shape") or normalize_goal_shape(row.get("goal", ""))
+            if shape:
+                shape_counts[shape] += 1
+            for prefix in row.get("search_prefixes", []):
+                label = (prefix or "<none>").replace("\n", "\\n").strip() or "<none>"
+                prefix_counts[label] += 1
             for tactic in row.get("selected_tactics", []):
                 family_counts[tactic_family(tactic)] += 1
         example = group[0].get("stmt", "")
@@ -115,6 +123,16 @@ def summarize(rows: list[dict]) -> list[str]:
             f"[{goal_class}] count={len(group)} timed_out={timeouts}/{len(group)} "
             f"top_families={', '.join(f'{name}:{count}' for name, count in family_counts.most_common(5)) or 'none'}"
         )
+        if shape_counts:
+            lines.append(
+                "top_shapes: "
+                + ", ".join(f"{shape}:{count}" for shape, count in shape_counts.most_common(3))
+            )
+        if prefix_counts:
+            lines.append(
+                "search_prefixes: "
+                + ", ".join(f"{name}:{count}" for name, count in prefix_counts.most_common(5))
+            )
         if example:
             lines.append(f"example: {example}")
     return lines
