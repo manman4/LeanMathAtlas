@@ -94,11 +94,20 @@ auto_prove.py
   ├─【フェーズ 1.6】apply? / refine? でレンマ候補を見つけてサブゴールを閉じる
   │    apply? → "Try this: apply X" を抽出 → all_goals simp/omega で残ゴールを閉じる
   │    preamble（haveI）あり・なし 両方を試す
+  │    固定 closer を毎回打つのではなく、apply 後の残り goal shape から
+  │    `simp` / `fun_prop` / `ring` / `linarith` などを選び直す
   │
   ├─【フェーズ 2】失敗したらイテラティブ BFS（時間制限付き）
   │    1タクティクスずつ適用 → 途中ゴールを見て次を選ぶ
   │    intro h → exact h / constructor → left → ... など
   │    (最大 10 秒 / 深さ 6 ステップ)
+  │    固定の全候補を毎回試すのではなく、現在の goal shape に応じて
+  │    少数の step tactic に絞って分岐を抑える
+  │
+  ├─【フェーズ 3】`have` を使う最後の補助探索
+  │    まず 1 個の `have` を試し、それでも閉じなければ
+  │    その後の残り goal から 2 個目の `have` 候補を少数だけ生成する
+  │    深く広くは探索せず、2 段まで・幅制限つきで候補爆発を避ける
   │
   ├─【全体タイムアウト】各定理は全フェーズ合計で既定 60 秒まで
   │    `--theorem-timeout N` で変更可能
@@ -226,6 +235,69 @@ python3 auto_prove.py "theorem am_gm_sq (a b : ℝ) : 2 * a * b ≤ a^2 + b^2"
 # Σ を使った公式（帰納法で証明）
 python3 auto_prove.py "theorem sum_cubes (n : ℕ) : 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2"
 ```
+
+### 少数の未解決だけを順番に試す
+
+Mathlib の起動コストが重いときは、`tools/check_targets.py` で
+`FILE::theorem_name` を並べると、ファイルごとに REPL を 1 回だけ起動して
+少数の定理を `dry_run` できます。
+
+```bash
+python3 tools/check_targets.py \
+  --target LeanMathAtlas/Analysis/Limits.lean::tendsto_linear \
+  --target LeanMathAtlas/Analysis/Derivatives.lean::deriv_quadratic \
+  --theorem-timeout 20
+```
+
+REPL 起動が長い環境では、`--prepare-timeout` で起動タイムアウトも付けられます。
+
+```bash
+python3 tools/check_targets.py \
+  --target LeanMathAtlas/Analysis/Limits.lean::tendsto_linear \
+  --prepare-timeout 180 \
+  --theorem-timeout 20
+```
+
+タイムアウトした場合も、現在は REPL プロセスを強制終了してから
+次のターゲットに進むので、`wait()` でぶら下がって止まり続けにくくなっています。
+
+### failure log を goal class ごとに見る
+
+`AUTO_PROVE_LOG_FAILURES=1` で集めた `.auto_prove_failures.jsonl` は、
+`tools/analyze_failures.py` で goal class ごとの失敗傾向にまとめられます。
+
+```bash
+python3 tools/analyze_failures.py
+```
+
+これで、`derivative` / `limit` / `trig` / `inner_norm` / `power_inequality`
+のようなクラス単位で件数、timeout 比率、よく試されている tactic family を見られます。
+
+さらに、`normalized_goal_shape` も出すので、変数名や定数の違いだけを落とした
+「同型の未解決」をまとめて把握しやすくしています。
+
+`limit` 系では、`Tendsto (fun x => ...) (𝓝 a) ...` を見つけたときに、
+まず `ContinuousAt` を `fun_prop` で作ってから `simpa using` する
+汎用テンプレートを使います。加えて、文脈に `hf : Tendsto f ...`,
+`hg : Tendsto g ...` のような仮定があれば、target の形に応じて
+`hf.add hg` / `hf.mul hg` / `hf.const_mul c` / `hg.comp hf` も試します。
+
+`derivative` 系では、`HasDerivAt` のうち
+`x^n + c*x + k`、`x * (x + c)`、`Real.sin x * Real.cos x`
+のような広い式クラスに対して、`pow` / `add` / `mul` / `const` を組み合わせる
+構造テンプレートを使います。`ContinuousAt` / `DifferentiableAt` の goal でも、
+文脈にある `HasDerivAt` から `continuousAt` / `differentiableAt` を引く
+テンプレートを先に試します。
+
+また、`select_tactics` は goal class ごとの template が
+一般的な `ring` / `nlinarith` / `norm_num` に埋もれないよう、
+`trig` や `limit` などでは class 専用テンプレートを先に出します。
+`have` 候補も `Tendsto` / `HasDerivAt` / `trig` / `inner_norm` ごとに
+少しずつ専用化しています。
+
+検索系 (`exact?` / `simp?` / `apply?`) で見つけた候補も、
+そのまま打つだけでなく `simpa [Function.comp]` / `simpa [sub_eq_add_neg]`
+のような goal 依存の軽い書き換えを付けた検証まで行います。
 
 ### 複数の定理をまとめて渡す
 

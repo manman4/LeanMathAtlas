@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
+import selectors
 import subprocess
+import time
 
 from auto_prove_store import WORKDIR, build_proved_theorems, resolve_lake
 
 SEP = "\n\n"
 REPL_CMD = [resolve_lake(), "exe", "repl"]
+DEFAULT_REPL_STARTUP_TIMEOUT = float(os.environ.get("AUTO_PROVE_PREPARE_TIMEOUT_SEC", "240"))
 
 
 def has_error(resp: dict) -> bool:
@@ -33,37 +37,77 @@ class ReplSession:
             cwd=WORKDIR,
         )
 
-    def send(self, cmd: dict) -> dict:
+    def send(self, cmd: dict, timeout_sec: float | None = None) -> dict:
+        if self.proc.poll() is not None:
+            raise RuntimeError("Lean REPL process is no longer running")
         payload = json.dumps(cmd) + SEP
-        self.proc.stdin.write(payload.encode())
-        self.proc.stdin.flush()
-        return self._read_response()
-
-    def _read_response(self) -> dict:
-        lines = []
-        while True:
-            line = self.proc.stdout.readline().decode()
-            if line in ("\n", ""):
-                if lines:
-                    block = "".join(lines).strip()
-                    try:
-                        return json.loads(block)
-                    except json.JSONDecodeError:
-                        lines = []
-                if line == "":
-                    return {}
-            else:
-                lines.append(line)
-
-    def close(self):
         try:
-            self.proc.stdin.close()
-        except BrokenPipeError:
+            self.proc.stdin.write(payload.encode())
+            self.proc.stdin.flush()
+        except (BrokenPipeError, OSError) as exc:
+            raise RuntimeError("Failed to send command to Lean REPL") from exc
+        return self._read_response(timeout_sec=timeout_sec)
+
+    def _read_response(self, timeout_sec: float | None = None) -> dict:
+        lines = []
+        selector = selectors.DefaultSelector()
+        selector.register(self.proc.stdout, selectors.EVENT_READ)
+        deadline = None if timeout_sec is None else time.monotonic() + timeout_sec
+        try:
+            while True:
+                if deadline is not None:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise TimeoutError("Timed out waiting for Lean REPL response")
+                else:
+                    remaining = None
+                events = selector.select(remaining)
+                if not events:
+                    raise TimeoutError("Timed out waiting for Lean REPL response")
+                line = self.proc.stdout.readline().decode()
+                if line in ("\n", ""):
+                    if lines:
+                        block = "".join(lines).strip()
+                        try:
+                            return json.loads(block)
+                        except json.JSONDecodeError:
+                            lines = []
+                    if line == "":
+                        return {}
+                else:
+                    lines.append(line)
+        finally:
+            selector.close()
+
+    def close(self, wait_timeout_sec: float = 2.0, force: bool = False):
+        try:
+            if self.proc.stdin is not None and not self.proc.stdin.closed:
+                self.proc.stdin.close()
+        except (BrokenPipeError, OSError):
             pass
-        self.proc.wait()
+        if self.proc.poll() is not None:
+            return
+        if force:
+            self.proc.terminate()
+        try:
+            self.proc.wait(timeout=wait_timeout_sec)
+            return
+        except subprocess.TimeoutExpired:
+            pass
+        self.proc.terminate()
+        try:
+            self.proc.wait(timeout=wait_timeout_sec)
+            return
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+            try:
+                self.proc.wait(timeout=wait_timeout_sec)
+            except subprocess.TimeoutExpired:
+                pass
 
 
-def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False) -> tuple[ReplSession, int]:
+def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: bool = False,
+                      startup_timeout: float | None = DEFAULT_REPL_STARTUP_TIMEOUT) -> tuple[ReplSession, int]:
     """Create a REPL session and return (session, base_env) for theorem proving."""
     if use_proved and not dry_run:
         ok, details = build_proved_theorems()
@@ -75,39 +119,79 @@ def prepare_proof_env(dry_run: bool = False, preamble: str = "", use_proved: boo
 
     session = ReplSession()
     load_proved = use_proved and not dry_run
-    print("  [repl] Loading Mathlib + ProvedTheorems (~80s)..." if load_proved else "  [repl] Loading Mathlib (~80s)...")
+    print(
+        "  [repl] Loading Mathlib + ProvedTheorems (~80s)..."
+        if load_proved else
+        "  [repl] Loading Mathlib (~80s)..."
+    )
     imports = "import Mathlib\nimport LeanMathAtlas.ProvedTheorems" if load_proved else "import Mathlib"
-    resp = session.send({"cmd": imports})
+    t0 = time.monotonic()
+    try:
+        resp = session.send({"cmd": imports}, timeout_sec=startup_timeout)
+    except TimeoutError:
+        session.close(force=True)
+        raise RuntimeError(
+            "Timed out while importing the Lean environment for proof search.\n"
+            f"stage=import timeout_sec={startup_timeout}"
+        )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to import the Lean environment for proof search.\n"
             f"{format_repl_errors(resp)}"
         )
+    print(f"  [repl] import ready in {time.monotonic() - t0:.1f}s")
     env0 = resp.get("env", 0)
     open_cmd = "open BigOperators AutoProved" if load_proved else "open BigOperators"
-    resp = session.send({"cmd": open_cmd, "env": env0})
+    t1 = time.monotonic()
+    try:
+        resp = session.send({"cmd": open_cmd, "env": env0}, timeout_sec=startup_timeout)
+    except TimeoutError:
+        session.close(force=True)
+        raise RuntimeError(
+            "Timed out while opening the Lean proof environment.\n"
+            f"stage=open timeout_sec={startup_timeout}"
+        )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to open the Lean proof environment.\n"
             f"{format_repl_errors(resp)}"
         )
+    print(f"  [repl] namespaces ready in {time.monotonic() - t1:.1f}s")
     env1 = resp.get("env", env0)
-    resp = session.send({"cmd": "open scoped Nat", "env": env1})
+    t2 = time.monotonic()
+    try:
+        resp = session.send({"cmd": "open scoped Nat", "env": env1}, timeout_sec=startup_timeout)
+    except TimeoutError:
+        session.close(force=True)
+        raise RuntimeError(
+            "Timed out while enabling scoped Nat notations.\n"
+            f"stage=open_scoped_nat timeout_sec={startup_timeout}"
+        )
     if has_error(resp):
-        session.close()
+        session.close(force=True)
         raise RuntimeError(
             "Failed to enable scoped Nat notations.\n"
             f"{format_repl_errors(resp)}"
         )
+    print(f"  [repl] scoped Nat ready in {time.monotonic() - t2:.1f}s")
     env2 = resp.get("env", env0)
     if preamble:
-        resp = session.send({"cmd": preamble, "env": env2})
+        t3 = time.monotonic()
+        try:
+            resp = session.send({"cmd": preamble, "env": env2}, timeout_sec=startup_timeout)
+        except TimeoutError:
+            session.close(force=True)
+            raise RuntimeError(
+                "Timed out while loading the theorem preamble into the REPL.\n"
+                f"stage=preamble timeout_sec={startup_timeout}"
+            )
         if has_error(resp):
-            session.close()
+            session.close(force=True)
             raise RuntimeError(
                 "Failed to load the theorem preamble into the REPL.\n"
                 f"{format_repl_errors(resp)}"
             )
+        print(f"  [repl] preamble ready in {time.monotonic() - t3:.1f}s")
     return session, resp.get("env", env2)

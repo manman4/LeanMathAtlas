@@ -27,16 +27,21 @@ from auto_prove_store import (
 )
 from auto_prove_tactics import (
     DEFAULT_THEOREM_TIMEOUT,
+    HAVE_STAGE1_LIMIT,
     SEARCH_TACTICS,
     STEP_TIME_LIMIT,
+    probe_apply_subgoal,
     extract_try_this,
     fact_preamble,
-    have_candidates,
+    limited_have_candidates,
     prove_iterative,
     prove_with_have,
+    prove_with_two_haves,
+    normalize_goal_shape,
     search_suggestion_variants,
     search_normalization_prefixes,
     select_tactics,
+    single_line_closers,
     to_example,
     verify_tactic_variants,
 )
@@ -188,10 +193,6 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                 # More powerful than exact? for goals that need a lemma application
                 # followed by a simple finishing step (e.g. Pigeonhole + card simp).
                 if proof is None:
-                    _closers = [
-                        "simp", "simp [*]", "omega",
-                        "simp [Fintype.card_fin, *]", "simp_all",
-                    ]
                     # Try plain apply? first, then with Fact preamble if present
                     _preamble = fact_preamble(stmt)
                     _prefixes = [""]
@@ -213,6 +214,17 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             _sug = extract_try_this(_resp)
                             if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
                                 continue
+                            _prefix_lines = [_pre, f"{_norm}{_sug}"] if _pre else [f"{_norm}{_sug}"]
+                            _remaining_goal = probe_apply_subgoal(
+                                session, example, base_env, _prefix_lines[:-1], _prefix_lines[-1]
+                            )
+                            if _remaining_goal == "":
+                                proof = f"{_pre}\n  {_norm}{_sug}" if _pre else f"{_norm}{_sug}"
+                                if not dry_run:
+                                    lean_name = lean_name_from(stmt)
+                                    persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                                break
+                            _closers = single_line_closers(_remaining_goal or goal)
                             for _closer in _closers:
                                 if timed_out():
                                     break
@@ -247,14 +259,22 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
 
                 # Phase 3 (last resort): have-augmented proofs
-                # Tried after BFS because it costs O(candidates × closers) REPL calls.
-                # Covers theorems needing one intermediate fact that neither one-shot
-                # tactics nor BFS can construct (e.g. sin²+cos²=1 for single-trig goals).
+                # Tried after BFS because it costs extra REPL calls.
+                # First try one intermediate fact, then a tightly bounded two-stage
+                # have search where the second candidate is generated from the
+                # remaining goal after the first have.
                 if proof is None and not skip_phase17 and not timed_out():
-                    for have_line in have_candidates(goal):
+                    for have_line in limited_have_candidates(goal, HAVE_STAGE1_LIMIT):
                         if timed_out():
                             break
                         p = prove_with_have(session, example, base_env, have_line, theorem_deadline)
+                        if p:
+                            proof = p
+                            if not dry_run:
+                                lean_name = lean_name_from(stmt)
+                                persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                            break
+                        p = prove_with_two_haves(session, example, base_env, have_line, theorem_deadline)
                         if p:
                             proof = p
                             if not dry_run:
@@ -268,6 +288,7 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                     log_failure({
                         "stmt": stmt,
                         "goal": goal,
+                        "normalized_goal_shape": normalize_goal_shape(goal),
                         "timed_out": timed_out(),
                         "theorem_timeout_sec": theorem_timeout,
                         "search_prefixes": search_prefixes,
