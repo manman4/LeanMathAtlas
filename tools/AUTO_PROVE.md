@@ -279,6 +279,12 @@ python3 tools/analyze_failures.py
 のような広い式クラスに対して、`pow` / `add` / `mul` / `const` を組み合わせる
 構造テンプレートも使います。
 
+また、`select_tactics` は goal class ごとの template が
+一般的な `ring` / `nlinarith` / `norm_num` に埋もれないよう、
+`trig` や `limit` などでは class 専用テンプレートを先に出します。
+`have` 候補も `Tendsto` / `HasDerivAt` / `trig` / `inner_norm` ごとに
+少しずつ専用化しています。
+
 ### 複数の定理をまとめて渡す
 
 現在のスクリプトはコマンドライン引数を 1 つしか受け取りません。

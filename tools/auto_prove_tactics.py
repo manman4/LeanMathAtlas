@@ -468,6 +468,10 @@ def nlinarith_nonneg3_tactic(goal: str) -> str | None:
 def select_tactics(goal: str) -> list[str]:
     target = goal_target(goal)
 
+    if any(token in target for token in ["tan", "cos (2 *", "sin (2 *", "Real.tan", "Real.cos", "Real.sin"]):
+        trig_tactics = trig_identity_templates(goal)
+        if trig_tactics:
+            return trig_tactics + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if (re.search(r'\binner\b', target) and ("ℝ" in goal or "𝕜" in goal)) or "⟪" in target:
         return INNER_PRODUCT_TACTICS + SEARCH_TACTICS
     if "‖" in target and "•" in target:
@@ -670,6 +674,7 @@ def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP
 
 def have_candidates(goal: str) -> list[str]:
     candidates = []
+    target = goal_target(goal)
 
     for m in re.finditer(r'(\w+)\s*:\s*(\w+(?:\s+\w+)?)\s*≠\s*0', goal):
         hname = m.group(1)
@@ -685,10 +690,40 @@ def have_candidates(goal: str) -> list[str]:
                 seen.add(var)
                 candidates.append(f"have hsc_{var} := sin_sq_add_cos_sq {var}")
                 candidates.append(f"have hsc_{var} := Real.sin_sq_add_cos_sq {var}")
+        double_arg = extract_double_angle_arg(target)
+        if double_arg:
+            candidates.append(f"have hsc_{cache_key_fragment(double_arg)} := sin_sq_add_cos_sq {double_arg}")
+            candidates.append(f"have hsc_{cache_key_fragment(double_arg)} := Real.sin_sq_add_cos_sq {double_arg}")
+
+    if "tan" in target:
+        cos_ne_zero = extract_cos_ne_zero(goal)
+        if cos_ne_zero:
+            hname, arg = cos_ne_zero
+            candidates.append(f"have {hname}2 : cos {arg} ^ 2 ≠ 0 := pow_ne_zero 2 {hname}")
 
     for m in re.finditer(r'(\w+)\s*:\s*0\s*<\s*(\w+)', goal):
         hname, var = m.group(1), m.group(2)
         candidates.append(f"have {hname}' : 0 ≤ {var} := le_of_lt {hname}")
+
+    tendsto_params = extract_tendsto_lambda(goal)
+    if tendsto_params:
+        var, expr, point = tendsto_params
+        candidates.append(f"have hcont : ContinuousAt (fun {var} => {expr}) {point} := by\n    fun_prop")
+
+    deriv_params = extract_has_deriv_expr(goal)
+    if deriv_params:
+        var, expr, point = deriv_params
+        power_match = re.search(rf'{re.escape(var)}\s*\^\s*(\d+)', expr)
+        if power_match:
+            power = power_match.group(1)
+            candidates.append(
+                f"have hpow : HasDerivAt (fun {var} => {var} ^ {power}) ({power} * {point} ^ ({power} - 1)) {point} := by\n"
+                f"    simpa using hasDerivAt_pow {power} {point}"
+            )
+        candidates.append(f"have hid : HasDerivAt (fun {var} => {var}) 1 {point} := hasDerivAt_id {point}")
+
+    if "inner" in target or "⟪" in target or "‖" in target:
+        candidates.append("have hcs := abs_real_inner_le_norm _ _")
 
     if "≤" in goal or "≥" in goal or "<" in goal or ">" in goal:
         vars_ = extract_real_vars(goal)
@@ -697,6 +732,10 @@ def have_candidates(goal: str) -> list[str]:
                 candidates.append(f"have hnn_{i}{j} := sq_nonneg ({vars_[i]} - {vars_[j]})")
 
     return candidates
+
+
+def cache_key_fragment(text: str) -> str:
+    return re.sub(r'[^A-Za-z0-9_]+', '_', text).strip('_') or "arg"
 
 
 def limited_have_candidates(goal: str, limit: int, exclude: set[str] | None = None) -> list[str]:
