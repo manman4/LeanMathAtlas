@@ -30,6 +30,7 @@ from auto_prove_tactics import (
     HAVE_STAGE1_LIMIT,
     SEARCH_TACTICS,
     STEP_TIME_LIMIT,
+    probe_apply_subgoal,
     extract_try_this,
     fact_preamble,
     limited_have_candidates,
@@ -39,6 +40,7 @@ from auto_prove_tactics import (
     search_suggestion_variants,
     search_normalization_prefixes,
     select_tactics,
+    single_line_closers,
     to_example,
     verify_tactic_variants,
 )
@@ -190,10 +192,6 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                 # More powerful than exact? for goals that need a lemma application
                 # followed by a simple finishing step (e.g. Pigeonhole + card simp).
                 if proof is None:
-                    _closers = [
-                        "simp", "simp [*]", "omega",
-                        "simp [Fintype.card_fin, *]", "simp_all",
-                    ]
                     # Try plain apply? first, then with Fact preamble if present
                     _preamble = fact_preamble(stmt)
                     _prefixes = [""]
@@ -215,6 +213,17 @@ def prove_all(theorems: list, dry_run: bool = False, preamble: str = "",
                             _sug = extract_try_this(_resp)
                             if not _sug or not (_sug.startswith("apply ") or _sug.startswith("refine ")):
                                 continue
+                            _prefix_lines = [_pre, f"{_norm}{_sug}"] if _pre else [f"{_norm}{_sug}"]
+                            _remaining_goal = probe_apply_subgoal(
+                                session, example, base_env, _prefix_lines[:-1], _prefix_lines[-1]
+                            )
+                            if _remaining_goal == "":
+                                proof = f"{_pre}\n  {_norm}{_sug}" if _pre else f"{_norm}{_sug}"
+                                if not dry_run:
+                                    lean_name = lean_name_from(stmt)
+                                    persist_proof(stmt, proof, goal, lean_name, preamble, index, use_proved)
+                                break
+                            _closers = single_line_closers(_remaining_goal or goal)
                             for _closer in _closers:
                                 if timed_out():
                                     break

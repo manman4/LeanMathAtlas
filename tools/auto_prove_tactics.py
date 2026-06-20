@@ -425,6 +425,54 @@ def step_tactics_for_goal(goal: str) -> list[str]:
     return tactics[:BFS_TACTIC_LIMIT]
 
 
+def single_line_closers(goal: str) -> list[str]:
+    target = goal_target(goal)
+    closers: list[str] = []
+
+    def add_many(items: list[str]):
+        for item in items:
+            if "\n" in item:
+                continue
+            if item in SEARCH_TACTICS:
+                continue
+            if item not in closers:
+                closers.append(item)
+
+    add_many(["simp", "simp [*]", "simp_all", "aesop"])
+
+    if "HasDerivAt" in target or "HasFDerivAt" in target:
+        add_many(["fun_prop", "ring", "norm_num", "linarith"])
+    if "Tendsto" in target or "Continuous" in target or "Differentiable" in target:
+        add_many(["fun_prop", "simpa", "simp"])
+    if "∑" in target or "Finset" in target:
+        add_many(["omega", "ring", "linarith", "nlinarith"])
+    if "inner" in target or "⟪" in target or "‖" in target:
+        add_many(["simp", "ring", "nlinarith"])
+    if "ZMod" in goal or "↑" in goal:
+        add_many(["norm_cast", "push_cast; ring", "norm_num"])
+    if "^" in target or any(tok in target for tok in [" + ", " - ", " * ", " / "]):
+        add_many(["ring", "nlinarith", "linarith", "norm_num"])
+    if "ℕ" in goal or "ℤ" in goal:
+        add_many(["omega", "rfl", "decide", "norm_num"])
+
+    add_many(select_tactics(goal)[:8])
+    add_many(["omega", "ring", "nlinarith", "linarith", "norm_num"])
+    return closers[:12]
+
+
+def probe_apply_subgoal(session, example: str, base_env: int,
+                        prefix_lines: list[str], suggestion: str) -> str | None:
+    prefix = "\n  ".join(line for line in prefix_lines if line)
+    body = f"{prefix}\n  {suggestion}\n  sorry" if prefix else f"{suggestion}\n  sorry"
+    probe = session.send({"cmd": f"{example} := by\n  {body}", "env": base_env})
+    if has_error(probe):
+        return None
+    sorries = probe.get("sorries", [])
+    if not sorries:
+        return ""
+    return sorries[0].get("goal", "")
+
+
 def prove_iterative(session, example: str, base_env: int, time_limit: int = STEP_TIME_LIMIT,
                     deadline: float | None = None) -> str | None:
     resp = session.send({"cmd": f"{example} := by sorry", "env": base_env})

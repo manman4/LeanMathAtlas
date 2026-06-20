@@ -94,6 +94,8 @@ auto_prove.py
   ├─【フェーズ 1.6】apply? / refine? でレンマ候補を見つけてサブゴールを閉じる
   │    apply? → "Try this: apply X" を抽出 → all_goals simp/omega で残ゴールを閉じる
   │    preamble（haveI）あり・なし 両方を試す
+  │    固定 closer を毎回打つのではなく、apply 後の残り goal shape から
+  │    `simp` / `fun_prop` / `ring` / `linarith` などを選び直す
   │
   ├─【フェーズ 2】失敗したらイテラティブ BFS（時間制限付き）
   │    1タクティクスずつ適用 → 途中ゴールを見て次を選ぶ
@@ -232,6 +234,19 @@ python3 auto_prove.py "theorem am_gm_sq (a b : ℝ) : 2 * a * b ≤ a^2 + b^2"
 
 # Σ を使った公式（帰納法で証明）
 python3 auto_prove.py "theorem sum_cubes (n : ℕ) : 4 * ∑ k ∈ Finset.range (n + 1), k ^ 3 = (n * (n + 1)) ^ 2"
+```
+
+### 少数の未解決だけを順番に試す
+
+Mathlib の起動コストが重いときは、`tools/check_targets.py` で
+`FILE::theorem_name` を並べると、ファイルごとに REPL を 1 回だけ起動して
+少数の定理を `dry_run` できます。
+
+```bash
+python3 tools/check_targets.py \
+  --target LeanMathAtlas/Analysis/Limits.lean::tendsto_linear \
+  --target LeanMathAtlas/Analysis/Derivatives.lean::deriv_quadratic \
+  --theorem-timeout 20
 ```
 
 ### 複数の定理をまとめて渡す
