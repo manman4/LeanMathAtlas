@@ -249,6 +249,22 @@ python3 tools/check_targets.py \
   --theorem-timeout 20
 ```
 
+### failure log を goal class ごとに見る
+
+`AUTO_PROVE_LOG_FAILURES=1` で集めた `.auto_prove_failures.jsonl` は、
+`tools/analyze_failures.py` で goal class ごとの失敗傾向にまとめられます。
+
+```bash
+python3 tools/analyze_failures.py
+```
+
+これで、`derivative` / `limit` / `trig` / `inner_norm` / `power_inequality`
+のようなクラス単位で件数、timeout 比率、よく試されている tactic family を見られます。
+
+`limit` 系では、`Tendsto (fun x => ...) (𝓝 a) ...` を見つけたときに、
+まず `ContinuousAt` を `fun_prop` で作ってから `simpa using` する
+汎用テンプレートも使います。
+
 ### 複数の定理をまとめて渡す
 
 現在のスクリプトはコマンドライン引数を 1 つしか受け取りません。

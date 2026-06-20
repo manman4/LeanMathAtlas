@@ -245,6 +245,33 @@ def extract_chain_rule_params(goal: str) -> tuple[str, str, str] | None:
     return fn, coeff, pt
 
 
+def extract_tendsto_lambda(goal: str) -> tuple[str, str, str] | None:
+    target = goal_target(goal)
+    m = re.search(r'Tendsto\s+\(fun\s+(\w+)\s*=>\s*(.+)\)\s+\(𝓝\s+(.+?)\)\s+\(𝓝\s+(.+)\)', target)
+    if not m:
+        return None
+    var = m.group(1).strip()
+    expr = m.group(2).strip()
+    point = m.group(3).strip()
+    return var, expr, point
+
+
+def tendsto_templates(goal: str) -> list[str]:
+    params = extract_tendsto_lambda(goal)
+    if not params:
+        return []
+    var, expr, point = params
+    fn = f"(fun {var} => {expr})"
+    return [
+        (
+            f"have hcont : ContinuousAt {fn} {point} := by\n"
+            f"    fun_prop\n"
+            f"  simpa using hcont"
+        ),
+        f"simpa using (show ContinuousAt {fn} {point} from by fun_prop)",
+    ]
+
+
 def chain_rule_deriv_tactics(goal: str) -> list[str]:
     params = extract_chain_rule_params(goal)
     if not params:
@@ -327,6 +354,8 @@ def select_tactics(goal: str) -> list[str]:
         return COMPLEX_TACTICS + SEARCH_TACTICS
     if "exp" in target and re.search(r'\^\s*\w+', target) and ("Complex" in goal or "ℂ" in goal or re.search(r'\bI\b', target)):
         return COMPLEX_TACTICS + SEARCH_TACTICS
+    if "Tendsto" in target:
+        return tendsto_templates(goal) + ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "HasDerivAt" in target or "HasFDerivAt" in target:
         chain_tactics = chain_rule_deriv_tactics(goal)
         return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
