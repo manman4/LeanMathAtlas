@@ -79,6 +79,15 @@ theorem cos_double_sin (x : ℝ) : cos (2 * x) = 1 - 2 * sin x ^ 2 := by
 theorem cos_double_cos (x : ℝ) : cos (2 * x) = 2 * cos x ^ 2 - 1 := by
   rw [cos_double]; linarith [sin_sq_add_cos_sq x]
 
+-- sin²x ≤ 1
+theorem sin_sq_le_one (x : ℝ) : sin x ^ 2 ≤ 1 := by
+  have hsc := sin_sq_add_cos_sq x
+  nlinarith [hsc, sq_nonneg (cos x)]
+
+-- 2sin²x ≤ 2
+theorem two_mul_sin_sq_le_two (x : ℝ) : 2 * sin x ^ 2 ≤ 2 := by
+  nlinarith [sin_sq_add_cos_sq x, sq_nonneg (cos x)]
+
 -- ============================================================
 -- 4. 特殊値 (数I)
 -- ============================================================

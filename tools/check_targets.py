@@ -34,6 +34,16 @@ def theorem_map(lean_file: Path) -> dict[str, str]:
     return result
 
 
+def module_name_for_file(lean_file: Path) -> str | None:
+    try:
+        rel = lean_file.resolve().relative_to(WORKDIR)
+    except ValueError:
+        return None
+    if rel.suffix != ".lean":
+        return None
+    return ".".join(rel.with_suffix("").parts)
+
+
 def run_targets(target_specs: list[str], theorem_timeout: int = 20,
                 prepare_timeout: float | None = None) -> int:
     grouped: dict[Path, list[str]] = defaultdict(list)
@@ -44,6 +54,8 @@ def run_targets(target_specs: list[str], theorem_timeout: int = 20,
     total_failed = 0
     for lean_file, theorem_names in grouped.items():
         preamble = extract_preamble(lean_file)
+        module_name = module_name_for_file(lean_file)
+        import_cmd = f"import {module_name}" if module_name else None
         stmt_by_name = theorem_map(lean_file)
         selected = []
         missing = []
@@ -73,6 +85,7 @@ def run_targets(target_specs: list[str], theorem_timeout: int = 20,
             session, base_env = prepare_proof_env(
                 dry_run=True, preamble=preamble, use_proved=False,
                 startup_timeout=prepare_timeout,
+                import_cmd=import_cmd,
             )
             print(f"  [check] REPL ready; running {len(selected)} theorem(s)...", flush=True)
             results = []
