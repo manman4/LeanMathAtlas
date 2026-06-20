@@ -34,7 +34,8 @@ def theorem_map(lean_file: Path) -> dict[str, str]:
     return result
 
 
-def run_targets(target_specs: list[str], theorem_timeout: int = 20) -> int:
+def run_targets(target_specs: list[str], theorem_timeout: int = 20,
+                prepare_timeout: float | None = None) -> int:
     grouped: dict[Path, list[str]] = defaultdict(list)
     for spec in target_specs:
         lean_file, theorem_name = parse_target(spec)
@@ -70,7 +71,8 @@ def run_targets(target_specs: list[str], theorem_timeout: int = 20) -> int:
         try:
             print("  [check] preparing REPL...", flush=True)
             session, base_env = prepare_proof_env(
-                dry_run=True, preamble=preamble, use_proved=False
+                dry_run=True, preamble=preamble, use_proved=False,
+                startup_timeout=prepare_timeout,
             )
             print(f"  [check] REPL ready; running {len(selected)} theorem(s)...", flush=True)
             results = []
@@ -128,9 +130,19 @@ if __name__ == "__main__":
         default=20,
         help="Total per-theorem timeout in seconds across all proof phases.",
     )
+    parser.add_argument(
+        "--prepare-timeout",
+        type=float,
+        default=None,
+        help="Optional REPL startup timeout in seconds.",
+    )
     args = parser.parse_args()
 
     if not args.target:
         parser.error("At least one --target FILE::theorem_name is required")
 
-    sys.exit(1 if run_targets(args.target, theorem_timeout=args.theorem_timeout) else 0)
+    sys.exit(1 if run_targets(
+        args.target,
+        theorem_timeout=args.theorem_timeout,
+        prepare_timeout=args.prepare_timeout,
+    ) else 0)

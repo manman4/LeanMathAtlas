@@ -249,6 +249,15 @@ python3 tools/check_targets.py \
   --theorem-timeout 20
 ```
 
+REPL 起動が長い環境では、`--prepare-timeout` で起動タイムアウトも付けられます。
+
+```bash
+python3 tools/check_targets.py \
+  --target LeanMathAtlas/Analysis/Limits.lean::tendsto_linear \
+  --prepare-timeout 180 \
+  --theorem-timeout 20
+```
+
 ### failure log を goal class ごとに見る
 
 `AUTO_PROVE_LOG_FAILURES=1` で集めた `.auto_prove_failures.jsonl` は、

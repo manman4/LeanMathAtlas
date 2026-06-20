@@ -268,6 +268,20 @@ def extract_tendsto_lambda(goal: str) -> tuple[str, str, str] | None:
     return var, expr, point
 
 
+def extract_cos_ne_zero(goal: str) -> tuple[str, str] | None:
+    m = re.search(r'(\w+)\s*:\s*cos\s+(.+?)\s*≠\s*0', goal)
+    if not m:
+        return None
+    return m.group(1).strip(), m.group(2).strip()
+
+
+def extract_double_angle_arg(target: str) -> str | None:
+    m = re.search(r'cos\s+\(2\s*\*\s*(.+?)\)', target)
+    if not m:
+        return None
+    return m.group(1).strip()
+
+
 def tendsto_templates(goal: str) -> list[str]:
     params = extract_tendsto_lambda(goal)
     if not params:
@@ -344,6 +358,38 @@ def product_deriv_templates(goal: str) -> list[str]:
             f"  convert h using 1\n"
             f"  ring"
         )
+
+    return templates
+
+
+def trig_identity_templates(goal: str) -> list[str]:
+    target = goal_target(goal)
+    templates: list[str] = []
+
+    cos_ne_zero = extract_cos_ne_zero(goal)
+    if "tan" in target and "cos" in target and " = " in target and cos_ne_zero:
+        hname, arg = cos_ne_zero
+        templates.extend([
+            (
+                "simp only [Real.tan_eq_sin_div_cos, div_pow]\n"
+                f"  have hx2 : cos {arg} ^ 2 ≠ 0 := pow_ne_zero 2 {hname}\n"
+                "  field_simp [hx2]\n"
+                f"  linarith [sin_sq_add_cos_sq {arg}]"
+            ),
+            (
+                f"have hx2 : cos {arg} ^ 2 ≠ 0 := pow_ne_zero 2 {hname}\n"
+                "  field_simp [Real.tan_eq_sin_div_cos, hx2]\n"
+                f"  linarith [sin_sq_add_cos_sq {arg}]"
+            ),
+        ])
+
+    double_arg = extract_double_angle_arg(target)
+    if double_arg and "sin" in target and " = " in target:
+        templates.extend([
+            f"rw [cos_double]\n  linarith [sin_sq_add_cos_sq {double_arg}]",
+            f"rw [Real.cos_two_mul]\n  linarith [Real.sin_sq_add_cos_sq {double_arg}]",
+            f"rw [cos_two_mul]\n  linarith [sin_sq_add_cos_sq {double_arg}]",
+        ])
 
     return templates
 
@@ -439,7 +485,7 @@ def select_tactics(goal: str) -> list[str]:
     if "Continuous" in target or "Differentiable" in target:
         return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "cos" in target and "sin" in target and ("≤" in target or re.search(r'(?<![<>=!])=(?![>=])', target)):
-        return TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
+        return trig_identity_templates(goal) + TRIG_DOUBLE_TACTICS + SIMPLE_TACTICS + SEARCH_TACTICS
     if "∑" in target or "Finset" in target:
         if ".card" in target:
             return FINSET_CARD_TEMPLATES + INDUCTION_TACTICS + SEARCH_TACTICS
