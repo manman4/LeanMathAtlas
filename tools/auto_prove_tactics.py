@@ -245,6 +245,18 @@ def extract_chain_rule_params(goal: str) -> tuple[str, str, str] | None:
     return fn, coeff, pt
 
 
+def extract_has_deriv_expr(goal: str) -> tuple[str, str, str] | None:
+    target = goal_target(goal)
+    m = re.search(r'HasDerivAt\s+\(fun\s+(\w+)\s*=>\s*(.+)\)\s+\((.+)\)\s+(.+)$', target)
+    if not m:
+        return None
+    var = m.group(1).strip()
+    expr = m.group(2).strip()
+    deriv = m.group(3).strip()
+    point = m.group(4).strip()
+    return var, expr, point
+
+
 def extract_tendsto_lambda(goal: str) -> tuple[str, str, str] | None:
     target = goal_target(goal)
     m = re.search(r'Tendsto\s+\(fun\s+(\w+)\s*=>\s*(.+)\)\s+\(𝓝\s+(.+?)\)\s+\(𝓝\s+(.+)\)', target)
@@ -270,6 +282,70 @@ def tendsto_templates(goal: str) -> list[str]:
         ),
         f"simpa using (show ContinuousAt {fn} {point} from by fun_prop)",
     ]
+
+
+def polynomial_deriv_templates(goal: str) -> list[str]:
+    params = extract_has_deriv_expr(goal)
+    if not params:
+        return []
+    var, expr, point = params
+    m = re.fullmatch(
+        rf'{re.escape(var)}\s*\^\s*(\d+)\s*\+\s*(.+?)\s*\*\s*{re.escape(var)}\s*\+\s*(.+)',
+        expr,
+    )
+    if not m:
+        return []
+    power = m.group(1).strip()
+    coeff = m.group(2).strip()
+    const = m.group(3).strip()
+    return [
+        (
+            f"have h1 : HasDerivAt (fun {var} => {var} ^ {power}) ({power} * {point} ^ ({power} - 1)) {point} := by\n"
+            f"    simpa using hasDerivAt_pow {power} {point}\n"
+            f"  have h2 : HasDerivAt (fun {var} => {coeff} * {var}) ({coeff} * 1) {point} :=\n"
+            f"    (hasDerivAt_id {point}).const_mul {coeff}\n"
+            f"  have h3 : HasDerivAt (fun _ => ({const})) 0 {point} := hasDerivAt_const {point} ({const})\n"
+            f"  have h := h1.add h2\n"
+            f"  have h' := h.add h3\n"
+            f"  convert h' using 1\n"
+            f"  ring"
+        ),
+    ]
+
+
+def product_deriv_templates(goal: str) -> list[str]:
+    params = extract_has_deriv_expr(goal)
+    if not params:
+        return []
+    var, expr, point = params
+    templates: list[str] = []
+
+    m = re.fullmatch(rf'{re.escape(var)}\s*\*\s*\(\s*{re.escape(var)}\s*\+\s*(.+)\)', expr)
+    if m:
+        const = m.group(1).strip()
+        templates.append(
+            f"have hf := hasDerivAt_id {point}\n"
+            f"  have hg : HasDerivAt (fun {var} => {var} + {const}) 1 {point} := by\n"
+            f"    have h := hf.add (hasDerivAt_const {point} ({const}))\n"
+            f"    convert h using 1\n"
+            f"    norm_num\n"
+            f"  have h := hf.mul hg\n"
+            f"  convert h using 1\n"
+            f"  simp\n"
+            f"  ring"
+        )
+
+    m = re.fullmatch(rf'Real\.sin\s+{re.escape(var)}\s*\*\s*Real\.cos\s+{re.escape(var)}', expr)
+    if m:
+        templates.append(
+            f"have hf := Real.hasDerivAt_sin {point}\n"
+            f"  have hg := Real.hasDerivAt_cos {point}\n"
+            f"  have h := hf.mul hg\n"
+            f"  convert h using 1\n"
+            f"  ring"
+        )
+
+    return templates
 
 
 def chain_rule_deriv_tactics(goal: str) -> list[str]:
@@ -358,7 +434,8 @@ def select_tactics(goal: str) -> list[str]:
         return tendsto_templates(goal) + ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "HasDerivAt" in target or "HasFDerivAt" in target:
         chain_tactics = chain_rule_deriv_tactics(goal)
-        return chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
+        structural_tactics = polynomial_deriv_templates(goal) + product_deriv_templates(goal)
+        return structural_tactics + chain_tactics + DERIV_TEMPLATES + ["fun_prop", "simp"] + SEARCH_TACTICS
     if "Continuous" in target or "Differentiable" in target:
         return ["fun_prop", "simp", "aesop"] + SEARCH_TACTICS
     if "cos" in target and "sin" in target and ("≤" in target or re.search(r'(?<![<>=!])=(?![>=])', target)):

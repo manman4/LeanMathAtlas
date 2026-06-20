@@ -265,6 +265,11 @@ python3 tools/analyze_failures.py
 まず `ContinuousAt` を `fun_prop` で作ってから `simpa using` する
 汎用テンプレートも使います。
 
+`derivative` 系では、`HasDerivAt` のうち
+`x^n + c*x + k`、`x * (x + c)`、`Real.sin x * Real.cos x`
+のような広い式クラスに対して、`pow` / `add` / `mul` / `const` を組み合わせる
+構造テンプレートも使います。
+
 ### 複数の定理をまとめて渡す
 
 現在のスクリプトはコマンドライン引数を 1 つしか受け取りません。
